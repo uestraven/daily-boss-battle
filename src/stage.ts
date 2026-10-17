@@ -186,6 +186,18 @@ export function displayedValue(
   return value;
 }
 
+/** Whether an actor reads as down *at this point in playback*, rather than in the state
+ * the batch ended in.
+ *
+ * Exported because the DOM party panel needs the same answer the canvas does. Reading
+ * `actor.hp === 0` there dimmed a hero the instant an action was committed, before the
+ * attack that killed them had even begun animating. */
+export function downAt(
+  script: BeatScript | null, actorId: ActorId, timeMs: number, actualHp: number,
+): boolean {
+  return displayedValue(script, actorId, timeMs, actualHp) <= 0;
+}
+
 /** Composes a single frame. Pure: identical inputs give an identical frame. */
 export function composeFrame(input: ComposeInput): Frame {
   const {state, script, timeMs} = input;
@@ -224,7 +236,7 @@ export function composeFrame(input: ComposeInput): Frame {
 
   /** Down according to playback, not according to the final state. */
   const downNow = (id: ActorId, actualHp: number): boolean =>
-    displayedValue(script, id, timeMs, actualHp) <= 0;
+    downAt(script, id, timeMs, actualHp);
 
   /** Builds the sprite command for an actor, using its sheet when one exists.
    *

@@ -14,7 +14,7 @@ import {advanceToDecision, applyPlayerAction, calculateDamage, createEncounter,
   nextBossCountdown, previewAction, starsForResult} from '../../dist/src/engine.js';
 import {availableActions, eligibleTargets, previewDisplay, actionInput} from '../../dist/src/play-ui.js';
 import {choreograph} from '../../dist/src/presentation.js';
-import {displayedValue} from '../../dist/src/stage.js';
+import {displayedValue, downAt} from '../../dist/src/stage.js';
 import {poolCatalog, selectDaily, targetTierFor, validatePool} from '../../dist/src/pool.js';
 import {dailyStatistics, ensureDay, playDailyAction, stepForDay} from '../../dist/src/daily.js';
 import {loadLedger, saveLedger, clearLedger} from './storage.js';
@@ -138,6 +138,21 @@ function Battle({def, catalog, tier, day}:
    * action to be committed. */
   const audioStarted = useRef(false);
   const terminalRef = useRef<BattleStep['terminal']>(step.terminal);
+  /** Readings taken just before a batch, held while it animates.
+   *
+   * HP has `hp_change` beats, so `displayedValue` can place it anywhere on the timeline.
+   * MP spend, momentum, turn readiness and the boss's next intent have no beat at all, so
+   * reading them from `state` showed the aftermath the instant an action was committed --
+   * the next telegraph appearing while the current attack was still winding up. Held at
+   * their pre-batch values instead, and released when playback ends. */
+  const [held, setHeld] = useState<{
+    mp: Record<string, number>; momentum: Record<string, number>;
+    ready: Record<string, boolean>; phase: number;
+    /** The whole telegraph as one unit. Holding only the target list would have paired
+     * last turn's targets with this turn's ability name, which is worse than either. */
+    telegraph: {countdown: NonNullable<ReturnType<typeof nextBossCountdown>>;
+                targetIds: readonly string[]} | null;
+  } | null>(null);
 
   /** Start the download now. It needs no AudioContext, so it does not have to wait for a
    * gesture, and the theme is by far the largest asset: deferring the request until the
@@ -164,6 +179,8 @@ function Battle({def, catalog, tier, day}:
       setTimeMs(elapsed);
       if (elapsed >= script.totalMs) {
         setPhase(terminalRef.current ? {kind: 'over'} : {kind: 'choosing'});
+        // The animation has caught up with the state, so stop holding anything back.
+        setHeld(null);
         return;
       }
       raf = requestAnimationFrame(tick);
@@ -215,15 +232,34 @@ function Battle({def, catalog, tier, day}:
     return result as Record<string, NonNullable<ReturnType<typeof spriteSheet>>>;
   }, [def]);
 
+  /** Non-null only while a batch is animating, so every read below has one rule. */
+  const pending = phase.kind === 'playing' ? held : null;
+
   const active = replay ?? step;
   terminalRef.current = active.terminal;
   const state = active.state;
   const actorId: ActorId | undefined = active.readyHeroIds[0];
   const boss = state.actors[state.bossId]!;
   const countdown = nextBossCountdown(state);
+  /** The telegraph as the player should see it now: last turn's while this turn animates,
+   * so the boss's next move is not revealed before the current one has landed. */
+  const shownTelegraph = pending
+    ? pending.telegraph
+    : countdown ? {countdown, targetIds: state.bossIntent?.targetIds ?? []} : null;
 
   const commit = useCallback((input: {actorId: string; abilityId: string; targetIds: string[]}) => {
     const before = state.events.length;
+    // Taken while `state` is still the pre-batch state, which the lines below replace.
+    setHeld({
+      mp: Object.fromEntries(state.party.map(id => [id, state.actors[id]?.mp ?? 0])),
+      momentum: Object.fromEntries(state.party.map(id => [id, state.actors[id]?.momentum ?? 0])),
+      ready: Object.fromEntries(state.party.map(id => [id, state.actors[id]?.ready ?? false])),
+      phase: state.phase,
+      telegraph: (() => {
+        const countdown = nextBossCountdown(state);
+        return countdown ? {countdown, targetIds: state.bossIntent?.targetIds ?? []} : null;
+      })(),
+    });
     let next: BattleStep;
     if (replay) {
       // Unranked: played against the engine directly, never recorded.
@@ -381,14 +417,15 @@ function Battle({def, catalog, tier, day}:
             ))}
           </div>
         )}
-        {countdown && (
+        {shownTelegraph && (
           <div className="dbb-telegraph">
-            ▶ {abilityNames[countdown.abilityId] ?? countdown.abilityId}
+            ▶ {abilityNames[shownTelegraph.countdown.abilityId] ?? shownTelegraph.countdown.abilityId}
             {' → '}
-            {(state.bossIntent?.targetIds ?? []).map(id => names[id]).join(', ') || '—'}
-            {countdown.impactIn !== undefined
-              ? ` · impact in ${countdown.impactIn}`
-              : countdown.readyIn === 0 ? ' · now' : ` · ready in ${countdown.readyIn}`}
+            {shownTelegraph.targetIds.map(id => names[id]).join(', ') || '—'}
+            {shownTelegraph.countdown.impactIn !== undefined
+              ? ` · impact in ${shownTelegraph.countdown.impactIn}`
+              : shownTelegraph.countdown.readyIn === 0
+                ? ' · now' : ` · ready in ${shownTelegraph.countdown.readyIn}`}
           </div>
         )}
       </section>
@@ -400,16 +437,22 @@ function Battle({def, catalog, tier, day}:
       <section className="dbb-party">
         {state.party.map(id => {
           const actor = state.actors[id]!;
-          const ready = actor.ready && actor.hp > 0;
           const shownHp = Math.round(displayedValue(script, id, timeMs, actor.hp));
+          // Down according to playback, the same way the canvas decides it. Reading
+          // actor.hp here dimmed the panel the moment an action was committed, ahead of
+          // the attack that caused it.
+          const down = downAt(script, id, timeMs, actor.hp);
+          const shownMp = pending?.mp[id] ?? actor.mp;
+          const shownMomentum = pending?.momentum[id] ?? actor.momentum;
+          const ready = (pending ? pending.ready[id] : actor.ready) && !down;
           return (
-            <div key={id} className={`dbb-hero rpg-window${ready ? ' is-ready' : ''}${actor.hp === 0 ? ' is-down' : ''}`}>
+            <div key={id} className={`dbb-hero rpg-window${ready ? ' is-ready' : ''}${down ? ' is-down' : ''}`}>
               <div className="dbb-hero-name">{names[id]}</div>
               <div className="dbb-meter"><i style={{width: `${(100 * shownHp) / actor.stats.hp}%`}} /></div>
               <div className="dbb-hero-numbers">
                 <span>{shownHp}/{actor.stats.hp}</span>
-                {actor.stats.mp > 0 && <span>MP {actor.mp}</span>}
-                {actor.momentum > 0 && <span>◆{actor.momentum}</span>}
+                {actor.stats.mp > 0 && <span>MP {shownMp}</span>}
+                {shownMomentum > 0 && <span>◆{shownMomentum}</span>}
               </div>
             </div>
           );

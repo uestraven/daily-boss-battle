@@ -2,7 +2,7 @@
  * can be asserted without a browser. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {STAGE, bossSlot, composeFrame, displayedValue, floatProgress, heroSlots,
+import {STAGE, bossSlot, composeFrame, displayedValue, downAt, floatProgress, heroSlots,
   integerScale, shakeOffset, tintForRole} from '../dist/src/stage.js';
 import {choreograph} from '../dist/src/presentation.js';
 import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src/engine.js';
@@ -622,5 +622,66 @@ test('shipped arenas must have their art on disk', () => {
   for (const [, id] of [...block[1].matchAll(/'([^']+)'/g)]) {
     const file = new URL(`../web/public/battle-backgrounds/${id}.png`, import.meta.url);
     assert.ok(existsSync(file), `"${id}" is shipped but ${id}.png is missing`);
+  }
+});
+
+// --- When an actor reads as down -----------------------------------------------------
+
+test('an actor reads as down only once the killing blow has landed', () => {
+  // The defect this guards: the party panel read actor.hp === 0 straight from state,
+  // which is already the post-batch state, so a hero dimmed the instant the action was
+  // committed -- several hundred milliseconds before the attack animation reached them.
+  const state = freshState();
+  const victim = state.party[0];
+  const maxHp = state.actors[victim].stats.hp;
+  const script = choreograph([
+    ev('action_committed', {actorId: state.bossId, abilityId: 'attack'}),
+    ev('damage', {actorId: state.bossId, targetId: victim, abilityId: 'attack',
+      amount: maxHp, hpAfter: 0}),
+    ev('ko', {actorId: victim}),
+  ], {maxHp: {[victim]: maxHp}});
+
+  const tween = script.beats.find(b => b.kind === 'hp_change' && b.targetId === victim);
+  assert.ok(tween, 'the hit produces an hp tween');
+  assert.ok(tween.at > 0, 'and it does not begin at time zero');
+
+  // `0` is the final hp, which is what the panel passes in.
+  assert.equal(downAt(script, victim, 0, 0), false, 'not down before the attack begins');
+  assert.equal(downAt(script, victim, tween.at - 1, 0), false, 'nor at the moment of impact');
+  assert.equal(downAt(script, victim, tween.at + tween.duration, 0), true,
+    'down once the drain completes');
+  assert.equal(downAt(script, victim, script.totalMs, 0), true, 'and stays down');
+});
+
+test('a survivor never reads as down, and a corpse always does', () => {
+  const state = freshState();
+  const id = state.party[0];
+  const script = choreograph([
+    ev('damage', {actorId: state.bossId, targetId: id, amount: 10, hpAfter: 90}),
+  ], {maxHp: {[id]: 100}});
+  for (const t of [0, 100, script.totalMs]) {
+    assert.equal(downAt(script, id, t, 90), false);
+  }
+  // With no script at all -- between turns -- the state is the only truth available.
+  assert.equal(downAt(null, id, 0, 0), true);
+  assert.equal(downAt(null, id, 0, 90), false);
+});
+
+test('the canvas and the panel cannot disagree about who is down', () => {
+  // Both go through downAt now; this asserts composeFrame's dimming matches it exactly,
+  // since two separate rules were how the panel drifted ahead in the first place.
+  const state = freshState();
+  const victim = state.party[0];
+  const maxHp = state.actors[victim].stats.hp;
+  state.actors[victim].hp = 0;
+  const script = choreograph([
+    ev('damage', {actorId: state.bossId, targetId: victim, amount: maxHp, hpAfter: 0}),
+    ev('ko', {actorId: victim}),
+  ], {maxHp: {[victim]: maxHp}});
+
+  for (const t of [0, 200, 400, 700, 1200, script.totalMs]) {
+    const sprite = composeFrame({state, script, timeMs: t}).commands
+      .find(c => c.kind === 'sprite' && c.actorId === victim);
+    assert.equal(sprite.dim, downAt(script, victim, t, 0), `disagreement at ${t}ms`);
   }
 });
