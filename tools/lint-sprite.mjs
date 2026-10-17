@@ -262,9 +262,41 @@ if (clips && Number.isInteger(cols) && Number.isInteger(rows)) {
 }
 
 // --- verdict -----------------------------------------------------------------
+// The report is about the image, not about this tool. Say so plainly: an exit code and
+// the word FAIL otherwise read as though the linter itself broke.
 console.log();
-for (const problem of problems) console.log(`  FAIL  ${problem}`);
-for (const warning of warnings) console.log(`  WARN  ${warning}`);
-if (!problems.length && !warnings.length) console.log('  All checks passed.');
+for (const problem of problems) console.log(`  PROBLEM  ${problem}`);
+for (const warning of warnings) console.log(`  ADVICE   ${warning}`);
+console.log();
+
+const gridBroken = !Number.isInteger(cols) || !Number.isInteger(rows);
+const looksGenerated = whole.colours > 256;
+
+if (!problems.length && !warnings.length) {
+  console.log('  VERDICT: usable as-is. Grid, frames, alignment and palette all check out.');
+} else if (!problems.length) {
+  console.log('  VERDICT: usable. The advice above would improve it but nothing is broken.');
+} else if (gridBroken && looksGenerated) {
+  console.log('  VERDICT: this is an illustration, not a sprite sheet.');
+  console.log();
+  console.log('  That is a statement about the image, not an error in this tool. The image has');
+  console.log(`  no ${frameWidth}x${frameHeight} grid and far too many colours to be pixel art at that size.`);
+  console.log('  There is no automated fix: a large illustration reduced to sprite size loses the');
+  console.log('  detail that made it readable. It has to be drawn at the target size.');
+  console.log();
+  // Target canvas comes from the declared clips, not from the oversized source image.
+  const wantCols = clips ? Math.max(...Object.values(clips).map(c => c.frames)) : 4;
+  const wantRows = clips ? Object.keys(clips).length : 2;
+  console.log('  Keep this image as reference for costume, palette and silhouette, then redraw:');
+  console.log(`    canvas ${wantCols * frameWidth} x ${wantRows * frameHeight} ` +
+    `(${wantCols} x ${wantRows} cells of ${frameWidth} x ${frameHeight}), under 64 colours,`);
+  console.log('    hard-edged pixels, feet on each cell baseline, no effects in the frames.');
+  console.log('  See docs/ART-AND-AUDIO-SPEC.md for the full brief.');
+} else if (gridBroken) {
+  console.log('  VERDICT: the canvas is not a clean grid, so the frames cannot be indexed.');
+  console.log(`  Resize the canvas to an exact multiple of ${frameWidth} x ${frameHeight} and re-run.`);
+} else {
+  console.log('  VERDICT: it is a grid, but some frames need fixing. See the problems above.');
+}
 console.log();
 process.exit(problems.length ? 1 : 0);

@@ -1,8 +1,59 @@
 # Art and audio specification
 
-What to produce, in what format, so assets drop into the game without rework. The engine
-side is already built and tested — see `src/animation.ts`, `src/stage.ts` and
-`src/audio.ts`.
+Daily Boss Battle is a 16-bit-style turn-based boss-battle game for web and mobile. This
+document is the complete brief for its art and music: what to produce, at what size, in
+what format. It is self-contained — no access to the codebase is needed.
+
+All characters, bosses and designs are **original to this project**. Parody a genre
+trope, never a specific character from an existing game.
+
+---
+
+## The one-page version
+
+**Sprites.** The battle stage renders at a fixed internal **320 × 180** pixels, scaled up
+by whole numbers. So sprites are small and must read as silhouettes.
+
+| | Frame size | Sheet canvas |
+| --- | --- | --- |
+| Hero | **32 × 40** (48 × 40 if a weapon reaches well past the body) | frames-per-row × 40 tall per row |
+| Boss | **96 × 96** | as above |
+
+- PNG, transparent background, uniform grid, **one row per animation**, frames left to right.
+- **Author at the target size.** A large illustration reduced to 32 × 40 becomes mud. This
+  has been tried and measured; there is no automated route.
+- **Under 64 colours**, ideally 16–32. Hard-edged pixels: no anti-aliasing, no gradients,
+  no semi-transparent pixels. A 1-pixel dark outline.
+- **Heroes face left, bosses face right.**
+- Feet on the bottom edge of each cell; body centre fixed across frames so the figure
+  does not appear to slide.
+- **No slashes, flares, glows or particles in the character frames.** Effects are a
+  separate layer (see §2).
+
+**Animations**, one row each. Only `idle` is required; the rest can be added later.
+
+| Row | Clip | Loops | Frames | Fitted to |
+| --- | --- | --- | --- | --- |
+| 0 | `idle` | yes | 2–4 | its own cadence |
+| 1 | `attack` | no | 3–5 | a 180 ms beat |
+| 2 | `cast` | no | 3–4 | a 420 ms beat |
+| 3 | `hurt` | no | 2 | a 90 ms beat |
+| 4 | `ko` | no | 3–4 | a 520 ms beat, holds last frame |
+| 5 | `victory` | yes | 2–3 | its own cadence |
+
+Non-looping clips are **stretched to span their beat**, so pick a frame count that reads
+well and ignore timing entirely.
+
+**Music.** Four looping tracks as **OGG Vorbis** (`battle_main`, `battle_phase_two`,
+`victory`, `defeat`), 44.1 kHz stereo. **MIDI cannot ship** — no browser can play a `.mid`
+file — so compose in MIDI and render through a soundfont. Plus 17 short sound effects.
+
+**Who to draw:** 12 heroes and 8 bosses, listed in §4.
+
+---
+
+The rest of this document is the detail behind the above. The engine side is already
+built and tested — `src/animation.ts`, `src/stage.ts` and `src/audio.ts`.
 
 ---
 
@@ -56,8 +107,7 @@ payload is well under 1 MB. Revisit only if live remixing becomes a feature.
 
 ### Files needed
 
-Four tracks. `npm run audio:manifest` prints this list from the code that plays them, so
-it cannot drift.
+Four tracks.
 
 | File | Use |
 | --- | --- |
@@ -72,7 +122,7 @@ The phase transition is the dramatic beat of the fight. The engine emits silence
 
 ### Sound effects
 
-17 cues, also listed by `npm run audio:manifest`. Short, dry, and mixed below the music —
+17 cues. Short, dry, and mixed below the music —
 hit sounds fire on a 90 ms beat, and a four-hit ability fires one per hit 120 ms apart, so
 anything with a long tail will smear.
 
@@ -228,19 +278,64 @@ One entry per combatant in `web/src/sprite-manifest.json`:
 `validateSheet()` rejects a malformed entry at load with a specific message, rather than
 drawing garbage. Run `npm run art:check` to see which sheets are present and valid.
 
-### Who to draw
-
-8 bosses and 12 heroes. `npm run draft:check` lists the heroes; `npm run pool:check` the
-bosses. All names and designs are original to this project — see the IP rule in the
-technical plan: parody a trope, never a specific character.
-
-Highest value first: the three heroes and one boss of a single day's encounter make one
-complete-looking battle, which is worth far more than twenty idle-only sheets.
-
 ---
 
-## 3. Arenas
+## 3. Who to draw
 
-Six backgrounds, one per boss, briefed in `web/public/battle-backgrounds/README.md` with
-per-arena composition notes in `web/src/background-catalog.ts`. 16:9, 1280 × 720 or wider,
-and **keep the centre band quiet** — the boss sprite sits there and must stay readable.
+All names and designs original. The description is what the character does in combat, as
+a hook for the design.
+
+### Heroes — 32 × 40 (48 × 40 where a weapon reaches past the body)
+
+| Id | Name | Role | Combat identity |
+| --- | --- | --- | --- |
+| `warden` | The Warden | Guardian | Covers allies; emergency healing |
+| `lancer` | The Lancer | Striker | Leaps airborne, lands a delayed blow |
+| `oracle` | The Oracle | Healer | Healing, buffs, precision archery |
+| `blademage` | The Blademage | Striker | Enchants the blade; rapid multi-hit volley |
+| `channeler` | The Channeler | Caster | Surge-powered elemental magic |
+| `nullifier` | The Nullifier | Controller | Intercepts and absorbs enemy spells |
+| `monk` | The Monk | Striker | Martial, armour-piercing, holy strikes |
+| `machinist` | The Machinist | Striker | Mechanical tools, drills through armour |
+| `vanguard` | The Vanguard | Striker | Rising cut; a timed interrupt |
+| `brawler` | The Brawler | Striker | Builds momentum, spends it on burst |
+| `magus` | The Magus | Caster | Elemental attack magic, focused casting |
+| `thief` | The Thief | Controller | Steals, then strikes harder for it |
+
+### Bosses — 96 × 96
+
+| Id | Name | Combat identity |
+| --- | --- | --- |
+| `tide_maw` | Tide Maw | Flooded-cavern horror; tentacles that weaken |
+| `ink_lurker` | Ink Lurker | Tentacles, blinding ink, status timing |
+| `crush_wall` | Crush Wall | An advancing wall; telegraphed crushes, a damage race |
+| `storm_keeper` | Storm Keeper | Lightning magic; repairs itself; immune to fire |
+| `spell_weaver` | Spell Weaver | Elemental magic; silences casters |
+| `mad_harlequin` | The Mad Harlequin | Gleeful chaos; silence and delayed punishment |
+| `clockwork_emperor` | The Clockwork Emperor | Armoured siege engine that self-repairs |
+| `blade_tyrant` | The Blade Tyrant | Telegraphed blade storms; a guarded stance |
+
+**Start with one complete encounter** — three heroes, one boss, one arena, one track and
+the eight highest-value sound effects. One battle that looks and sounds finished is worth
+far more than twenty idle-only sheets, and it reveals whether the frame sizes read at this
+scale while that is still cheap to change.
+
+## 4. Arenas
+
+One background per boss. **16:9, 1280 × 720 or wider.** Scenery only — no HUD, no window
+frames, no character art; the game draws those on top. **Keep the centre band quiet**: the
+boss sprite sits there and must stay readable. Drawn with `object-fit: contain`, so nothing
+is cropped on a phone.
+
+| Boss | Arena | Style | Brief |
+| --- | --- | --- | --- |
+| Blade Tyrant | Broken Span | 16-bit pixel art | A narrow ruined bridge deck crossing the frame, open sky and a drop behind it. Centre band clear so the boss reads against empty space. |
+| Tide Maw | Sunken Waterway | 16-bit pixel art | Flooded cavern. Standing water across the lower third, wet rock walls framing the sides. Cool blues and greens so tentacle silhouettes stay legible. |
+| Ink Lurker | Drowned Theatre | 16-bit pixel art | Abandoned stage, house lights dimmed. Heavy drapes at the edges, seating lost to shadow. Warm highlight at centre stage, dark wings for the ambush. |
+| Crush Wall | Sealed Corridor | 16-bit pixel art | Collapsing passage. Strong one-point perspective down a tunnel so the far wall feels like it is advancing. The wall itself is a separate sprite. |
+| Storm Keeper | Stormworks | Painted backdrop | Lightning-struck pipe gallery on a mountainside. Industrial pipework and catwalks under a charged sky; cold rim light and arcing discharge. |
+| Spell Weaver | Gate Platform | Painted backdrop | Rail platform at a border gate, at night. A waiting train and lamp-lit gatehouse beyond. Night palette with warm lamps so spell flashes pop. |
+
+The four pixel-art arenas share one palette depth and one horizon height. The two painted
+backdrops keep that camera height but are not pixelated. The Mad Harlequin and The
+Clockwork Emperor have no arena brief yet; they can reuse another until one exists.
