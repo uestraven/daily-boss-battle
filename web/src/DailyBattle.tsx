@@ -50,11 +50,11 @@ type Phase = {kind: 'choosing'} | {kind: 'playing'} | {kind: 'over'};
 const MODE_BLURB: Record<BattleMode, {title: string; detail: string}> = {
   easy: {
     title: 'Easy',
-    detail: 'Shows status effects on both sides, and the boss announces its next attack.',
+    detail: 'Shows status effects, the boss\u2019s elemental weaknesses, and its next attack.',
   },
   normal: {
     title: 'Normal',
-    detail: 'No status badges and no warning. Read the fight yourself.',
+    detail: 'No status badges, no warning, no elemental hints. Read the fight yourself.',
   },
 };
 const MODE_KEY = 'daily-boss-battle.mode.v1';
@@ -266,6 +266,16 @@ function Battle({def, catalog, tier, day}:
     return result as Record<string, NonNullable<ReturnType<typeof spriteSheet>>>;
   }, [def]);
 
+  /** The whole difficulty policy, in one place.
+   *
+   * Everything Easy adds is *information the interface already has*, never a change to the
+   * fight. Four things hang off this: status badges, the boss's telegraphed next attack,
+   * its elemental affinity tags, and the NO EFFECT label on abilities that cannot hurt it.
+   * Keeping it one named flag rather than four scattered `mode === 'easy'` checks is the
+   * point -- a new reveal should be an obvious decision about difficulty, not something
+   * that quietly lands in Normal because nobody remembered the policy existed. */
+  const reveals = mode === 'easy';
+
   /** Non-null only while a batch is animating, so every read below has one rule. */
   const pending = phase.kind === 'playing' ? held : null;
 
@@ -295,7 +305,7 @@ function Battle({def, catalog, tier, day}:
    * batch ended in -- the same rule as the health bars, so a buff cannot appear before the
    * spell that granted it has played. */
   const statusBadges = useCallback((id: ActorId) => {
-    if (mode !== 'easy') return null;
+    if (!reveals) return null;
     const ids = visibleStatuses(statusesAt(script, id, timeMs, state.actors[id]?.statuses ?? {}));
     if (!ids.length) return null;
     return (
@@ -311,11 +321,11 @@ function Battle({def, catalog, tier, day}:
         })}
       </div>
     );
-  }, [mode, script, timeMs, state]);
+  }, [reveals, script, timeMs, state]);
 
   /** The telegraph as the player should see it now: last turn's while this turn animates,
    * so the boss's next move is not revealed before the current one has landed. */
-  const shownTelegraph = mode !== 'easy' ? null : pending
+  const shownTelegraph = !reveals ? null : pending
     ? pending.telegraph
     : countdown ? {countdown, targetIds: state.bossIntent?.targetIds ?? []} : null;
 
@@ -369,29 +379,35 @@ function Battle({def, catalog, tier, day}:
     ].slice(0, 24));
   }, [state, ledger, day, catalog, def, replay, names, maxHp, abilityNames]);
 
-  /** Elemental affinities are decisive information — a fire-immune boss makes a
-   * fire-only caster useless — and the player cannot infer them. Surface them. */
+  /** Elemental affinities are decisive information — a fire-immune boss makes a fire-only
+   * caster useless — and the player cannot infer them without spending a turn finding out.
+   * Which is exactly why they belong to Easy: in Normal, spending that turn *is* the
+   * fight. */
   const affinityNotes = useMemo(() => {
+    if (!reveals) return [];
     const table = def.affinities?.[def.bossId] ?? {};
     return Object.entries(table)
       .filter(([, affinity]) => affinity && affinity !== 'neutral')
       .map(([element, affinity]) => ({element, affinity: affinity as string}));
-  }, [def]);
+  }, [def, reveals]);
 
   const offered = useMemo(() => {
     if (!actorId) return [];
     return availableActions(state, def, actorId).filter(o => o.enabled).map(option => {
-      // Flag offensive abilities that would land for nothing against this boss.
+      // Flag offensive abilities that would land for nothing against this boss. Easy only:
+      // this is the affinity table restated per ability, so showing it in Normal would
+      // hand over the same information the tags are withheld for. Not computed at all
+      // there, which also keeps a dimmed menu item from leaking it without the label.
       const isOffensive = option.ability.kind === 'physical' || option.ability.kind === 'magical';
       let noEffect = false;
-      if (isOffensive && (option.ability.power ?? 0) > 0) {
+      if (reveals && isOffensive && (option.ability.power ?? 0) > 0) {
         const actor = state.actors[actorId];
         const boss = state.actors[state.bossId];
         if (actor && boss) noEffect = calculateDamage(def, actor, boss, option.ability, state.tick) <= 0;
       }
       return {...option, noEffect};
     });
-  }, [state, def, actorId]);
+  }, [state, def, actorId, reveals]);
   const targets = useMemo(
     () => (selected && actorId ? eligibleTargets(state, actorId, selected.ability) : []),
     [selected, actorId, state],

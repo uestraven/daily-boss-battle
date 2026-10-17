@@ -266,13 +266,18 @@ v1 is a website, desktop and mobile web, no accounts and no server:
 - **A landing screen** chooses the mode before the fight starts, so it is a decision rather
   than a default nobody saw. It is skipped for a day already under way or finished, since
   the choice was already made and re-offering it would imply it could be changed.
-- **Easy and Normal differ only in what the interface tells you.** Easy shows status badges
-  on both sides and the boss's announced next attack; Normal shows neither. The encounter,
+- **Easy and Normal differ only in what the interface tells you.** Easy reveals four
+  things, all of them information the interface already holds: status badges on both sides,
+  the boss's telegraphed next attack, its elemental affinity tags, and the NO EFFECT label
+  on abilities that cannot hurt it. Normal shows none of them. They hang off one named flag
+  in `DailyBattle`, so adding a fifth reveal is a deliberate decision about difficulty
+  rather than something that quietly lands in Normal. The encounter,
   the engine and the action log are identical, which is what keeps a replay verifiable and
   the verified pool valid — mode is never an engine input. Worth being precise about the
   consequence: the pool proves every encounter is winnable using a solver that sees
   everything, so Normal is harder in a way the gates do not measure. The win is still
-  there; it is no longer signposted.
+  there; it is no longer signposted. Affinities are the sharpest case — in Easy you read
+  them off the boss panel, and in Normal spending a turn to discover them *is* the fight.
   The mode is recorded against the day and printed on the shared card, so an Easy result is
   not mistaken for a Normal one. It is the one field in a record that *cannot* be verified
   by replay — mode leaves no trace in the action log by design — so it reports what the
