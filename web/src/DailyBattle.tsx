@@ -15,10 +15,13 @@ import {advanceToDecision, applyPlayerAction, calculateDamage, createEncounter,
 import {availableActions, eligibleTargets, previewDisplay, actionInput} from '../../dist/src/play-ui.js';
 import {choreograph} from '../../dist/src/presentation.js';
 import {displayedValue} from '../../dist/src/stage.js';
-import {dailyEncounter, selectDaily, targetTierFor, validatePool} from '../../dist/src/pool.js';
+import {poolCatalog, selectDaily, targetTierFor, validatePool} from '../../dist/src/pool.js';
+import {dailyStatistics, ensureDay, playDailyAction, stepForDay} from '../../dist/src/daily.js';
+import {loadLedger, saveLedger, clearLedger} from './storage.js';
 import {heroes} from '../../dist/src/roster.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {ActorId, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
+import type {DailyCatalog, DailyLedger} from '../../src/daily.js';
 import type {OfferedAction} from '../../src/play-ui.js';
 import type {VerifiedPool} from '../../src/pool.js';
 import poolData from '../../dist-content/verified-pool.json';
@@ -44,7 +47,8 @@ export default function DailyBattle() {
       const pool = validatePool(poolData as unknown as VerifiedPool);
       const entry = selectDaily(day, pool);
       if (!entry) return {error: `No verified encounter is available for ${day}.`} as const;
-      return {def: dailyEncounter(day, pool), entry} as const;
+      const catalog = poolCatalog(pool);
+      return {catalog, def: catalog.definitionFor(day), entry} as const;
     } catch (error) {
       return {error: error instanceof Error ? error.message : String(error)} as const;
     }
@@ -62,11 +66,15 @@ export default function DailyBattle() {
     );
   }
 
-  return <Battle def={setup.def} tier={setup.entry.tier ?? 'standard'} day={day} />;
+  return <Battle def={setup.def} catalog={setup.catalog} tier={setup.entry.tier ?? 'standard'} day={day} />;
 }
 
-function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: string}) {
-  const [step, setStep] = useState<BattleStep>(() => advanceToDecision(createEncounter(def), def));
+function Battle({def, catalog, tier, day}:
+  {def: EncounterDefinition; catalog: DailyCatalog; tier: string; day: string}) {
+  // The ledger is the source of truth: it replays each stored action log, so a battle in
+  // progress resumes exactly and a finished day stays finished.
+  const [ledger, setLedger] = useState<DailyLedger>(() => ensureDay(loadLedger(catalog), day, catalog));
+  const [step, setStep] = useState<BattleStep>(() => stepForDay(ledger, day, catalog));
   const [script, setScript] = useState<BeatScript | null>(null);
   const [phase, setPhase] = useState<Phase>({kind: 'choosing'});
   const [selected, setSelected] = useState<OfferedAction | null>(null);
@@ -115,7 +123,11 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
 
   const commit = useCallback((input: {actorId: string; abilityId: string; targetIds: string[]}) => {
     const before = state.events.length;
-    const next = applyPlayerAction(state, input, def);
+    // Goes through the ledger, so the action log that proves this result is recorded.
+    const played = playDailyAction(ledger, day, input, catalog);
+    const next = played.step;
+    setLedger(played.ledger);
+    saveLedger(played.ledger);
     const batch = next.state.events.slice(before);
     setTimeMs(0);
     setScript(choreograph(batch, {names, maxHp, abilityNames}));
@@ -129,7 +141,7 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
           : `${names[e.actorId ?? ''] ?? ''} → ${names[e.targetId ?? ''] ?? ''}: ${e.type === 'heal' ? '+' : '−'}${e.amount}`),
       ...previous,
     ].slice(0, 24));
-  }, [state, def, names, maxHp, abilityNames]);
+  }, [state, ledger, day, catalog, names, maxHp, abilityNames]);
 
   /** Elemental affinities are decisive information — a fire-immune boss makes a
    * fire-only caster useless — and the player cannot infer them. Surface them. */
@@ -169,6 +181,9 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
   }, [selected, actorId, state, def]);
 
   const stars = starsForResult(state);
+  const record = ledger.records[day];
+  const locked = Boolean(record?.completed);
+  const stats = useMemo(() => dailyStatistics(ledger, day), [ledger, day]);
 
   return (
     <main className="dbb-shell">
@@ -228,15 +243,25 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
       <section className="dbb-commands rpg-window">
         {phase.kind === 'playing' && <div className="dbb-busy">…</div>}
 
-        {phase.kind === 'over' && (
+        {locked && phase.kind !== 'playing' && (
           <div className="dbb-result">
-            <strong>{step.terminal === 'victory' ? 'VICTORY' : 'DEFEAT'}</strong>
-            <span className="dbb-stars">{'★'.repeat(stars)}{'☆'.repeat(3 - stars)}</span>
-            <span className="dbb-hint">{state.heroActionCount} actions · tick {state.tick}</span>
+            <strong>{record?.result === 'victory' ? 'VICTORY' : 'DEFEAT'}</strong>
+            <span className="dbb-stars">
+              {'★'.repeat(record?.stars ?? 0)}{'☆'.repeat(3 - (record?.stars ?? 0))}
+            </span>
+            <span className="dbb-hint">Today is settled. Come back tomorrow.</span>
+            <div className="dbb-stats">
+              <span>played {stats.completed}</span>
+              <span>won {stats.wins}</span>
+              <span>streak {stats.participationStreak}</span>
+              <span>win streak {stats.victoryStreak}</span>
+              <span>{stats.stars}★ total</span>
+            </div>
+            <span className="dbb-hint">Results are stored on this device and are not server verified.</span>
           </div>
         )}
 
-        {phase.kind === 'choosing' && actorId && !selected && (
+        {!locked && phase.kind === 'choosing' && actorId && !selected && (
           <>
             <div className="dbb-prompt">{names[actorId]}</div>
             <ul className="rpg-menu-list">
@@ -259,7 +284,7 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
           </>
         )}
 
-        {phase.kind === 'choosing' && actorId && selected && (
+        {!locked && phase.kind === 'choosing' && actorId && selected && (
           <>
             <div className="dbb-prompt">{selected.ability.name}</div>
             {preview && (
@@ -291,10 +316,12 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
             <button onClick={() => setStep(nudgeBoss(step, def, 0.46))}>Boss → 46%</button>
             <button onClick={() => setStep(nudgeBoss(step, def, 0.04))}>Boss → 4%</button>
             <button onClick={() => setStep(hurtParty(step, 0.25))}>Party → 25%</button>
+            <button onClick={() => { clearLedger(); window.location.reload(); }}>Reset day</button>
           </div>
           <div className="dbb-dev-hint">
             Phase {state.phase} · transition at {def.bossProgram.transitionPercent}% ·
-            {' '}attack from just above it to see the flash-and-hold
+            {' '}attack from just above it to see the flash-and-hold ·
+            {' '}stars {stars} · {locked ? 'locked' : 'in progress'}
           </div>
         </section>
       )}

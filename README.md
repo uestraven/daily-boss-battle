@@ -232,6 +232,27 @@ desktop harness `web/src/App.tsx` is still on disk, now unreferenced — it carr
 background-import studio and battle-version switcher, and can be deleted once those are
 either ported or abandoned.
 
+## The daily loop
+
+The screen is backed by the daily ledger, so it behaves like a daily game rather than a
+battle sandbox:
+
+- **One attempt per UTC day.** A finished day is locked; the screen shows the result,
+  streaks and star total instead of a playable battle.
+- **Resumable.** Close the tab mid-fight and it resumes at exactly the same decision,
+  because the ledger replays the stored action log rather than trusting a snapshot.
+- **Tamper-evident.** Editing localStorage cannot manufacture a result: normalisation
+  recomputes every record by replay and drops anything that does not reproduce.
+
+One ledger serves both content sources. `DailyCatalog` abstracts "which encounter is
+today's", so the verified pool reuses the curated path's integrity model instead of
+growing a second one — `poolCatalog(pool)` for the product path, `curatedCatalog` for the
+frozen regression templates. A record from one is never accepted by the other, and a pool
+rebuild changes the catalog version, which invalidates stored results for encounters that
+no longer exist.
+
+Results are local and unverified until there is a server, and the UI says so.
+
 ## Playing it now
 
 A zero-dependency terminal client runs the real daily loop — no browser, no React:
@@ -244,6 +265,10 @@ npm run play -- --seed anything     # draft a random party
 npm run play -- --speed 3           # faster animation
 npm run play -- --instant           # no animation delays
 ```
+
+`npm run web:dev` binds all interfaces, so a phone on the same network can open it at
+`http://<your-ip>:5173`. Testing on the real Android target answers the questions that
+matter — touch latency, 60fps, safe-area insets — without needing a native wrapper yet.
 
 It shows the boss's announced intent and tick countdown, previews exact damage with
 `p <n>` before you commit, and replays your action log on exit to confirm the result

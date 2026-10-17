@@ -12,6 +12,7 @@
  */
 import {buildEncounter} from './generate.js';
 import type {ActorId, EncounterDefinition} from './types.js';
+import type {DailyCatalog} from './daily.js';
 import type {Tier} from './gates.js';
 
 export type PoolEntry = {
@@ -152,6 +153,20 @@ export function dailyEncounter(day: string, pool: VerifiedPool): EncounterDefini
     id: `daily-${day}-${entry.bossId}`,
     contentVersion: `1.0-pool|${pool.contentHash}`,
   });
+}
+
+/** A ledger catalog backed by the verified pool, so daily results for pool encounters
+ * get the same action-log-and-replay integrity as the curated templates. */
+export function poolCatalog(pool: VerifiedPool): DailyCatalog {
+  return {
+    version: `1.0-pool|${pool.contentHash}`,
+    keyFor: day => {
+      const entry = selectDaily(day, pool);
+      if (!entry) throw new Error(`The verified pool has no encounter available for ${day}`);
+      return entry.id;
+    },
+    definitionFor: day => dailyEncounter(day, pool),
+  };
 }
 
 /** Validates a pool artifact before it is trusted as a content source. */

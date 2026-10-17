@@ -60,20 +60,35 @@ export function dailyDefinition(day:string):EncounterDefinition {
 export const MAX_DAILY_INPUTS=200;
 /** `inputs` is the authoritative record. `state` is a derived cache that normalizeLedger
  * recomputes from `inputs`, so editing it cannot change a result. */
-export type DailyRecord={day:string;catalogVersion:string;key:DailyKey;definitionId:string;
+/** Where a day's encounter comes from. The ledger is written against this rather than
+ * against the curated six, so the verified pool reuses exactly the same replay-based
+ * integrity model instead of growing a second one. */
+export type DailyCatalog={
+  version:string;
+  keyFor(day:string):string;
+  definitionFor(day:string):EncounterDefinition;
+};
+
+export const curatedCatalog:DailyCatalog={
+  version:DAILY_CATALOG_VERSION,
+  keyFor:(day)=>dailyKeyFor(day),
+  definitionFor:(day)=>dailyDefinition(day),
+};
+
+export type DailyRecord={day:string;catalogVersion:string;key:string;definitionId:string;
   inputs:BattleInput[];state:BattleState;
   completed:boolean;result:'victory'|'defeat'|null;stars:number|null};
 export type DailyLedger={schema:1;records:Record<string,DailyRecord>};
 export function emptyLedger():DailyLedger{return {schema:1,records:{}};}
-export function normalizeLedger(input:unknown):DailyLedger {
+export function normalizeLedger(input:unknown,catalog:DailyCatalog=curatedCatalog):DailyLedger {
   if(!input||typeof input!=='object'||Array.isArray(input))return emptyLedger();
   const raw=input as Partial<DailyLedger>;
   if(raw.schema!==1||!raw.records||typeof raw.records!=='object'||Array.isArray(raw.records))return emptyLedger();
   const ledger=emptyLedger();
   for(const [day,v] of Object.entries(raw.records)){
     try{
-      const expected=dailyDefinition(day);
-      if(!v||v.day!==day||v.definitionId!==expected.id||v.key!==dailyKeyFor(day)||v.catalogVersion!==DAILY_CATALOG_VERSION)continue;
+      const expected=catalog.definitionFor(day);
+      if(!v||v.day!==day||v.definitionId!==expected.id||v.key!==catalog.keyFor(day)||v.catalogVersion!==catalog.version)continue;
       if(v.result!==null&&v.result!=='victory'&&v.result!=='defeat')continue;
       if(!Array.isArray(v.inputs)||v.inputs.length>MAX_DAILY_INPUTS)continue;
       // The action log is the only trusted field: replay it and derive everything else.
@@ -88,25 +103,25 @@ export function normalizeLedger(input:unknown):DailyLedger {
   return ledger;
 }
 /** Creates exactly one official record for a date; never overwrites an existing result. */
-export function ensureDay(ledger:DailyLedger,day:string):DailyLedger {
-  const def=dailyDefinition(day);
+export function ensureDay(ledger:DailyLedger,day:string,catalog:DailyCatalog=curatedCatalog):DailyLedger {
+  const def=catalog.definitionFor(day);
   if(ledger.records[day])return ledger;
   const next=clone(ledger);
   const state=advanceToDecision(createEncounter(def),def).state;
-  next.records[day]={day,key:dailyKeyFor(day),catalogVersion:DAILY_CATALOG_VERSION,definitionId:def.id,
+  next.records[day]={day,key:catalog.keyFor(day),catalogVersion:catalog.version,definitionId:def.id,
     inputs:[],state,completed:false,result:null,stars:null};
   return next;
 }
-export function stepForDay(ledger:DailyLedger,day:string):BattleStep {
+export function stepForDay(ledger:DailyLedger,day:string,catalog:DailyCatalog=curatedCatalog):BattleStep {
   const record=ledger.records[day];if(!record)throw new Error('Daily record not started');
-  const def=dailyDefinition(day);
+  const def=catalog.definitionFor(day);
   if(record.completed){return {state:clone(record.state),events:[],readyHeroIds:[],needsPlayerInput:false,terminal:record.result};}
   return advanceToDecision(record.state,def);
 }
-export function playDailyAction(ledger:DailyLedger,day:string,input:BattleInput):{ledger:DailyLedger;step:BattleStep} {
+export function playDailyAction(ledger:DailyLedger,day:string,input:BattleInput,catalog:DailyCatalog=curatedCatalog):{ledger:DailyLedger;step:BattleStep} {
   const record=ledger.records[day];if(!record)throw new Error('Daily record not started');
   if(record.completed)throw new Error('Official daily result is locked; use practice mode');
-  const def=dailyDefinition(day);
+  const def=catalog.definitionFor(day);
   const step=applyPlayerAction(record.state,input,def);
   const next=clone(ledger);
   next.records[day]={...record,inputs:[...record.inputs,input],state:step.state,
