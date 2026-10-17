@@ -40,6 +40,22 @@ export type AudioCue = {
 
 export type MusicChange = {at: number; track: MusicTrack};
 
+/** Playback shape for a music file.
+ *
+ * A JRPG theme is often an intro that plays once followed by a section that repeats.
+ * Web Audio supports that directly via loopStart/loopEnd on a buffer source, in seconds,
+ * which is sample-accurate — unlike the <audio> element, which can gap between
+ * iterations. Omit the loop points to loop the whole file. */
+export type TrackPlayback = {
+  file: string;
+  /** Seconds. Playback jumps back here at loopEnd. */
+  loopStart?: number;
+  /** Seconds. Defaults to the end of the buffer. */
+  loopEnd?: number;
+  /** 0..1 mix level relative to the sound effects. */
+  gain?: number;
+};
+
 /** A hit at or above this fraction of a health bar uses the heavy variant. */
 export const HEAVY_HIT_INTENSITY = 0.55;
 /** Silence either side of a phase sting, so the transition lands. */
@@ -166,6 +182,15 @@ export function requiredSounds(): {id: SoundId; purpose: string}[] {
     {id: 'defeat_sting', purpose: 'Battle lost'},
   ];
 }
+
+/** Default playback for each track. Loop points are filled in once the real files exist;
+ * with none set, the whole file loops. */
+export const TRACK_PLAYBACK: Record<Exclude<MusicTrack, 'silence'>, TrackPlayback> = {
+  battle_main: {file: 'battle_main.ogg', gain: 0.7},
+  battle_phase_two: {file: 'battle_phase_two.ogg', gain: 0.75},
+  victory: {file: 'victory.ogg', gain: 0.8},
+  defeat: {file: 'defeat.ogg', gain: 0.7},
+};
 
 /** The music manifest. */
 export function requiredTracks(): {id: MusicTrack; purpose: string}[] {

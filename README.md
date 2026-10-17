@@ -126,6 +126,25 @@ npm run golden
 npm run web:dev
 ```
 
+## Producing art and audio
+
+**[docs/ART-AND-AUDIO-SPEC.md](docs/ART-AND-AUDIO-SPEC.md)** is the brief: sheet layout,
+frame counts, anchors, file naming, audio formats and looping.
+
+Two things worth knowing before starting:
+
+- **MIDI cannot be the shipping format.** No browser has a built-in synthesiser, so
+  `.mid` will not play anywhere. Compose in MIDI, render once through a soundfont to OGG.
+  The spec has the fluidsynth command.
+- **Animated attacks are supported.** Animation is driven by the battle choreography, so
+  it is automatically in sync with damage numbers, shake and health drain. Non-looping
+  clips are **stretched to fit their beat**, so an attack animation can never finish early
+  or overrun its hit — pick a frame count that reads well and ignore timing.
+
+`src/animation.ts` resolves which clip and frame each actor is on; `validateSheet()`
+rejects a malformed manifest entry with a specific message at load. Only an `idle` clip is
+required — a missing clip degrades to idle, so sheets can gain animations incrementally.
+
 ## Art pipeline
 
 Arena and sprite slots exist for all six bosses, with an in-browser crop/import tool and a

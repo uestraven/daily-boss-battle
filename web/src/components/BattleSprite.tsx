@@ -29,7 +29,9 @@ export function BattleSprite({ kind, actorId, alt, className, fallback, override
     {status !== 'ready' && fallback}
     {status !== 'missing' && <img
       key={url}
-      className={`${className} rpg-original-sprite ${meta?.pixelArt ? 'rpg-sprite-pixel' : 'rpg-sprite-smooth'}`}
+      // Every sprite is pixel art: the stage is a fixed internal resolution scaled by
+      // whole numbers, so nearest-neighbour is always correct.
+      className={`${className} rpg-original-sprite rpg-sprite-pixel`}
       src={url}
       alt={alt}
       draggable={false}
