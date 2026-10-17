@@ -53,7 +53,24 @@ const SPEED = (() => {
 })();
 
 export default function DailyBattle() {
-  const day = todayUtc();
+  // A tab left open past UTC midnight was stuck on yesterday's battle, because the date
+  // was read once on mount. Poll for the change, and check on focus, which is when it is
+  // most likely to have happened.
+  const [day, setDay] = useState(todayUtc);
+  useEffect(() => {
+    const check = () => setDay(previous => {
+      const now = todayUtc();
+      return now === previous ? previous : now;
+    });
+    const timer = window.setInterval(check, 30_000);
+    document.addEventListener('visibilitychange', check);
+    window.addEventListener('focus', check);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', check);
+      window.removeEventListener('focus', check);
+    };
+  }, []);
 
   // The pool is a verified artifact; if it cannot serve today, say so rather than
   // silently falling back to an unverified encounter.
@@ -81,7 +98,15 @@ export default function DailyBattle() {
     );
   }
 
-  return <Battle def={setup.def} catalog={setup.catalog} tier={setup.entry.tier ?? 'standard'} day={day} />;
+  return (
+    <Battle
+      key={day}
+      def={setup.def}
+      catalog={setup.catalog}
+      tier={setup.entry.tier ?? 'standard'}
+      day={day}
+    />
+  );
 }
 
 function Battle({def, catalog, tier, day}:
