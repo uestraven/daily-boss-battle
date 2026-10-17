@@ -1,8 +1,8 @@
 /** The player-facing daily battle screen. Portrait-first.
  *
  * Layout: stage on top, party status beneath it, command window in the bottom third —
- * everything reachable with one thumb. Replaces the old desktop `App.tsx` dev harness,
- * which remains on disk until this screen is proven on a device.
+ * everything reachable with one thumb. Replaced the old desktop `App.tsx` dev harness,
+ * now deleted.
  *
  * Engine imports come from `dist/` because `src/` uses NodeNext `.js` specifiers that
  * Vite will not rewrite to `.ts`. `npm run web:dev` builds first, so this is consistent
@@ -22,7 +22,7 @@ import {ShareCard} from './ShareCard.js';
 import {EmailSignup} from './EmailSignup.js';
 import {resultCardInputFrom} from '../../dist/src/result-card.js';
 import {audioCues, musicChanges} from '../../dist/src/audio.js';
-import {isMuted, playCues, playMusic, setMuted, unlockAudio} from './audio-player.js';
+import {isMuted, playCues, playMusic, prefetchMusic, setMuted, unlockAudio} from './audio-player.js';
 import {advanceToDecision as freshBattle} from '../../dist/src/engine.js';
 import {heroes} from '../../dist/src/roster.js';
 import {spriteSheet} from './sprite-catalog.js';
@@ -126,10 +126,26 @@ function Battle({def, catalog, tier, day}:
    * recorded result. v1 deliberately lets anyone replay as much as they like. */
   const [replay, setReplay] = useState<BattleStep | null>(null);
   const [mutedState, setMutedState] = useState(() => isMuted());
-  /** Autoplay is blocked until a gesture, so the battle theme starts on the first
-   * committed action rather than on load. */
+  /** Autoplay is blocked until a gesture, so the theme cannot start on load. Any gesture
+   * counts though, so it starts on the first touch anywhere rather than waiting for an
+   * action to be committed. */
   const audioStarted = useRef(false);
   const terminalRef = useRef<BattleStep['terminal']>(step.terminal);
+
+  /** Start the download now. It needs no AudioContext, so it does not have to wait for a
+   * gesture, and the theme is by far the largest asset: deferring the request until the
+   * moment the music should start meant it arrived seconds late. */
+  useEffect(() => { prefetchMusic(); }, []);
+
+  /** Unlock on the first gesture anywhere and start the theme. Called from the command
+   * menu, the mute button and the commit path, so whichever happens first wins. */
+  const startAudio = useCallback(() => {
+    unlockAudio();
+    // Muted means the mute button owns starting the music, so it is not wasted at gain 0.
+    if (audioStarted.current || isMuted()) return;
+    audioStarted.current = true;
+    void playMusic('battle_main');
+  }, []);
 
   // Drive the clock while a batch is playing, then hand control back to the player.
   useEffect(() => {
@@ -211,11 +227,7 @@ function Battle({def, catalog, tier, day}:
 
     // Audio is driven by the same choreography the visuals use, so a hit sound cannot
     // drift from the hit it belongs to.
-    if (!audioStarted.current) {
-      audioStarted.current = true;
-      unlockAudio();
-      void playMusic('battle_main');
-    }
+    startAudio();
     playCues(audioCues(nextScript, {abilityInfo}));
     for (const change of musicChanges(nextScript, 'battle_main')) {
       window.setTimeout(() => void playMusic(change.track), Math.max(0, change.at));
@@ -298,7 +310,9 @@ function Battle({def, catalog, tier, day}:
   }, [record, day, def]);
 
   return (
-    <main className="dbb-shell">
+    // Capture phase, so the theme starts on the first touch even if a child stops the
+    // event. Firing repeatedly is harmless: startAudio is idempotent.
+    <main className="dbb-shell" onPointerDownCapture={startAudio}>
       <header className="dbb-header">
         <span className="dbb-brand">✦ DAILY BOSS BATTLE</span>
         <span className="dbb-header-right">

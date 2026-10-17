@@ -8,6 +8,11 @@ import {choreograph} from '../dist/src/presentation.js';
 import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src/engine.js';
 import {buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
+import {validateSheet} from '../dist/src/animation.js';
+import {existsSync, readFileSync} from 'node:fs';
+
+/** The real shipped manifest, so these assertions fail on the actual art, not a fixture. */
+const manifest = JSON.parse(readFileSync(new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
 
 const def = buildEncounter('tide_maw', balancedParties()[0]);
 const freshState = () => advanceToDecision(createEncounter(def), def).state;
@@ -391,4 +396,40 @@ test('with no script the stage still reflects actual state', () => {
   state.actors[state.party[0]].hp = 0;
   assert.equal(composeFrame({state, script: null, timeMs: 0}).commands
     .find(c => c.kind === 'sprite' && c.actorId === state.party[0]).dim, true);
+});
+
+test('the very first frame already references sprite art', () => {
+  // The renderer only requests a sheet image when a draw command names one, so if the
+  // idle frame omitted sheets, no art would even begin downloading until the first
+  // action produced a script -- which is exactly how the stage came to sit on
+  // silhouettes while fully-loaded art waited in the cache.
+  const sheets = {};
+  for (const id of Object.keys(def.actors)) {
+    const meta = manifest.heroes[id] ?? manifest.bosses[id];
+    if (meta) sheets[id] = validateSheet(meta, id);
+  }
+  const named = Object.keys(sheets);
+  assert.ok(named.length >= 4, `expected the manifest to cover this encounter, got ${named}`);
+
+  const frame = composeFrame({state: freshState(), script: null, timeMs: 0, sheets});
+  for (const id of named) {
+    const sprite = frame.commands.find(c => c.kind === 'sprite' && c.actorId === id);
+    assert.ok(sprite, `${id} has no sprite command`);
+    assert.ok(sprite.sheet, `${id} draws no sheet on the idle frame, so its art is never requested`);
+    assert.equal(sprite.sheet.file, sheets[id].file);
+    assert.equal(sprite.animation, 'idle');
+    // A zero-area source rectangle would request the file and then blit nothing.
+    assert.ok(sprite.sheet.sw > 0 && sprite.sheet.sh > 0, `${id} has an empty source rect`);
+  }
+});
+
+test('every sheet the manifest declares exists on disk', () => {
+  // A manifest entry naming a missing PNG degrades to a silhouette at runtime with no
+  // error, so the mismatch has to be caught here.
+  for (const [kind, section] of Object.entries({heroes: manifest.heroes, bosses: manifest.bosses})) {
+    for (const [id, meta] of Object.entries(section)) {
+      const file = new URL(`../web/public/battle-sprites/${meta.file}`, import.meta.url);
+      assert.ok(existsSync(file), `${kind}/${id} declares ${meta.file}, which is not on disk`);
+    }
+  }
 });

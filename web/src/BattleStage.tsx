@@ -43,11 +43,23 @@ export type BattleStageProps = {
 /** Sprite sheet images, loaded once and cached. A sheet that fails to load simply stays
  * absent, and the stage keeps drawing that actor as a silhouette. */
 const imageCache = new Map<string, HTMLImageElement>();
-function sheetImage(file: string, onLoad: () => void): HTMLImageElement | null {
+
+/** Repaint callbacks for whichever stages are mounted.
+ *
+ * Module-level, because the image cache is too. A sheet whose request was started by one
+ * mount can land after that mount is gone — the screen remounts on UTC rollover — and the
+ * stage that is mounted *then* is the one that needs telling. Keying the notification to
+ * the requesting component would silently lose that repaint. */
+const repaintListeners = new Set<() => void>();
+const notifyRepaint = (): void => { for (const listener of repaintListeners) listener(); };
+
+function sheetImage(file: string): HTMLImageElement | null {
   const cached = imageCache.get(file);
   if (cached) return cached.complete && cached.naturalWidth > 0 ? cached : null;
   const image = new Image();
-  image.onload = onLoad;
+  // `once` matters: paint runs per animation frame, so a listener added per call would
+  // pile up for as long as the request is in flight.
+  image.addEventListener('load', notifyRepaint, {once: true});
   image.src = `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}battle-sprites/${file}`;
   imageCache.set(file, image);
   return null;
@@ -57,8 +69,19 @@ export function BattleStage({state, script, timeMs, roles, sheets}: BattleStageP
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
-  // Bumped when a sheet finishes loading, so the next frame paints with it.
-  const [, setLoadTick] = useState(0);
+  // Bumped when a sheet finishes loading, so the next frame paints with it. This has to be
+  // read, not just set: it is a paint dependency. Discarding the value meant a sheet that
+  // arrived while the stage was idle re-rendered the component but never re-ran the paint
+  // effect, so the art sat decoded in the cache while the canvas kept showing silhouettes
+  // until the first action happened to change `script`.
+  const [loadTick, setLoadTick] = useState(0);
+
+  // Repaint when any sheet finishes loading, including one requested before this mount.
+  useEffect(() => {
+    const listener = () => setLoadTick(tick => tick + 1);
+    repaintListeners.add(listener);
+    return () => { repaintListeners.delete(listener); };
+  }, []);
 
   // Whole-number scaling against the available width.
   useLayoutEffect(() => {
@@ -79,8 +102,8 @@ export function BattleStage({state, script, timeMs, roles, sheets}: BattleStageP
     const context = canvasRef.current?.getContext('2d');
     if (!context) return;
     paint(context, composeFrame({state, script, timeMs, sheets, roles}), state, roles,
-      file => sheetImage(file, () => setLoadTick(t => t + 1)));
-  }, [state, script, timeMs, roles, sheets, scale]);
+      sheetImage);
+  }, [state, script, timeMs, roles, sheets, scale, loadTick]);
 
   return (
     <div className="stage-wrap" ref={wrapRef}>

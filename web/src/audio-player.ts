@@ -29,6 +29,12 @@ let muted = readMuted();
 const buffers = new Map<string, AudioBuffer | null>();
 const pending = new Map<string, Promise<AudioBuffer | null>>();
 
+// Downloading is kept separate from decoding because only decoding needs an AudioContext,
+// and the context cannot exist before a user gesture. Fusing the two meant the 1.2 MB
+// theme did not even begin downloading until the moment it was supposed to start playing.
+const bytes = new Map<string, ArrayBuffer | null>();
+const bytesPending = new Map<string, Promise<ArrayBuffer | null>>();
+
 function readMuted(): boolean {
   try { return window.localStorage.getItem(MUTE_KEY) === '1'; } catch { return false; }
 }
@@ -57,20 +63,61 @@ export function setMuted(value: boolean): void {
   if (effectGain) effectGain.gain.value = value ? 0 : 1;
 }
 
-async function loadBuffer(url: string): Promise<AudioBuffer | null> {
-  if (buffers.has(url)) return buffers.get(url) ?? null;
-  const existing = pending.get(url);
+/** Downloads a file, needing no AudioContext. Safe to call at page load. */
+function fetchBytes(url: string): Promise<ArrayBuffer | null> {
+  if (bytes.has(url)) return Promise.resolve(bytes.get(url) ?? null);
+  const existing = bytesPending.get(url);
   if (existing) return existing;
   const task = (async () => {
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error(String(response.status));
-      const bytes = await response.arrayBuffer();
-      const decoded = await context!.decodeAudioData(bytes);
-      buffers.set(url, decoded);
-      return decoded;
+      const data = await response.arrayBuffer();
+      bytes.set(url, data);
+      return data;
     } catch {
       // Expected while the soundtrack is incomplete; cached so it is attempted once.
+      bytes.set(url, null);
+      return null;
+    } finally {
+      bytesPending.delete(url);
+    }
+  })();
+  bytesPending.set(url, task);
+  return task;
+}
+
+/** Starts downloading audio without playing it, so the bytes are already here when the
+ * first gesture unlocks the context. Skipped when muted: nothing will be heard, so
+ * spending a mobile visitor's data on it would be rude. */
+export function prefetchMusic(): void {
+  if (muted) return;
+  const playback = TRACK_PLAYBACK.battle_main;
+  if (playback) void fetchBytes(`${base()}${MUSIC_DIR}/${playback.file}`);
+}
+
+async function loadBuffer(url: string): Promise<AudioBuffer | null> {
+  if (buffers.has(url)) return buffers.get(url) ?? null;
+  // No context yet is a temporary state, not a verdict about the file, so return without
+  // caching: recording a null here would silence the track for the rest of the session.
+  if (!context) return null;
+  const existing = pending.get(url);
+  if (existing) return existing;
+  const active = context;
+  const task = (async () => {
+    try {
+      const data = await fetchBytes(url);
+      // A genuinely absent file is cached as null, so it is attempted only once.
+      if (!data) { buffers.set(url, null); return null; }
+      // decodeAudioData takes ownership of the buffer it is given, so decode a copy and
+      // leave the cached download intact for any later decode.
+      const decoded = await active.decodeAudioData(data.slice(0));
+      buffers.set(url, decoded);
+      // The compressed copy is dead weight once decoded.
+      bytes.delete(url);
+      return decoded;
+    } catch {
+      // Undecodable is as good as absent, and equally permanent.
       buffers.set(url, null);
       return null;
     } finally {
