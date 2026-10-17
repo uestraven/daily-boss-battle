@@ -26,6 +26,9 @@
 /battle-sprites/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
+/battle-effects/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
 /battle-backgrounds/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 

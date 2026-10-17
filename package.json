@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Daily Boss Battle — deterministic tactical ATB engine, six daily templates, local daily results and practice mode. Android-first mobile client",
+  "description": "Daily Boss Battle \u2014 deterministic tactical ATB engine, six daily templates, local daily results and practice mode. Android-first mobile client",
   "engines": {
     "node": ">=22"
   },
@@ -23,6 +23,7 @@
     "art:lint": "node tools/lint-sprite.mjs",
     "art:placeholders": "npm run build && node tools/make-placeholder-sheets.mjs",
     "audio:check": "npm run build && node tools/check-audio.mjs",
+    "effects:check": "npm run build && node tools/check-effects.mjs",
     "audio:manifest": "npm run build && node tools/audio-manifest.mjs",
     "behavior:check": "npm run build && node tools/behavior-snapshot.mjs --check reports/behavior-baseline.json",
     "behavior:record": "npm run build && node tools/behavior-snapshot.mjs --write reports/behavior-baseline.json",

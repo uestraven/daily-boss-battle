@@ -58,8 +58,9 @@ const isImmutable = url => url.pathname.includes('/assets/');
 
 /** Unhashed assets copied from public/: worth serving fast and refreshing in the
  * background. */
-const isGameAsset = url => /\/(battle-sprites|battle-backgrounds|battle-music|battle-sounds|icons)\//
-  .test(url.pathname);
+const isGameAsset = url =>
+  /\/(battle-sprites|battle-effects|battle-backgrounds|battle-music|battle-sounds|icons)\//
+    .test(url.pathname);
 
 const cacheable = response => response
   && response.status === 200

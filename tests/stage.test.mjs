@@ -9,10 +9,12 @@ import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src
 import {buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
 import {validateSheet} from '../dist/src/animation.js';
+import {requiredEffects, validateEffectSheet} from '../dist/src/effects.js';
 import {existsSync, readFileSync} from 'node:fs';
 
 /** The real shipped manifest, so these assertions fail on the actual art, not a fixture. */
 const manifest = JSON.parse(readFileSync(new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
+const effectManifest = JSON.parse(readFileSync(new URL('../web/src/effect-manifest.json', import.meta.url), 'utf8'));
 
 const def = buildEncounter('tide_maw', balancedParties()[0]);
 const freshState = () => advanceToDecision(createEncounter(def), def).state;
@@ -431,5 +433,150 @@ test('every sheet the manifest declares exists on disk', () => {
       const file = new URL(`../web/public/battle-sprites/${meta.file}`, import.meta.url);
       assert.ok(existsSync(file), `${kind}/${id} declares ${meta.file}, which is not on disk`);
     }
+  }
+});
+
+// --- Hit effect layer ---------------------------------------------------------------
+
+const effectSheet = (over = {}) => ({
+  file: 'slash.png', frameWidth: 64, frameHeight: 48, frames: 4,
+  anchorX: 32, anchorY: 40, ...over,
+});
+
+/** A script with one hero hit landing on the boss. */
+const hitScript = (abilityId = 'swing') => {
+  const state = freshState();
+  return {
+    state,
+    script: choreograph([
+      ev('action_committed', {actorId: state.party[0], abilityId}),
+      ev('damage', {actorId: state.party[0], targetId: state.bossId, abilityId,
+        amount: 100, hpAfter: 900}),
+    ], {maxHp: {[state.bossId]: 1000}}),
+  };
+};
+
+test('an impact draws its effect, anchored on the target', () => {
+  const {state, script} = hitScript();
+  const impact = script.beats.find(b => b.kind === 'impact');
+  const frame = composeFrame({
+    state, script, timeMs: impact.at + 10,
+    effects: {slash: effectSheet()},
+    abilityInfo: {swing: {kind: 'physical'}},
+  });
+  const effects = frame.commands.filter(c => c.kind === 'effect');
+  assert.equal(effects.length, 1, 'one hit, one effect');
+  const [effect] = effects;
+  assert.equal(effect.effectId, 'slash');
+  assert.equal(effect.targetId, state.bossId);
+  // Positioned by the sheet's own anchor against the boss slot, so a ground effect and an
+  // overhead flare need no special-casing.
+  assert.equal(effect.x, bossSlot.x - 32);
+  assert.equal(effect.y, bossSlot.y - 40);
+  assert.equal(effect.width, 64);
+  assert.equal(effect.height, 48);
+  assert.ok(effect.sheet.sw === 64 && effect.sheet.sh === 48);
+});
+
+test('an empty effect library emits nothing at all', () => {
+  // This is the shipping state until art exists: no commands, so no requests and no
+  // console noise, and the stage keeps its hit flash and shake.
+  const {state, script} = hitScript();
+  const impact = script.beats.find(b => b.kind === 'impact');
+  for (const effects of [undefined, {}]) {
+    const frame = composeFrame({state, script, timeMs: impact.at + 10, effects,
+      abilityInfo: {swing: {kind: 'physical'}}});
+    assert.equal(frame.commands.filter(c => c.kind === 'effect').length, 0);
+  }
+});
+
+test('a binding with no matching sheet is skipped rather than drawn empty', () => {
+  const {state, script} = hitScript('fire');
+  const impact = script.beats.find(b => b.kind === 'impact');
+  // The ability is magical, so it binds to flare_neutral, which is not in the library.
+  const frame = composeFrame({state, script, timeMs: impact.at + 10,
+    effects: {slash: effectSheet()}, abilityInfo: {fire: {kind: 'magical'}}});
+  assert.equal(frame.commands.filter(c => c.kind === 'effect').length, 0);
+});
+
+test('a spell picks its elemental flare over the generic one', () => {
+  const {state, script} = hitScript('fire');
+  const impact = script.beats.find(b => b.kind === 'impact');
+  const library = {
+    flare_neutral: effectSheet({file: 'flare_neutral.png'}),
+    flare_fire: effectSheet({file: 'flare_fire.png'}),
+  };
+  const frame = composeFrame({state, script, timeMs: impact.at + 10, effects: library,
+    abilityInfo: {fire: {kind: 'magical', element: 'fire'}}});
+  const [effect] = frame.commands.filter(c => c.kind === 'effect');
+  assert.equal(effect.effectId, 'flare_fire');
+});
+
+test('effects marked behind draw under the actors, the rest over them', () => {
+  const {state, script} = hitScript();
+  const impact = script.beats.find(b => b.kind === 'impact');
+  const order = behind => {
+    const frame = composeFrame({state, script, timeMs: impact.at + 10,
+      effects: {slash: effectSheet({behind})},
+      abilityInfo: {swing: {kind: 'physical'}}});
+    return {
+      effect: frame.commands.findIndex(c => c.kind === 'effect'),
+      boss: frame.commands.findIndex(c => c.kind === 'sprite' && c.actorId === state.bossId),
+      hud: frame.commands.findIndex(c => c.kind === 'bar'),
+    };
+  };
+  const under = order(true);
+  assert.ok(under.effect < under.boss, 'a behind effect precedes the boss sprite');
+  const over = order(false);
+  assert.ok(over.effect > over.boss, 'a front effect follows the actors');
+  assert.ok(over.effect < over.hud, 'but stays under the HUD, so numbers stay readable');
+});
+
+test('an effect outlives the instant beat that spawned it, then stops', () => {
+  // Impact beats are ~110ms; an effect that only showed for that long would barely
+  // register, so activeEffects extends its own window.
+  const {state, script} = hitScript();
+  const impact = script.beats.find(b => b.kind === 'impact');
+  const at = offset => composeFrame({state, script, timeMs: impact.at + offset,
+    effects: {slash: effectSheet()}, abilityInfo: {swing: {kind: 'physical'}},
+    effectDurationMs: 300}).commands.filter(c => c.kind === 'effect');
+
+  assert.equal(at(0).length, 1, 'starts with the hit');
+  assert.ok(impact.duration < 300, 'the beat is shorter than the effect');
+  assert.equal(at(impact.duration + 20).length, 1, 'still running after the beat ended');
+  assert.equal(at(299).length, 1);
+  assert.equal(at(300).length, 0, 'and ends');
+  assert.equal(at(-1).length, 0, 'nothing before the hit');
+
+  // Frames advance monotonically across the effect, ending on the last one.
+  const frames = [0, 80, 160, 299].map(o => at(o)[0].frame);
+  for (let i = 1; i < frames.length; i++) assert.ok(frames[i] >= frames[i - 1]);
+  assert.equal(frames.at(-1), 3, 'the final frame is the last in the sheet, not past it');
+});
+
+test('every declared effect validates and is reachable from the default bindings', () => {
+  // The manifest is the commissioning brief, so a malformed entry should fail here rather
+  // than when the art finally arrives.
+  const declared = effectManifest.effects;
+  for (const entry of requiredEffects()) {
+    const sheet = declared[entry.id];
+    assert.ok(sheet, `${entry.id} is required but not declared in effect-manifest.json`);
+    assert.doesNotThrow(() => validateEffectSheet(sheet, entry.id));
+    assert.ok(sheet.file.endsWith('.png'));
+  }
+  // And nothing is declared that no binding can ever ask for.
+  const reachable = new Set(requiredEffects().map(e => e.id));
+  for (const id of Object.keys(declared)) {
+    assert.ok(reachable.has(id), `${id} is declared but no binding reaches it`);
+  }
+});
+
+test('shipped effects must have their art on disk', () => {
+  // The gate that keeps the renderer from requesting a file that is not there.
+  for (const id of effectManifest.shipped) {
+    const sheet = effectManifest.effects[id];
+    assert.ok(sheet, `"${id}" is shipped but not declared`);
+    const file = new URL(`../web/public/battle-effects/${sheet.file}`, import.meta.url);
+    assert.ok(existsSync(file), `"${id}" is listed as shipped but ${sheet.file} is missing`);
   }
 });

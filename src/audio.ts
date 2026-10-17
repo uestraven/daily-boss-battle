@@ -9,7 +9,7 @@
  */
 import type {Beat, BeatScript} from './presentation.js';
 import type {AbilityInfo} from './animation.js';
-import type {AbilityKind} from './types.js';
+import {readsAsMagical} from './effects.js';
 
 export type SoundId =
   | 'hit_physical'
@@ -74,12 +74,6 @@ export type AudioOptions = {
   abilityInfo?: AbilityInfo;
 };
 
-/** Kinds that sound magical on impact. Narrower than "picks the cast animation": `cover`
- * and `focus` are self-directed and never land a hit, so listing them would be dead
- * weight, while a debuff or a dispel that does connect should not sound like steel. */
-const MAGICAL_KINDS: ReadonlySet<AbilityKind> =
-  new Set<AbilityKind>(['magical', 'heal', 'status', 'dispel', 'nullify']);
-
 const gainFor = (intensity: number | undefined, floor = 0.45): number => {
   const i = intensity ?? 0.3;
   return Math.round(100 * Math.min(1, Math.max(floor, floor + (1 - floor) * i))) / 100;
@@ -94,8 +88,8 @@ function cueFor(beat: Beat, options: AudioOptions): AudioCue | null {
       // carried by the paired shake beat, which the caller merges in first.
       const intensity = beat.intensity ?? 0.3;
       const kind = beat.abilityId ? options.abilityInfo?.[beat.abilityId]?.kind : undefined;
-      const magical = (kind !== undefined && MAGICAL_KINDS.has(kind))
-        || beat.source === 'poison_pulse';
+      // Shared with the effects layer, so a hit that flares also sounds like a spell.
+      const magical = readsAsMagical(kind) || beat.source === 'poison_pulse';
       const sound: SoundId = magical ? 'hit_magical'
         : intensity >= HEAVY_HIT_INTENSITY ? 'hit_heavy' : 'hit_physical';
       return {at: beat.at, sound, gain: gainFor(intensity)};

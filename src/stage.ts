@@ -14,6 +14,8 @@ import type {Beat, BeatScript} from './presentation.js';
 import {beatsAt, tweenValue} from './presentation.js';
 import {animationFor, frameRect} from './animation.js';
 import type {AbilityInfo} from './animation.js';
+import {activeEffects, effectRect} from './effects.js';
+import type {EffectBindings, EffectLibrary} from './effects.js';
 import type {AnimationName, SpriteSheet} from './animation.js';
 
 /** Internal stage resolution. 16:9 so it letterboxes cleanly on any phone. */
@@ -61,7 +63,13 @@ export type DrawCommand =
   | {kind: 'bar'; x: number; y: number; width: number; height: number; fraction: number; palette: 'hp' | 'mp' | 'atb'}
   | {kind: 'text'; x: number; y: number; text: string; align: 'left' | 'center' | 'right';
      palette: 'default' | 'damage' | 'heal' | 'warning'}
-  | {kind: 'overlay'; alpha: number; palette: 'flash' | 'dim'};
+  | {kind: 'overlay'; alpha: number; palette: 'flash' | 'dim'}
+  /** A hit effect from its own sheet, anchored on the target. Separate from the character
+   * sheet because a sweeping slash is wider than a 32x40 cell, and because one slash then
+   * serves every weapon user. */
+  | {kind: 'effect'; effectId: string; targetId: ActorId; x: number; y: number;
+     width: number; height: number; frame: number; progress: number; behind: boolean;
+     sheet: {file: string; sx: number; sy: number; sw: number; sh: number}};
 
 export type Frame = {
   /** Whole-pixel screen offset for shake. Applied by the renderer to the whole stage. */
@@ -87,6 +95,14 @@ export type ComposeInput = {
   /** Ability kinds, so a spell, a potion and a sword swing each pick their own clip.
    * Omitted, every action falls back to looking physical. */
   abilityInfo?: AbilityInfo;
+  /** Effect sheets available to draw. Empty or omitted means no effect layer, which is
+   * how it behaves until the art exists. */
+  effects?: EffectLibrary;
+  /** How abilities choose an effect. Defaults to DEFAULT_BINDINGS. */
+  effectBindings?: EffectBindings;
+  /** How long each effect runs. Impact beats are near-instant, so an effect outlives the
+   * beat that spawned it. */
+  effectDurationMs?: number;
 };
 
 /** Deterministic pseudo-random in [-1, 1] from an integer. Shake must be reproducible
@@ -234,12 +250,51 @@ export function composeFrame(input: ComposeInput): Frame {
   };
 
   const boss = state.actors[state.bossId];
+  const slots = heroSlots(state.party.length);
+
+  /** Where an actor stands, for anything anchored onto it. */
+  const anchorFor = (actorId: ActorId | undefined): Point => {
+    if (actorId === state.bossId) return bossSlot;
+    const index = state.party.indexOf(actorId ?? '');
+    return slots[index] ?? bossSlot;
+  };
+
+  /** Effect commands for one layer. Anchored on the target's feet so a sheet's own anchor
+   * decides how high the effect sits, which is what lets a ground effect and an overhead
+   * flare share one code path. */
+  const effectCommands = (behind: boolean): DrawCommand[] => {
+    if (!input.effects) return [];
+    const playing = activeEffects(script, timeMs, {
+      library: input.effects, bindings: input.effectBindings,
+      abilityInfo: input.abilityInfo, durationMs: input.effectDurationMs,
+    });
+    const out: DrawCommand[] = [];
+    for (const effect of playing) {
+      if (effect.behind !== behind) continue;
+      const sheet = input.effects[effect.id];
+      if (!sheet) continue;
+      const rect = effectRect(sheet, effect);
+      const anchor = anchorFor(effect.targetId);
+      out.push({
+        kind: 'effect', effectId: effect.id, targetId: effect.targetId,
+        x: anchor.x - sheet.anchorX, y: anchor.y - sheet.anchorY,
+        width: sheet.frameWidth, height: sheet.frameHeight,
+        // The source rect already encodes the frame; carrying the index too keeps the
+        // command self-describing for a renderer that wants it.
+        frame: effect.frame, progress: effect.progress, behind,
+        sheet: {file: sheet.file, sx: rect.x, sy: rect.y, sw: rect.width, sh: rect.height},
+      });
+    }
+    return out;
+  };
+
+  commands.push(...effectCommands(true));
+
   if (boss) {
     commands.push(spriteFor(state.bossId, bossSlot, SPRITE.boss, 'right', TINTS.boss!,
       downNow(state.bossId, boss.hp), -stepFor(state.bossId)));
   }
 
-  const slots = heroSlots(state.party.length);
   state.party.forEach((id, index) => {
     const actor = state.actors[id];
     const slot = slots[index];
@@ -249,6 +304,8 @@ export function composeFrame(input: ComposeInput): Frame {
     commands.push(spriteFor(id, stepped, SPRITE.hero, 'left',
       tintForRole(input.roles?.[id]), downNow(id, actor.hp), 0));
   });
+
+  commands.push(...effectCommands(false));
 
   // --- boss health bar across the top ---
   if (boss) {
@@ -262,8 +319,7 @@ export function composeFrame(input: ComposeInput): Frame {
   // --- floating numbers ---
   for (const beat of active) {
     if (beat.kind !== 'damage_number' && beat.kind !== 'heal_number') continue;
-    const index = state.party.indexOf(beat.targetId ?? '');
-    const anchor = beat.targetId === state.bossId ? bossSlot : (slots[index] ?? bossSlot);
+    const anchor = anchorFor(beat.targetId);
     const rise = Math.round(18 * floatProgress(beat, timeMs));
     const height = beat.targetId === state.bossId ? SPRITE.boss.height : SPRITE.hero.height;
     commands.push({

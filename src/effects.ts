@@ -9,7 +9,7 @@
  * is a few pixels tall. Separating the layers also means one slash effect serves every
  * sword user, which is far less art for a better result.
  */
-import type {ActorId, Element} from './types.js';
+import type {AbilityKind, ActorId, Element} from './types.js';
 import type {Beat, BeatScript} from './presentation.js';
 import {beatsAt} from './presentation.js';
 
@@ -48,6 +48,19 @@ export const DEFAULT_BINDINGS: EffectBindings = {
   magical: 'flare_neutral',
 };
 
+/** Whether a hit reads as magic rather than steel.
+ *
+ * Shared with the mixer deliberately: a hit that flares should also sound like a spell, and
+ * two separate lists would eventually disagree. Kept as an explicit set rather than derived
+ * from the animation clip, so retiring `heal` to a clip of its own could not silently make
+ * cures sound like swords. `cover` and `focus` are self-directed and never land a hit, so
+ * they are absent rather than classified. */
+const MAGICAL_KINDS: ReadonlySet<AbilityKind> =
+  new Set<AbilityKind>(['magical', 'heal', 'status', 'dispel', 'nullify']);
+
+export const readsAsMagical = (kind: AbilityKind | undefined): boolean =>
+  kind !== undefined && MAGICAL_KINDS.has(kind);
+
 export function effectIdFor(
   binding: EffectBindings,
   options: {abilityId?: string; element?: Element; kind?: 'physical' | 'magical'},
@@ -81,8 +94,9 @@ export function activeEffects(
   options: {
     library: EffectLibrary;
     bindings?: EffectBindings;
-    /** Ability metadata, so an impact can resolve its element and kind. */
-    abilityInfo?: Record<string, {element?: Element; kind?: 'physical' | 'magical'}>;
+    /** Ability metadata, so an impact can resolve its element and kind. Takes the real
+     * AbilityKind, so one table serves clip selection, the mixer and the effect layer. */
+    abilityInfo?: Record<string, {element?: Element; kind?: AbilityKind} | undefined>;
     /** Stretches each effect over this many milliseconds. Impact beats are very short,
      * so an effect normally outlives the beat that spawned it. */
     durationMs?: number;
@@ -102,7 +116,9 @@ export function activeEffects(
     if (!beat.targetId) continue;
     const info = beat.abilityId ? options.abilityInfo?.[beat.abilityId] : undefined;
     const id = effectIdFor(bindings, {
-      abilityId: beat.abilityId, element: info?.element, kind: info?.kind ?? 'physical',
+      abilityId: beat.abilityId, element: info?.element,
+      // Unknown abilities read as physical, which is what a plain attack is.
+      kind: readsAsMagical(info?.kind) ? 'magical' : 'physical',
     });
     if (!id) continue;
     const sheet = options.library[id];

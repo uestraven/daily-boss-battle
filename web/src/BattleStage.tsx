@@ -12,6 +12,7 @@ import type {DrawCommand, Frame} from '../../src/stage.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {BattleState} from '../../src/types.js';
 import type {AbilityInfo, SpriteSheet} from '../../src/animation.js';
+import type {EffectLibrary} from '../../src/effects.js';
 
 const PALETTE = {
   backdrop: '#0b0d16',
@@ -40,10 +41,15 @@ export type BattleStageProps = {
   roles?: Record<string, string>;
   /** Ability kinds, so an action picks the clip that matches what it is. */
   abilityInfo?: AbilityInfo;
+  /** Hit effect sheets that have art. Empty means no effect layer. */
+  effects?: EffectLibrary;
 };
 
-/** Sprite sheet images, loaded once and cached. A sheet that fails to load simply stays
- * absent, and the stage keeps drawing that actor as a silhouette. */
+/** Images, loaded once and cached by URL. One cache for sprite sheets, effect sheets and
+ * backdrops: they load the same way, and keying on the full URL keeps a `slash.png` effect
+ * from colliding with a hypothetical sprite of the same name. An image that fails to load
+ * stays absent, and whatever draws it falls back — a silhouette for an actor, nothing at all
+ * for an effect, a flat colour for a backdrop. */
 const imageCache = new Map<string, HTMLImageElement>();
 
 /** Repaint callbacks for whichever stages are mounted.
@@ -55,19 +61,29 @@ const imageCache = new Map<string, HTMLImageElement>();
 const repaintListeners = new Set<() => void>();
 const notifyRepaint = (): void => { for (const listener of repaintListeners) listener(); };
 
-function sheetImage(file: string): HTMLImageElement | null {
-  const cached = imageCache.get(file);
+const base = (): string => import.meta.env.BASE_URL.replace(/\/?$/, '/');
+
+/** Resolves a URL to a loaded image, starting the request on first ask. Returns null until
+ * it is decoded, and forever if it fails. */
+function imageAt(url: string): HTMLImageElement | null {
+  const cached = imageCache.get(url);
   if (cached) return cached.complete && cached.naturalWidth > 0 ? cached : null;
   const image = new Image();
   // `once` matters: paint runs per animation frame, so a listener added per call would
   // pile up for as long as the request is in flight.
   image.addEventListener('load', notifyRepaint, {once: true});
-  image.src = `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}battle-sprites/${file}`;
-  imageCache.set(file, image);
+  image.src = url;
+  imageCache.set(url, image);
   return null;
 }
 
-export function BattleStage({state, script, timeMs, roles, sheets, abilityInfo}: BattleStageProps) {
+const sheetImage = (file: string): HTMLImageElement | null =>
+  imageAt(`${base()}battle-sprites/${file}`);
+const effectImage = (file: string): HTMLImageElement | null =>
+  imageAt(`${base()}battle-effects/${file}`);
+
+export function BattleStage({state, script, timeMs, roles, sheets, abilityInfo,
+  effects}: BattleStageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
@@ -103,9 +119,9 @@ export function BattleStage({state, script, timeMs, roles, sheets, abilityInfo}:
   useEffect(() => {
     const context = canvasRef.current?.getContext('2d');
     if (!context) return;
-    paint(context, composeFrame({state, script, timeMs, sheets, roles, abilityInfo}), state,
-      roles, sheetImage);
-  }, [state, script, timeMs, roles, sheets, abilityInfo, scale, loadTick]);
+    paint(context, composeFrame({state, script, timeMs, sheets, roles, abilityInfo, effects}),
+      state, roles, {sprite: sheetImage, effect: effectImage});
+  }, [state, script, timeMs, roles, sheets, abilityInfo, effects, scale, loadTick]);
 
   return (
     <div className="stage-wrap" ref={wrapRef}>
@@ -127,7 +143,8 @@ function paint(
   frame: Frame,
   state: BattleState,
   roles: Record<string, string> | undefined,
-  resolveImage: (file: string) => HTMLImageElement | null,
+  resolve: {sprite: (file: string) => HTMLImageElement | null;
+            effect: (file: string) => HTMLImageElement | null},
 ) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
@@ -145,9 +162,20 @@ function paint(
         ctx.fillRect(-8, 118, STAGE.width + 16, STAGE.height - 110);
         break;
       }
+      case 'effect': {
+        // Nothing to draw if the art is absent or still loading. The hit flash and shake
+        // carry the moment on their own, which is how the stage reads today.
+        const image = resolve.effect(command.sheet.file);
+        if (!image) break;
+        const {sx, sy, sw, sh} = command.sheet;
+        ctx.globalAlpha = 1;
+        ctx.drawImage(image, sx, sy, sw, sh, command.x, command.y, command.width, command.height);
+        ctx.globalAlpha = 1;
+        break;
+      }
       case 'sprite': {
         const y = command.y + command.offsetY;
-        const image = command.sheet ? resolveImage(command.sheet.file) : null;
+        const image = command.sheet ? resolve.sprite(command.sheet.file) : null;
         ctx.globalAlpha = command.dim ? 0.35 : 1;
 
         if (image && command.sheet) {

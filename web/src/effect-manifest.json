@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "_comment": "Hit effect sheets, drawn over the stage and anchored on the target. One row of frames, left to right. anchorY is measured from the top of the frame down to the point that lands on the target's feet, so a value near the frame height puts the effect at ground level and roughly half the height centres it on the body. See docs/ART-AND-AUDIO-SPEC.md. Frames are stretched to fit the effect duration, so pick a count that reads well rather than one that matches a timing.",
+  "_shippedComment": "Ids whose PNG is actually in web/public/battle-effects/. Only these are offered to the renderer, so an uncommissioned effect costs no failed request and no console noise. Drop the art in, add the id here, and run `npm run effects:check` -- it fails if this list and the directory disagree, so it cannot drift.",
+  "shipped": [],
+  "effects": {
+    "slash": {
+      "file": "slash.png",
+      "frameWidth": 64,
+      "frameHeight": 48,
+      "frames": 4,
+      "anchorX": 32,
+      "anchorY": 40
+    },
+    "flare_neutral": {
+      "file": "flare_neutral.png",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frames": 5,
+      "anchorX": 32,
+      "anchorY": 48
+    },
+    "flare_fire": {
+      "file": "flare_fire.png",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frames": 5,
+      "anchorX": 32,
+      "anchorY": 48
+    },
+    "flare_ice": {
+      "file": "flare_ice.png",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frames": 5,
+      "anchorX": 32,
+      "anchorY": 48
+    },
+    "flare_lightning": {
+      "file": "flare_lightning.png",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frames": 5,
+      "anchorX": 32,
+      "anchorY": 48
+    },
+    "flare_holy": {
+      "file": "flare_holy.png",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frames": 5,
+      "anchorX": 32,
+      "anchorY": 48
+    },
+    "flare_dark": {
+      "file": "flare_dark.png",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frames": 5,
+      "anchorX": 32,
+      "anchorY": 48
+    }
+  }
+}

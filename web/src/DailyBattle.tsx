@@ -26,6 +26,7 @@ import {isMuted, playCues, playMusic, prefetchMusic, setMuted, unlockAudio} from
 import {advanceToDecision as freshBattle} from '../../dist/src/engine.js';
 import {heroes} from '../../dist/src/roster.js';
 import {spriteSheet} from './sprite-catalog.js';
+import {effectLibrary} from './effect-catalog.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {ActorId, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
 import type {DailyCatalog, DailyLedger} from '../../src/daily.js';
@@ -185,6 +186,9 @@ function Battle({def, catalog, tier, day}:
     () => Object.fromEntries(Object.values(def.abilities).map(a => [a.id, {kind: a.kind}])),
     [def],
   );
+  /** Hit effects that have art. Empty until the sheets are commissioned, in which case
+   * composeFrame emits no effect commands at all. */
+  const effects = useMemo(() => effectLibrary(), []);
   /** Validated sheets for whoever has one. A sheet that is missing or malformed is simply
    * omitted, and that actor keeps its silhouette. */
   const sheets = useMemo(() => {
@@ -366,7 +370,7 @@ function Battle({def, catalog, tier, day}:
       </section>
 
       <BattleStage state={state} script={script} timeMs={timeMs} roles={ROLE_BY_ID}
-        sheets={sheets} abilityInfo={abilityInfo} />
+        sheets={sheets} abilityInfo={abilityInfo} effects={effects} />
 
       <section className="dbb-party">
         {state.party.map(id => {
