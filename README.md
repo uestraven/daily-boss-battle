@@ -295,6 +295,22 @@ no longer exist.
 
 Results are local and unverified until there is a server, and the UI says so.
 
+## Installable
+
+`web/public/manifest.webmanifest` plus an icon set makes the game installable to a home
+screen. Icons are generated, not drawn: `npm run icons` renders each size natively from
+scaled geometry rather than downscaling one large image — the same reason sprites are
+authored at target size, since an icon is judged at 48px.
+
+`npm run pwa:check` validates the manifest against what platforms actually require,
+including checking declared icon sizes against the real PNG headers; a manifest that lies
+about a size is accepted silently and then renders blurry.
+
+**There is no service worker yet.** The manifest and icons are enough for iOS "Add to Home
+Screen" and for the icon and splash screen everywhere, but Chrome on Android only offers
+"Install app" once a service worker with a fetch handler is registered. Offline play needs
+one too, and this game is fully playable offline by design, so that is the next step.
+
 ## Audio
 
 `src/audio.ts` turns choreography beats into timed cues and music transitions; it is pure

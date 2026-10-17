@@ -68,3 +68,8 @@ jobs:
 
       - name: Art asset inventory
         run: npm run art:check
+
+      # Catches a manifest that lies about an icon size, or an icon file that was
+      # deleted, both of which only show up on a device otherwise.
+      - name: Web app manifest and icons
+        run: npm run pwa:check

@@ -4,8 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#10172c" />
-  <meta name="description" content="Daily Boss Battle — a deterministic tactical ATB daily battle challenge" />
-  <title>Daily Boss Battle — Playtest</title>
+  <meta name="description" content="One tactical boss fight a day. The same battle for everyone, decided by choices rather than reflexes." />
+  <title>Daily Boss Battle</title>
+
+  <!-- Relative hrefs throughout, because the build uses base './' and may be served
+       from a subpath. -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+  <!-- iOS does not read the manifest's icons for the home screen. -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Boss Battle" />
+  <meta name="color-scheme" content="dark" />
+
+  <!-- Open Graph, so a shared link previews as a game rather than a bare URL. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Daily Boss Battle" />
+  <meta property="og:description" content="One tactical boss fight a day. The same battle for everyone." />
+  <meta property="og:image" content="icons/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
 </head>
 <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
 </html>
