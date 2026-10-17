@@ -174,6 +174,13 @@ Which clip plays is decided by the **ability's kind**, not by who is acting: a m
 swinging a staff plays `attack`, and a knight drinking a potion plays `item`. The mapping
 is `CLIP_FOR_KIND` in `src/animation.ts`.
 
+**`cast` means "effort that is not a strike", so draw it to suit the character.** It covers
+spells, cures, buffs, debuffs and Defend. For a caster that is a spellcast; for the Brawler,
+whose entire kit is physical and who only reaches this row through Defend, it is a bracing
+guard with the forearms crossed. A bear throwing a fireball would have been the literal
+reading of the row name and the wrong picture. Check the character's kit before briefing
+this row — `node -e` over `heroAbilities` will tell you which kinds they can actually use.
+
 Only `idle` is mandatory. A missing clip degrades along a chain rather than vanishing —
 `item` falls back to `cast`, then `attack`, then `idle`, and `ko` falls back to `hurt` —
 so an idle-only sheet works and clips can land one at a time without ever showing an actor
