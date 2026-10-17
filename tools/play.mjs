@@ -14,18 +14,16 @@
 import {createInterface} from 'node:readline/promises';
 import {existsSync, readFileSync} from 'node:fs';
 import {stdin, stdout} from 'node:process';
-import {fileURLToPath} from 'node:url';
-import path from 'node:path';
+import {load, repoPath} from './load.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const {advanceToDecision, applyPlayerAction, createEncounter, nextBossCountdown, previewAction,
-  replay, starsForResult} = await import(`${root}/dist/src/engine.js`);
-const {availableActions, eligibleTargets, previewDisplay, actionInput} = await import(`${root}/dist/src/play-ui.js`);
-const {choreograph, tweenValue} = await import(`${root}/dist/src/presentation.js`);
-const {buildEncounter} = await import(`${root}/dist/src/generate.js`);
-const {practiceEncounters} = await import(`${root}/dist/src/encounters.js`);
-const {dailyEncounter, selectDaily, validatePool, targetTierFor} = await import(`${root}/dist/src/pool.js`);
-const {draftParty} = await import(`${root}/dist/src/draft.js`);
+  replay, starsForResult} = await load('dist/src/engine.js');
+const {availableActions, eligibleTargets, previewDisplay, actionInput} = await load('dist/src/play-ui.js');
+const {choreograph, tweenValue} = await load('dist/src/presentation.js');
+const {buildEncounter} = await load('dist/src/generate.js');
+const {practiceEncounters} = await load('dist/src/encounters.js');
+const {dailyEncounter, selectDaily, validatePool, targetTierFor} = await load('dist/src/pool.js');
+const {draftParty} = await load('dist/src/draft.js');
 
 const args = process.argv.slice(2);
 const flag = (name, fallback = null) => {
@@ -60,7 +58,7 @@ if (practice) {
   def = buildEncounter(bossId, party);
   header = `DRAFTED · seed "${seed}" · ${bossId}`;
 } else {
-  const poolPath = `${root}/dist-content/verified-pool.json`;
+  const poolPath = repoPath('dist-content/verified-pool.json');
   if (!existsSync(poolPath)) {
     console.error('No verified pool. Build one with:  npm run pool:build');
     console.error('Or play a practice encounter:       npm run play -- --practice tide_maw');

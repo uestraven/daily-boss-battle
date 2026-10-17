@@ -7,13 +7,11 @@
  *
  *   npm run draft:check
  */
-import {fileURLToPath} from 'node:url';
-import path from 'node:path';
+import {load} from './load.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const {heroes} = await import(`${root}/dist/src/roster.js`);
-const {bossProfiles} = await import(`${root}/dist/src/encounters.js`);
-const {balancedParties, heroCapabilities, inspectParty} = await import(`${root}/dist/src/draft.js`);
+const {heroes} = await load('dist/src/roster.js');
+const {bossProfiles} = await load('dist/src/encounters.js');
+const {balancedParties, heroCapabilities, inspectParty} = await load('dist/src/draft.js');
 
 const ids = heroes.map(h => h.id).sort();
 const total = (ids.length * (ids.length - 1) * (ids.length - 2)) / 6;

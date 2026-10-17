@@ -11,17 +11,15 @@
  * Fails loudly rather than writing a fixture it could not verify.
  */
 import {readFileSync, writeFileSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
-import path from 'node:path';
+import {load, repoPath} from './load.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const {practiceEncounters} = await import(`${root}/dist/src/encounters.js`);
-const {tyrantAI008} = await import(`${root}/dist/src/ai-variant.js`);
-const {solveEncounter} = await import(`${root}/dist/src/solver.js`);
-const {replay, starsForResult} = await import(`${root}/dist/src/engine.js`);
+const {practiceEncounters} = await load('dist/src/encounters.js');
+const {tyrantAI008} = await load('dist/src/ai-variant.js');
+const {solveEncounter} = await load('dist/src/solver.js');
+const {replay, starsForResult} = await load('dist/src/engine.js');
 
 const dryRun = process.argv.includes('--dry-run');
-const fixturePath = `${root}/fixtures/daily-witnesses-v10.json`;
+const fixturePath = repoPath('fixtures/daily-witnesses-v10.json');
 const existing = JSON.parse(readFileSync(fixturePath, 'utf8'));
 
 /** Maintains exactly the witnesses the fixture already declares; it never invents new

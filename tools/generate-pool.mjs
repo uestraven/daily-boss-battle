@@ -17,14 +17,13 @@
  * hash still matches, so a re-run after adding one boss only evaluates the new work.
  */
 import {existsSync, readFileSync, writeFileSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {load, repoPath, root} from './load.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const {bossProfiles} = await import(`${root}/dist/src/encounters.js`);
-const {buildEncounter, contentHash, encounterIdFor} = await import(`${root}/dist/src/generate.js`);
-const {assessEncounter, tierFor, DEFAULT_GATES, QUICK_GATES} = await import(`${root}/dist/src/gates.js`);
-const {balancedParties} = await import(`${root}/dist/src/draft.js`);
+const {bossProfiles} = await load('dist/src/encounters.js');
+const {buildEncounter, contentHash, encounterIdFor} = await load('dist/src/generate.js');
+const {assessEncounter, tierFor, DEFAULT_GATES, QUICK_GATES} = await load('dist/src/gates.js');
+const {balancedParties} = await load('dist/src/draft.js');
 
 const args = process.argv.slice(2);
 const flag = (name, fallback = null) => {
@@ -35,7 +34,7 @@ const quick = args.includes('--quick');
 const keepWitnesses = args.includes('--witnesses');
 const onlyBoss = flag('--boss');
 const limit = Number(flag('--limit', '0'));
-const outPath = flag('--out', `${root}/dist-content/verified-pool.json`);
+const outPath = flag('--out', repoPath('dist-content/verified-pool.json'));
 const config = quick ? QUICK_GATES : DEFAULT_GATES;
 
 const hash = contentHash();
@@ -51,7 +50,7 @@ const prior = new Map();
 if (existsSync(outPath)) {
   try {
     const old = JSON.parse(readFileSync(outPath, 'utf8'));
-    const rejectionsFile = `${root}/reports/pool-rejections.json`;
+    const rejectionsFile = path.join(path.dirname(outPath), 'pool-rejections.json');
     const oldRejected = existsSync(rejectionsFile)
       ? (JSON.parse(readFileSync(rejectionsFile, 'utf8')).rejected ?? []) : [];
     if (old.contentHash === hash && old.gateConfig?.name === (quick ? 'quick' : 'full')) {
@@ -165,7 +164,7 @@ const meta = {
 const pool = {...meta, entries: accepted.sort((a, b) => (a.id < b.id ? -1 : 1))};
 writeFileSync(outPath, `${JSON.stringify(pool, null, 2)}\n`);
 
-const rejectionsPath = `${root}/reports/pool-rejections.json`;
+const rejectionsPath = path.join(path.dirname(outPath), 'pool-rejections.json');
 writeFileSync(rejectionsPath, `${JSON.stringify(
   {...meta, rejected: rejected.sort((a, b) => (a.id < b.id ? -1 : 1))}, null, 2)}\n`);
 

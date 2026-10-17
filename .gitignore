@@ -27,3 +27,5 @@ artwork-source/
 
 # Local package archives
 *.zip
+# Pool rejection detail: derived, large, regenerable via `npm run pool:build`
+pool-rejections.json

@@ -16,21 +16,20 @@
  */
 import {createHash} from 'node:crypto';
 import {readFileSync, writeFileSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {load, repoPath, root} from './load.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const {reference001} = await import(`${root}/dist/src/reference.js`);
-const {tyrantVariant007} = await import(`${root}/dist/src/variant.js`);
-const {tyrantAI008} = await import(`${root}/dist/src/ai-variant.js`);
-const {practiceEncounters, bossProfiles} = await import(`${root}/dist/src/encounters.js`);
+const {reference001} = await load('dist/src/reference.js');
+const {tyrantVariant007} = await load('dist/src/variant.js');
+const {tyrantAI008} = await load('dist/src/ai-variant.js');
+const {practiceEncounters, bossProfiles} = await load('dist/src/encounters.js');
 const {createEncounter, advanceToDecision, applyPlayerAction, replay, starsForResult, calculateDamage} =
-  await import(`${root}/dist/src/engine.js`);
-const {dailyKeyFor} = await import(`${root}/dist/src/daily.js`);
-const {balancedParties} = await import(`${root}/dist/src/draft.js`);
+  await load('dist/src/engine.js');
+const {dailyKeyFor} = await load('dist/src/daily.js');
+const {balancedParties} = await load('dist/src/draft.js');
 
 const h = value => createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 16);
-const fixture = name => JSON.parse(readFileSync(`${root}/fixtures/${name}`, 'utf8'));
+const fixture = name => JSON.parse(readFileSync(repoPath('fixtures', name), 'utf8'));
 
 /** Outcome-relevant state only, so adding a struct field is not a false positive. */
 const behavior = s => h({

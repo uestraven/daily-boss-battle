@@ -1,0 +1,13 @@
+# Normalise to LF in the repository; Git checks out native on Windows where useful.
+* text=auto eol=lf
+
+# Keep generated artifacts byte-stable across platforms so hashes and diffs match.
+dist-content/*.json text eol=lf
+reports/*.json      text eol=lf
+fixtures/*.json     text eol=lf
+
+*.png binary
+*.jpg binary
+*.ogg binary
+*.mp3 binary
+*.wav binary

@@ -10,18 +10,17 @@
  *   node tools/check-pool.mjs --path dist-content/verified-pool.json
  */
 import {existsSync, readFileSync, statSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {load, repoPath, root} from './load.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const {contentHash, bossIds} = await import(`${root}/dist/src/generate.js`);
-const {validatePool, selectDaily, dailyEncounter} = await import(`${root}/dist/src/pool.js`);
-const {advanceToDecision, createEncounter} = await import(`${root}/dist/src/engine.js`);
+const {contentHash, bossIds} = await load('dist/src/generate.js');
+const {validatePool, selectDaily, dailyEncounter} = await load('dist/src/pool.js');
+const {advanceToDecision, createEncounter} = await load('dist/src/engine.js');
 
 const args = process.argv.slice(2);
 const flagIndex = args.indexOf('--path');
 const poolPath = flagIndex === -1
-  ? `${root}/dist-content/verified-pool.json`
+  ? repoPath('dist-content/verified-pool.json')
   : path.resolve(args[flagIndex + 1]);
 
 /** Repo-relative when inside the repo, absolute otherwise, so the path stays readable. */

@@ -10,7 +10,13 @@
   gap: var(--dbb-gap);
   max-width: 480px;
   margin: 0 auto;
-  padding: var(--dbb-gap);
+  /* Android 16 (API 36) enforces edge-to-edge and iOS 26 draws under the home
+   * indicator, so safe-area insets are required rather than optional. max() keeps a
+   * minimum gutter on devices that report no inset. */
+  padding-top: max(var(--dbb-gap), env(safe-area-inset-top));
+  padding-bottom: max(var(--dbb-gap), env(safe-area-inset-bottom));
+  padding-left: max(var(--dbb-gap), env(safe-area-inset-left));
+  padding-right: max(var(--dbb-gap), env(safe-area-inset-right));
   min-height: 100vh;
   min-height: 100dvh;
   box-sizing: border-box;
@@ -136,6 +142,17 @@
 .dbb-error { padding: 16px; }
 .dbb-error h1 { font-size: 18px; margin: 0 0 8px; }
 
+
+/* Short viewports (landscape phones, split screen): the stage keeps priority and the
+ * command window scrolls rather than pushing the stage off-screen. */
+@media (max-height: 560px) {
+  .dbb-shell { max-width: 720px; }
+  .dbb-log { display: none; }
+  .dbb-commands { min-height: 0; }
+}
+
+/* Honour the OS reduced-motion setting: the stage still paints every frame, but the
+ * UI stops drawing attention with transitions. */
 @media (prefers-reduced-motion: reduce) {
-  .stage-canvas { /* the renderer still paints; motion is the caller's concern */ }
+  .dbb-hero, .rpg-menu-item, .rpg-menu-back { transition: none !important; }
 }

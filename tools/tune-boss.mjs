@@ -10,14 +10,12 @@
  *   node tools/tune-boss.mjs --parties 6          samples per candidate (default 4)
  *   node tools/tune-boss.mjs --apply              print ready-to-paste stat lines
  */
-import {fileURLToPath} from 'node:url';
-import path from 'node:path';
+import {load} from './load.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const {bossProfiles} = await import(`${root}/dist/src/encounters.js`);
-const {buildEncounter} = await import(`${root}/dist/src/generate.js`);
-const {assessEncounter, QUICK_GATES} = await import(`${root}/dist/src/gates.js`);
-const {balancedParties} = await import(`${root}/dist/src/draft.js`);
+const {bossProfiles} = await load('dist/src/encounters.js');
+const {buildEncounter} = await load('dist/src/generate.js');
+const {assessEncounter, QUICK_GATES} = await load('dist/src/gates.js');
+const {balancedParties} = await load('dist/src/draft.js');
 
 const args = process.argv.slice(2);
 const flag = (name, fallback = null) => {

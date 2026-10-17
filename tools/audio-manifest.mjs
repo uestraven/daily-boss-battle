@@ -5,11 +5,9 @@
  *   npm run audio:manifest
  *   npm run audio:manifest -- --csv
  */
-import {fileURLToPath} from 'node:url';
-import path from 'node:path';
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const {requiredSounds, requiredTracks, HEAVY_HIT_INTENSITY} = await import(`${root}/dist/src/audio.js`);
-const {TIMING} = await import(`${root}/dist/src/presentation.js`);
+import {load} from './load.mjs';
+const {requiredSounds, requiredTracks, HEAVY_HIT_INTENSITY} = await load('dist/src/audio.js');
+const {TIMING} = await load('dist/src/presentation.js');
 
 if (process.argv.includes('--csv')) {
   console.log('kind,id,purpose');

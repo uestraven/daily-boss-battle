@@ -216,6 +216,11 @@ status beneath, commands in the bottom third, 44px touch targets throughout.
 - `web/src/DailyBattle.tsx` is the screen; it draws today's encounter from the verified
   pool and refuses to run rather than falling back to an unverified one.
 
+Target platforms are **Android 16 (API 36) first, then iOS 26**. API 36 enforces
+edge-to-edge and iOS 26 draws under the home indicator, so the screen uses
+`viewport-fit=cover` with `env(safe-area-inset-*)` padding rather than assuming a
+rectangular viewport.
+
 Two known warts. Engine imports in `web/` come from `dist/` because `src/` uses NodeNext
 `.js` specifiers that Vite will not rewrite to `.ts`; `web:dev` builds first, so it is
 consistent rather than stale, but engine edits need a rebuild to appear. And the old
@@ -242,6 +247,10 @@ reproduces. It drives the same choreography layer the real client will, so it is
 genuine feel test, not a mock.
 
 ## Development
+
+The tools run on Windows as well as POSIX: they load built modules through
+`tools/load.mjs`, because dynamic `import()` of an absolute path throws
+`ERR_UNSUPPORTED_ESM_URL_SCHEME` on Windows (`C:` parses as a URL scheme).
 
 ```bash
 npm run verify           # typecheck + tests + behavior guard + golden replay
