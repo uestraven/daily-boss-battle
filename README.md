@@ -264,7 +264,8 @@ v1 is a website, desktop and mobile web, no accounts and no server:
 
 - **One battle a day**, the same for everyone, drawn from the verified pool.
 - **A landing screen** chooses the mode before the fight starts, so it is a decision rather
-  than a default nobody saw. It is skipped for a day already under way or finished, since
+  than a default nobody saw. **Normal is the default** — it is the game as intended, and
+  Easy is opt-in. Only an explicit past choice brings Easy back on a later visit. It is skipped for a day already under way or finished, since
   the choice was already made and re-offering it would imply it could be changed.
 - **Easy and Normal differ only in what the interface tells you.** Easy reveals four
   things, all of them information the interface already holds: status badges on both sides,

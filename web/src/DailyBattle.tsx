@@ -57,11 +57,20 @@ const MODE_BLURB: Record<BattleMode, {title: string; detail: string}> = {
     detail: 'No status badges, no warning, no elemental hints. Read the fight yourself.',
   },
 };
-const MODE_KEY = 'daily-boss-battle.mode.v1';
+/** Bumped from v1 because the meaning of a stored value changed, not just the default.
+ * v1 read "anything that is not 'normal'" as Easy, so every browser that had ever opened
+ * the landing screen held a value that would still resolve to Easy under the new rule.
+ * Discarding those is the only way the new default actually takes effect for the people
+ * who have already visited. */
+const MODE_KEY = 'daily-boss-battle.mode.v2';
+
+/** Normal is the default: the game it is meant to be. Easy is opt-in, and only an explicit
+ * past choice brings it back — an unrecognised stored value falls to Normal rather than
+ * being treated as consent to the easier interface. */
 const readMode = (): BattleMode => {
   try {
-    return window.localStorage.getItem(MODE_KEY) === 'normal' ? 'normal' : 'easy';
-  } catch { return 'easy'; }
+    return window.localStorage.getItem(MODE_KEY) === 'easy' ? 'easy' : 'normal';
+  } catch { return 'normal'; }
 };
 
 /** `?dev` enables presentation-testing controls. Phase two, KOs and the defeat screen
