@@ -29,3 +29,7 @@ artwork-source/
 *.zip
 # Pool rejection detail: derived, large, regenerable via `npm run pool:build`
 pool-rejections.json
+
+# Concept art and reference illustrations: large, not shipped, and not the source of
+# truth for any asset. Keep them locally; the game loads only web/public/.
+art-reference/
