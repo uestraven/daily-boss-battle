@@ -32,14 +32,14 @@ by whole numbers. So sprites are small and must read as silhouettes.
 
 **Animations**, one row each. Only `idle` is required; the rest can be added later.
 
-| Row | Clip | Loops | Frames | Fitted to |
-| --- | --- | --- | --- | --- |
-| 0 | `idle` | yes | 2–4 | its own cadence |
-| 1 | `attack` | no | 3–5 | a 180 ms beat |
-| 2 | `cast` | no | 3–4 | a 420 ms beat |
-| 3 | `hurt` | no | 2 | a 90 ms beat |
-| 4 | `ko` | no | 3–4 | a 520 ms beat, holds last frame |
-| 5 | `victory` | yes | 2–3 | its own cadence |
+| Row | Clip | Loops | Frames | Fitted to | Per frame at 4 |
+| --- | --- | --- | --- | --- | --- |
+| 0 | `idle` | yes | 2–4 | its own cadence | 320 ms |
+| 1 | `attack` | no | 3–5 | a 320 ms beat | 80 ms |
+| 2 | `cast` | no | 3–4 | a 560 ms beat | 187 ms |
+| 3 | `hurt` | no | 2 | a 240 ms beat | 120 ms |
+| 4 | `ko` | no | 3–4 | a 720 ms beat, holds last frame | 240 ms |
+| 5 | `victory` | yes | 2–3 | its own cadence | 400 ms |
 
 Non-looping clips are **stretched to span their beat**, so pick a frame count that reads
 well and ignore timing entirely.
@@ -162,16 +162,20 @@ For reference, the beats a clip is fitted to:
 
 | Clip | Beat | Duration |
 | --- | --- | --- |
-| `attack` | actor step | 180 ms |
-| `cast` | cast wind-up | 420 ms |
-| `hurt` | impact | 90 ms |
-| `ko` | collapse | 520 ms |
+| `attack` | actor step | 320 ms |
+| `cast` | cast wind-up | 560 ms |
+| `hurt` | reaction | 240 ms |
+| `ko` | collapse | 720 ms |
 
 Looping clips use their own `frameMs` instead (default 180 ms), since nothing bounds them.
 
-A 5-frame attack across 180 ms is 36 ms per frame — fast. If an attack should read more
-slowly, say so and `TIMING.actorStep` in `src/presentation.ts` can be raised; it is one
-constant and the whole game follows.
+A 5-frame attack across 320 ms is 64 ms per frame; four frames is 80 ms each. These
+values were set by watching the placeholder animations — at the original 180 ms the attack
+was 45 ms per frame and read as a flicker. Every duration lives in `TIMING` in
+`src/presentation.ts`, one constant per beat, and the whole game follows.
+
+To dial the pace in the browser without a rebuild, append `?speed=0.75` (slower) or
+`?speed=1.5` (faster) to the URL.
 
 ### Effects go in their own layer, not the character sheet
 

@@ -217,3 +217,37 @@ test('a real engine batch choreographs into a sane, bounded timeline', () => {
   }
   assert.ok(batches >= 4, 'exercised several real batches');
 });
+
+test('clip frame rates are slow enough to read', () => {
+  // Measured against the placeholder animations: at 45ms per frame the attack read as a
+  // flicker rather than a swing. These bounds keep a retune from going back there.
+  const perFrame = (beatMs, frames) => beatMs / frames;
+  assert.ok(perFrame(TIMING.actorStep, 5) >= 55,
+    `a 5-frame attack is ${perFrame(TIMING.actorStep, 5).toFixed(0)}ms per frame; too fast to read`);
+  assert.ok(perFrame(TIMING.actorStep, 4) >= 70,
+    `a 4-frame attack is ${perFrame(TIMING.actorStep, 4).toFixed(0)}ms per frame`);
+  assert.ok(perFrame(TIMING.hurtReact, 2) >= 90,
+    `a 2-frame reaction is ${perFrame(TIMING.hurtReact, 2).toFixed(0)}ms per frame`);
+  assert.ok(perFrame(TIMING.koCollapse, 4) >= 140,
+    `a 4-frame collapse is ${perFrame(TIMING.koCollapse, 4).toFixed(0)}ms per frame`);
+  // ...but not so slow that a turn drags.
+  assert.ok(TIMING.actorStep <= 500, 'an attack beat should not exceed half a second');
+  assert.ok(TIMING.hurtReact <= TIMING.damageNumberHold, 'the recoil should not outlast its number');
+  assert.ok(TIMING.impact < TIMING.hurtReact, 'the flash is sharp; the reaction is not');
+});
+
+test('the hurt reaction is its own beat, outlasting the flash', () => {
+  const script = choreograph([
+    ev('action_committed', {actorId: 'boss', abilityId: 'tentacle'}),
+    ev('damage', {actorId: 'boss', targetId: 'warden', amount: 60, hpAfter: 340}),
+  ], {maxHp: {warden: 400}});
+  const impact = script.beats.find(b => b.kind === 'impact');
+  const hurt = script.beats.find(b => b.kind === 'hurt');
+  assert.ok(hurt, 'a reaction beat is emitted');
+  assert.equal(hurt.targetId, 'warden');
+  assert.equal(hurt.at, impact.at, 'it starts with the hit');
+  assert.ok(hurt.duration > impact.duration,
+    'it lasts longer than the flash, which is the point of separating them');
+  // And the batch is long enough to contain it.
+  assert.ok(script.totalMs >= hurt.at + hurt.duration);
+});

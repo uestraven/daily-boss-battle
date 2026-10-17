@@ -64,7 +64,9 @@ function drivingBeat(actorId: ActorId, active: Beat[]): {beat: Beat; name: Anima
   const ko = active.find(b => b.kind === 'ko' && b.actorId === actorId);
   if (ko) return {beat: ko, name: 'ko'};
 
-  const hurt = active.find(b => b.kind === 'impact' && b.targetId === actorId);
+  // The dedicated reaction beat, not the impact: the flash is brief by design, and a
+  // recoil bound to it was too short to see.
+  const hurt = active.find(b => b.kind === 'hurt' && b.targetId === actorId);
   if (hurt) return {beat: hurt, name: 'hurt'};
 
   const cast = active.find(b => b.kind === 'cast' && b.actorId === actorId);

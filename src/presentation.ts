@@ -17,6 +17,7 @@ export type BeatKind =
   | 'actor_step'     // actor moves forward to act
   | 'cast'           // spell/channel wind-up
   | 'impact'         // the moment of contact; renderers flash and play the hit sound
+  | 'hurt'           // the target's reaction, which outlasts the flash
   | 'damage_number'  // floating number above a target
   | 'heal_number'
   | 'hp_change'      // tween a health bar between two values
@@ -60,16 +61,22 @@ export type BeatScript = {beats: Beat[]; totalMs: number};
 
 /** Single place to tune the feel of the whole game. Milliseconds. */
 export const TIMING = {
-  actorStep: 180,
-  castWindUp: 420,
-  impact: 90,
-  damageNumberHold: 650,
+  /** An attack clip is fitted to this, so it also sets the animation's frame rate:
+   * four frames across 320ms is 80ms each, which reads. At 180ms it did not. */
+  actorStep: 320,
+  castWindUp: 560,
+  /** The hit flash only. Deliberately short and sharp. */
+  impact: 110,
+  /** The target's reaction. Separate from the flash: a recoil needs time to register,
+   * where a flash should not linger. */
+  hurtReact: 240,
+  damageNumberHold: 750,
   /** Health bars drain rather than snap; this is most of the perceived weight. */
-  hpTween: 400,
+  hpTween: 480,
   mpTween: 260,
   /** Consecutive hits of a multi-hit ability. */
-  multiHitStagger: 120,
-  koCollapse: 520,
+  multiHitStagger: 150,
+  koCollapse: 720,
   statusPopup: 300,
   /** A boss phase change stops everything. */
   phaseHold: 900,
@@ -77,7 +84,7 @@ export const TIMING = {
   victoryHold: 1200,
   defeatHold: 1400,
   /** Gap between two separate actors acting in the same batch. */
-  betweenActors: 140,
+  betweenActors: 200,
   /** Characters per second for typed message text. */
   textCharsPerSecond: 42,
   /** Floor so one-character messages are still readable. */
@@ -168,6 +175,8 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
         const before = hp.get(target ?? '') ?? (event.hpAfter ?? 0) + amount;
         push({duration: TIMING.impact, kind: 'impact', actorId: actor, targetId: target,
           abilityId: event.abilityId, source: event.type}, at);
+        push({duration: TIMING.hurtReact, kind: 'hurt', targetId: target,
+          abilityId: event.abilityId, source: event.type}, at);
         push({duration: TIMING.damageNumberHold, kind: 'damage_number', targetId: target,
           amount, abilityId: event.abilityId, source: event.type}, at + TIMING.impact);
         push({duration: TIMING.hpTween, kind: 'hp_change', targetId: target,
@@ -180,7 +189,7 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
         }
         if (event.hpAfter !== undefined) hp.set(target ?? '', event.hpAfter);
         consecutiveHits++;
-        cursor = Math.max(cursor, at + TIMING.impact + TIMING.hpTween);
+        cursor = Math.max(cursor, at + TIMING.impact + TIMING.hpTween, at + TIMING.hurtReact);
         break;
       }
       case 'heal': {
@@ -323,7 +332,7 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
 /** Stable ordering for beats that share a timestamp, so playback is deterministic
  * and a flash never lands after the shake it belongs to. */
 const KIND_ORDER: BeatKind[] = [
-  'actor_step', 'cast', 'telegraph', 'impact', 'flash', 'shake',
+  'actor_step', 'cast', 'telegraph', 'impact', 'hurt', 'flash', 'shake',
   'damage_number', 'heal_number', 'hp_change', 'mp_change',
   'status_on', 'status_off', 'ko', 'revive', 'message', 'phase', 'hold', 'victory', 'defeat',
 ];

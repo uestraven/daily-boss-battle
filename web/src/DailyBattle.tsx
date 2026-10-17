@@ -40,7 +40,15 @@ type Phase = {kind: 'choosing'} | {kind: 'playing'} | {kind: 'over'};
  * are all hard to reach by playing well, which makes them hard to verify; these jump
  * straight to the state under test. No daily result is persisted by this screen, so
  * nothing here can corrupt a record. */
-const DEV = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('dev');
+const PARAMS = typeof window !== 'undefined'
+  ? new URLSearchParams(window.location.search) : new URLSearchParams();
+const DEV = PARAMS.has('dev');
+/** `?speed=` scales playback: 1 is normal, 0.5 half speed, 2 double. For dialling in the
+ * animation pace against real art without a rebuild. */
+const SPEED = (() => {
+  const raw = Number(PARAMS.get('speed'));
+  return Number.isFinite(raw) && raw > 0 ? Math.min(4, Math.max(0.25, raw)) : 1;
+})();
 
 export default function DailyBattle() {
   const day = todayUtc();
@@ -161,7 +169,7 @@ function Battle({def, catalog, tier, day}:
     }
     const batch = next.state.events.slice(before);
     setTimeMs(0);
-    setScript(choreograph(batch, {names, maxHp, abilityNames}));
+    setScript(choreograph(batch, {names, maxHp, abilityNames, speed: SPEED}));
     setSelected(null);
     setPhase({kind: 'playing'});
     setLog(previous => [
@@ -384,7 +392,7 @@ function Battle({def, catalog, tier, day}:
           <div className="dbb-dev-hint">
             Phase {state.phase} · transition at {def.bossProgram.transitionPercent}% ·
             {' '}attack from just above it to see the flash-and-hold ·
-            {' '}stars {stars} · {record?.completed ? 'recorded' : 'in progress'}
+            {' '}stars {stars} · speed {SPEED}x · {record?.completed ? 'recorded' : 'in progress'}
             {replay ? ' · unranked replay' : ''}
           </div>
         </section>
