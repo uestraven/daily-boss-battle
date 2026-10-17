@@ -1,0 +1,11 @@
+# Cloudflare Pages project configuration.
+#
+# The dashboard's Git integration is the simplest route: point it at this repo with the
+# build command and output directory below, and every push to main deploys. This file
+# additionally lets `wrangler pages deploy` work from a terminal, and keeps the settings
+# in version control rather than only in a dashboard.
+#
+#   npm run web:build && npx wrangler pages deploy web-dist
+name = "daily-boss-battle"
+compatibility_date = "2026-10-17"
+pages_build_output_dir = "web-dist"

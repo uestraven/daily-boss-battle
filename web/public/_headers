@@ -1,0 +1,48 @@
+# Cloudflare Pages headers. Copied to the build root by Vite from web/public/.
+#
+# Caching splits three ways:
+#   - Vite's /assets/* are content-hashed, so they can be immutable forever.
+#   - Files served from public/ are NOT hashed, so they get a day of freshness and a
+#     week of stale-while-revalidate: fast for repeat visitors, and an updated asset
+#     still propagates without a cache bust.
+#   - index.html and the manifest must revalidate, or a deploy never reaches anyone.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=()
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/icons/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/battle-sprites/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/battle-backgrounds/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# Audio is large and changes rarely, so it is worth a longer hold.
+/battle-music/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+/battle-sounds/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: public, max-age=3600
+
+# A service worker must never be served stale, or a bad one becomes permanent.
+/sw.js
+  Cache-Control: no-cache
+  Service-Worker-Allowed: /
+
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache

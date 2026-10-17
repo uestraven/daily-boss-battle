@@ -295,6 +295,17 @@ no longer exist.
 
 Results are local and unverified until there is a server, and the UI says so.
 
+## Deploying
+
+A static build with no server: the verified pool, sprites and audio all ship in the
+bundle. **[docs/DEPLOY.md](docs/DEPLOY.md)** has the Cloudflare Pages setup — build
+command `npm run web:build`, output `web-dist`, and nothing else to configure.
+
+```bash
+npm run web:build
+npx wrangler pages deploy web-dist   # or push to main, once Git integration is connected
+```
+
 ## Installable
 
 `web/public/manifest.webmanifest` plus an icon set makes the game installable to a home
