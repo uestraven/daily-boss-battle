@@ -204,6 +204,33 @@ shake.
 4–6 frames each, one row, left to right, with `anchorX`/`anchorY` marking the effect's
 visual centre. `slash` alone is enough to make every physical attack in the game read.
 
+### How to actually produce a sheet
+
+Ranked by what gets a finished-looking game soonest.
+
+**1. Licensed asset pack — best value by far.** itch.io sells complete pixel-art character
+packs with full animation sets already built, typically $5–30 for dozens of characters.
+Mana Seed by Seliel the Shaper, the Oryx sets and the various "tiny RPG character" packs
+are all consistent, animated, and licensed for commercial game use. The 12 heroes here are
+archetypes — knight, mage, healer, rogue — which maps onto a generic fantasy pack almost
+directly. **Check the licence permits commercial use and redistribution inside a game**;
+most do, some forbid reselling the art itself, which is not what we are doing.
+
+**2. Commission one sheet, then match it.** $30–80 buys one hero sheet from a pixel artist
+(itch.io community, Pixel Joint, r/gameDevClassifieds). Use it to fix the style, then
+either commission the rest or draw to match. Fastest route to *good*, and this document is
+self-contained enough to hand over as the brief.
+
+**3. Draw it.** Aseprite ($20) is the standard; Piskel and LibreSprite are free. Put an
+existing illustration on a reference layer, scale it down beside the canvas, and draw over
+it at native size. Six frames of a 32 × 40 character is a couple of hours, and tracing
+from a reference you already like is the quick version.
+
+**What does not work:** a general-purpose image generator. They cannot hit exact pixel
+dimensions, cannot hold a grid, and anti-alias everything. Pixel-art-specific tools
+(PixelLab, Retro Diffusion, a local model with a pixel-art LoRA) target small canvases
+natively and are worth a try; general ones are not.
+
 ### Author at the target resolution
 
 A large illustration reduced to 32 × 40 does not become pixel art; it becomes mud. Set the

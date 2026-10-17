@@ -12,6 +12,8 @@
 import type {ActorId, BattleState} from './types.js';
 import type {Beat, BeatScript} from './presentation.js';
 import {beatsAt, tweenValue} from './presentation.js';
+import {animationFor, frameRect} from './animation.js';
+import type {AnimationName, SpriteSheet} from './animation.js';
 
 /** Internal stage resolution. 16:9 so it letterboxes cleanly on any phone. */
 export const STAGE = {width: 320, height: 180} as const;
@@ -49,9 +51,12 @@ export const SPRITE = {
 
 export type DrawCommand =
   | {kind: 'background'; id: string}
-  /** No art yet: renderers draw a flat silhouette with the given tint. */
+  /** `sheet` names the image and the source rectangle to blit. Absent means no sheet is
+   * available, and the renderer falls back to a flat silhouette in `tint`. */
   | {kind: 'sprite'; actorId: ActorId; x: number; y: number; width: number; height: number;
-     facing: 'left' | 'right'; tint: string; dim: boolean; flash: number; offsetY: number}
+     facing: 'left' | 'right'; tint: string; dim: boolean; flash: number; offsetY: number;
+     sheet?: {file: string; sx: number; sy: number; sw: number; sh: number};
+     animation?: AnimationName}
   | {kind: 'bar'; x: number; y: number; width: number; height: number; fraction: number; palette: 'hp' | 'mp' | 'atb'}
   | {kind: 'text'; x: number; y: number; text: string; align: 'left' | 'center' | 'right';
      palette: 'default' | 'damage' | 'heal' | 'warning'}
@@ -73,6 +78,11 @@ export type ComposeInput = {
   backgroundId?: string;
   /** Display names, for floating text. */
   names?: Record<ActorId, string>;
+  /** Animation sheets per actor. An actor without one is drawn as a silhouette, so the
+   * game stays playable while art is incomplete. */
+  sheets?: Record<ActorId, SpriteSheet>;
+  /** Role per hero, for silhouette tinting. */
+  roles?: Record<ActorId, string>;
 };
 
 /** Deterministic pseudo-random in [-1, 1] from an integer. Shake must be reproducible
@@ -189,15 +199,40 @@ export function composeFrame(input: ComposeInput): Frame {
   const downNow = (id: ActorId, actualHp: number): boolean =>
     displayedValue(script, id, timeMs, actualHp) <= 0;
 
+  /** Builds the sprite command for an actor, using its sheet when one exists.
+   *
+   * The sheet's own frame size wins over the placeholder constants, so a character whose
+   * weapon needs a wider cell works without touching the layout. Position is derived from
+   * the sheet's anchor, which is what keeps actors of different heights on one ground
+   * line. */
+  const spriteFor = (
+    id: ActorId, slot: Point, fallback: {width: number; height: number},
+    facing: 'left' | 'right', tint: string, down: boolean, extraOffsetY: number,
+  ): DrawCommand => {
+    const sheet = input.sheets?.[id];
+    const animation = sheet
+      ? animationFor(id, {script, timeMs, sheet, down,
+          victorious: state.result === 'victory' && id !== state.bossId && !down})
+      : undefined;
+    const width = sheet?.frameWidth ?? fallback.width;
+    const height = sheet?.frameHeight ?? fallback.height;
+    const anchorX = sheet?.anchorX ?? Math.floor(width / 2);
+    const anchorY = sheet?.anchorY ?? height;
+    const rect = sheet && animation ? frameRect(sheet, animation) : null;
+    return {
+      kind: 'sprite', actorId: id,
+      x: slot.x - anchorX, y: slot.y - anchorY,
+      width, height, facing, tint, dim: down,
+      flash: flashFor(id), offsetY: extraOffsetY,
+      ...(rect ? {sheet: {file: sheet!.file, sx: rect.x, sy: rect.y, sw: rect.width, sh: rect.height}} : {}),
+      ...(animation ? {animation: animation.name} : {}),
+    };
+  };
+
   const boss = state.actors[state.bossId];
   if (boss) {
-    commands.push({
-      kind: 'sprite', actorId: state.bossId,
-      x: bossSlot.x - SPRITE.boss.width / 2, y: bossSlot.y - SPRITE.boss.height,
-      width: SPRITE.boss.width, height: SPRITE.boss.height,
-      facing: 'right', tint: TINTS.boss!, dim: downNow(state.bossId, boss.hp),
-      flash: flashFor(state.bossId), offsetY: -stepFor(state.bossId),
-    });
+    commands.push(spriteFor(state.bossId, bossSlot, SPRITE.boss, 'right', TINTS.boss!,
+      downNow(state.bossId, boss.hp), -stepFor(state.bossId)));
   }
 
   const slots = heroSlots(state.party.length);
@@ -205,13 +240,10 @@ export function composeFrame(input: ComposeInput): Frame {
     const actor = state.actors[id];
     const slot = slots[index];
     if (!actor || !slot) return;
-    commands.push({
-      kind: 'sprite', actorId: id,
-      x: slot.x - SPRITE.hero.width / 2 - stepFor(id), y: slot.y - SPRITE.hero.height,
-      width: SPRITE.hero.width, height: SPRITE.hero.height,
-      facing: 'left', tint: TINTS.default!, dim: downNow(id, actor.hp),
-      flash: flashFor(id), offsetY: 0,
-    });
+    // A hero steps toward the enemy, which is to its left.
+    const stepped = {x: slot.x - stepFor(id), y: slot.y};
+    commands.push(spriteFor(id, stepped, SPRITE.hero, 'left',
+      tintForRole(input.roles?.[id]), downNow(id, actor.hp), 0));
   });
 
   // --- boss health bar across the top ---

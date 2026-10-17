@@ -11,6 +11,7 @@ import {STAGE, composeFrame, integerScale, tintForRole} from '../../dist/src/sta
 import type {DrawCommand, Frame} from '../../src/stage.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {BattleState} from '../../src/types.js';
+import type {SpriteSheet} from '../../src/animation.js';
 
 const PALETTE = {
   backdrop: '#0b0d16',
@@ -28,6 +29,8 @@ const PALETTE = {
 
 export type BattleStageProps = {
   state: BattleState;
+  /** Animation sheets per actor; absent actors fall back to silhouettes. */
+  sheets?: Record<string, SpriteSheet>;
   /** Choreography for the batch currently playing, or null when idle. */
   script: BeatScript | null;
   /** Playback position, owned by the screen so the canvas and the DOM meters share
@@ -37,10 +40,25 @@ export type BattleStageProps = {
   roles?: Record<string, string>;
 };
 
-export function BattleStage({state, script, timeMs, roles}: BattleStageProps) {
+/** Sprite sheet images, loaded once and cached. A sheet that fails to load simply stays
+ * absent, and the stage keeps drawing that actor as a silhouette. */
+const imageCache = new Map<string, HTMLImageElement>();
+function sheetImage(file: string, onLoad: () => void): HTMLImageElement | null {
+  const cached = imageCache.get(file);
+  if (cached) return cached.complete && cached.naturalWidth > 0 ? cached : null;
+  const image = new Image();
+  image.onload = onLoad;
+  image.src = `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}battle-sprites/${file}`;
+  imageCache.set(file, image);
+  return null;
+}
+
+export function BattleStage({state, script, timeMs, roles, sheets}: BattleStageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
+  // Bumped when a sheet finishes loading, so the next frame paints with it.
+  const [, setLoadTick] = useState(0);
 
   // Whole-number scaling against the available width.
   useLayoutEffect(() => {
@@ -60,8 +78,9 @@ export function BattleStage({state, script, timeMs, roles}: BattleStageProps) {
   useEffect(() => {
     const context = canvasRef.current?.getContext('2d');
     if (!context) return;
-    paint(context, composeFrame({state, script, timeMs}), state, roles);
-  }, [state, script, timeMs, roles, scale]);
+    paint(context, composeFrame({state, script, timeMs, sheets, roles}), state, roles,
+      file => sheetImage(file, () => setLoadTick(t => t + 1)));
+  }, [state, script, timeMs, roles, sheets, scale]);
 
   return (
     <div className="stage-wrap" ref={wrapRef}>
@@ -83,6 +102,7 @@ function paint(
   frame: Frame,
   state: BattleState,
   roles: Record<string, string> | undefined,
+  resolveImage: (file: string) => HTMLImageElement | null,
 ) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
@@ -101,19 +121,50 @@ function paint(
         break;
       }
       case 'sprite': {
-        const isHero = command.actorId !== state.bossId;
-        const tint = isHero ? tintForRole(roles?.[command.actorId]) : command.tint;
-        ctx.globalAlpha = command.dim ? 0.3 : 1;
-        ctx.fillStyle = tint;
         const y = command.y + command.offsetY;
-        ctx.fillRect(command.x, y, command.width, command.height);
-        // A lighter top band suggests a head, so silhouettes read as figures.
-        ctx.fillStyle = 'rgba(255,255,255,0.18)';
-        ctx.fillRect(command.x, y, command.width, Math.max(2, Math.round(command.height * 0.22)));
-        if (command.flash > 0) {
-          ctx.globalAlpha = command.dim ? 0.3 : command.flash;
-          ctx.fillStyle = PALETTE.flash;
+        const image = command.sheet ? resolveImage(command.sheet.file) : null;
+        ctx.globalAlpha = command.dim ? 0.35 : 1;
+
+        if (image && command.sheet) {
+          const {sx, sy, sw, sh} = command.sheet;
+          // Sheets are authored facing one way; mirror horizontally for the other side.
+          const mirror = command.facing === 'right';
+          if (mirror) {
+            ctx.save();
+            ctx.translate(command.x + command.width, y);
+            ctx.scale(-1, 1);
+            ctx.drawImage(image, sx, sy, sw, sh, 0, 0, command.width, command.height);
+            ctx.restore();
+          } else {
+            ctx.drawImage(image, sx, sy, sw, sh, command.x, y, command.width, command.height);
+          }
+          if (command.flash > 0) {
+            // Tint the sprite's own pixels rather than a rectangle over it.
+            ctx.globalAlpha = (command.dim ? 0.35 : 1) * command.flash;
+            ctx.globalCompositeOperation = 'lighter';
+            if (mirror) {
+              ctx.save();
+              ctx.translate(command.x + command.width, y);
+              ctx.scale(-1, 1);
+              ctx.drawImage(image, sx, sy, sw, sh, 0, 0, command.width, command.height);
+              ctx.restore();
+            } else {
+              ctx.drawImage(image, sx, sy, sw, sh, command.x, y, command.width, command.height);
+            }
+            ctx.globalCompositeOperation = 'source-over';
+          }
+        } else {
+          // No sheet yet: a flat silhouette keeps the game playable and readable.
+          const isHero = command.actorId !== state.bossId;
+          ctx.fillStyle = isHero ? tintForRole(roles?.[command.actorId]) : command.tint;
           ctx.fillRect(command.x, y, command.width, command.height);
+          ctx.fillStyle = 'rgba(255,255,255,0.18)';
+          ctx.fillRect(command.x, y, command.width, Math.max(2, Math.round(command.height * 0.22)));
+          if (command.flash > 0) {
+            ctx.globalAlpha = command.dim ? 0.35 : command.flash;
+            ctx.fillStyle = PALETTE.flash;
+            ctx.fillRect(command.x, y, command.width, command.height);
+          }
         }
         ctx.globalAlpha = 1;
         break;

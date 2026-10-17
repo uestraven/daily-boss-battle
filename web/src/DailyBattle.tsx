@@ -23,6 +23,7 @@ import {EmailSignup} from './EmailSignup.js';
 import {resultCardInputFrom} from '../../dist/src/result-card.js';
 import {advanceToDecision as freshBattle} from '../../dist/src/engine.js';
 import {heroes} from '../../dist/src/roster.js';
+import {spriteSheet} from './sprite-catalog.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {ActorId, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
 import type {DailyCatalog, DailyLedger} from '../../src/daily.js';
@@ -121,6 +122,19 @@ function Battle({def, catalog, tier, day}:
     () => Object.fromEntries(Object.values(def.abilities).map(a => [a.id, a.name])),
     [def],
   );
+  /** Validated sheets for whoever has one. A sheet that is missing or malformed is simply
+   * omitted, and that actor keeps its silhouette. */
+  const sheets = useMemo(() => {
+    const result: Record<string, ReturnType<typeof spriteSheet>> = {};
+    for (const id of def.party) {
+      try { const sheet = spriteSheet('heroes', id); if (sheet) result[id] = sheet; } catch { /* skip */ }
+    }
+    try {
+      const boss = spriteSheet('bosses', def.bossId);
+      if (boss) result[def.bossId] = boss;
+    } catch { /* skip */ }
+    return result as Record<string, NonNullable<ReturnType<typeof spriteSheet>>>;
+  }, [def]);
 
   const active = replay ?? step;
   terminalRef.current = active.terminal;
@@ -259,7 +273,7 @@ function Battle({def, catalog, tier, day}:
         )}
       </section>
 
-      <BattleStage state={state} script={script} timeMs={timeMs} roles={ROLE_BY_ID} />
+      <BattleStage state={state} script={script} timeMs={timeMs} roles={ROLE_BY_ID} sheets={sheets} />
 
       <section className="dbb-party">
         {state.party.map(id => {

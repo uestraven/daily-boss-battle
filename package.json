@@ -20,6 +20,7 @@
     "daily:check": "npm run build && node scripts/run-daily.mjs",
     "art:check": "node scripts/check-backgrounds.mjs",
     "art:lint": "node tools/lint-sprite.mjs",
+    "art:placeholders": "npm run build && node tools/make-placeholder-sheets.mjs",
     "audio:manifest": "npm run build && node tools/audio-manifest.mjs",
     "behavior:check": "npm run build && node tools/behavior-snapshot.mjs --check reports/behavior-baseline.json",
     "behavior:record": "npm run build && node tools/behavior-snapshot.mjs --write reports/behavior-baseline.json",
