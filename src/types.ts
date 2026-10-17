@@ -1,5 +1,11 @@
 export type ActorId = string;
 export type ItemId = 'potion' | 'mana_vial' | 'revive_tonic';
+/** How much the interface tells the player. Deliberately *only* an interface setting:
+ * the encounter, the engine and the action log are identical in both, so a replay still
+ * verifies and the verified pool stays valid. Easy reveals information; it does not make
+ * the fight weaker. */
+export type BattleMode = 'easy' | 'normal';
+
 export type StatusId = 'protect' | 'shell' | 'haste' | 'slow' | 'poison' | 'silence' | 'defend' | 'focus' | 'elemental_edge' | 'surge' | 'nullify' | 'airborne';
 export type Element = 'neutral' | 'fire' | 'ice' | 'lightning' | 'holy' | 'dark';
 export type Affinity = 'neutral' | 'weak' | 'resist' | 'immune';

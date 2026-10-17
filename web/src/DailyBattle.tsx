@@ -16,7 +16,7 @@ import {availableActions, eligibleTargets, previewDisplay, actionInput} from '..
 import {choreograph} from '../../dist/src/presentation.js';
 import {displayedValue, downAt, statusesAt} from '../../dist/src/stage.js';
 import {poolCatalog, selectDaily, targetTierFor, validatePool} from '../../dist/src/pool.js';
-import {dailyStatistics, ensureDay, playDailyAction, stepForDay} from '../../dist/src/daily.js';
+import {dailyStatistics, ensureDay, playDailyAction, setDayMode, stepForDay} from '../../dist/src/daily.js';
 import {loadLedger, saveLedger, clearLedger} from './storage.js';
 import {ShareCard} from './ShareCard.js';
 import {EmailSignup} from './EmailSignup.js';
@@ -31,7 +31,7 @@ import {backgroundForBoss, battleBackgrounds, hasBackgroundArt} from './backgrou
 import {BackgroundStudio} from './BackgroundStudio.js';
 import {STATUS_DISPLAY, visibleStatuses} from './status-display.js';
 import type {BeatScript} from '../../src/presentation.js';
-import type {ActorId, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
+import type {ActorId, BattleMode, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
 import type {DailyCatalog, DailyLedger} from '../../src/daily.js';
 import type {OfferedAction} from '../../src/play-ui.js';
 import type {VerifiedPool} from '../../src/pool.js';
@@ -41,6 +41,28 @@ const todayUtc = () => new Date().toISOString().slice(0, 10);
 const ROLE_BY_ID: Record<string, string> = Object.fromEntries(heroes.map(h => [h.id, h.role]));
 
 type Phase = {kind: 'choosing'} | {kind: 'playing'} | {kind: 'over'};
+
+/** Easy reveals what the interface knows; Normal withholds it. Neither changes the fight.
+ *
+ * The verified pool guarantees every daily encounter is winnable, but it proves that with
+ * a solver that can see everything, so Normal is harder in a way the gates do not measure:
+ * the win is still there, it is just no longer signposted. */
+const MODE_BLURB: Record<BattleMode, {title: string; detail: string}> = {
+  easy: {
+    title: 'Easy',
+    detail: 'Shows status effects on both sides, and the boss announces its next attack.',
+  },
+  normal: {
+    title: 'Normal',
+    detail: 'No status badges and no warning. Read the fight yourself.',
+  },
+};
+const MODE_KEY = 'daily-boss-battle.mode.v1';
+const readMode = (): BattleMode => {
+  try {
+    return window.localStorage.getItem(MODE_KEY) === 'normal' ? 'normal' : 'easy';
+  } catch { return 'easy'; }
+};
 
 /** `?dev` enables presentation-testing controls. Phase two, KOs and the defeat screen
  * are all hard to reach by playing well, which makes them hard to verify; these jump
@@ -122,6 +144,17 @@ function Battle({def, catalog, tier, day}:
   // The ledger is the source of truth: it replays each stored action log, so a battle in
   // progress resumes exactly and a finished day stays finished.
   const [ledger, setLedger] = useState<DailyLedger>(() => ensureDay(loadLedger(catalog), day, catalog));
+  /** The mode this day is being played under. A day already under way keeps the mode it
+   * was started with, so it cannot be switched mid-fight to reveal a telegraph. */
+  const [mode, setMode] = useState<BattleMode>(
+    () => ledger.records[day]?.mode ?? readMode());
+  /** The landing screen stands between arriving and playing, so the mode is a deliberate
+   * choice rather than a default nobody saw. Skipped for a day already in progress or
+   * finished: the choice was made, and re-asking would imply it could be changed. */
+  const [showLanding, setShowLanding] = useState(() => {
+    const existing = ledger.records[day];
+    return !existing || (existing.inputs.length === 0 && !existing.completed);
+  });
   const [step, setStep] = useState<BattleStep>(() => stepForDay(ledger, day, catalog));
   const [script, setScript] = useState<BeatScript | null>(null);
   const [phase, setPhase] = useState<Phase>({kind: 'choosing'});
@@ -242,10 +275,27 @@ function Battle({def, catalog, tier, day}:
   const actorId: ActorId | undefined = active.readyHeroIds[0];
   const boss = state.actors[state.bossId]!;
   const countdown = nextBossCountdown(state);
+  const beginBattle = useCallback((chosen: BattleMode) => {
+    setMode(chosen);
+    try { window.localStorage.setItem(MODE_KEY, chosen); } catch { /* private mode */ }
+    // Recorded against the day as well as remembered as a preference, so the result card
+    // can say which interface it was earned under.
+    setLedger(previous => {
+      const next = setDayMode(previous, day, chosen);
+      saveLedger(next);
+      return next;
+    });
+    setShowLanding(false);
+    // The tap that starts the battle is a user gesture, which is exactly what autoplay
+    // needs, so the theme can begin here rather than waiting for the first action.
+    startAudio();
+  }, [day, startAudio]);
+
   /** Status badges for one actor, resolved against playback rather than the state the
    * batch ended in -- the same rule as the health bars, so a buff cannot appear before the
    * spell that granted it has played. */
   const statusBadges = useCallback((id: ActorId) => {
+    if (mode !== 'easy') return null;
     const ids = visibleStatuses(statusesAt(script, id, timeMs, state.actors[id]?.statuses ?? {}));
     if (!ids.length) return null;
     return (
@@ -261,11 +311,11 @@ function Battle({def, catalog, tier, day}:
         })}
       </div>
     );
-  }, [script, timeMs, state]);
+  }, [mode, script, timeMs, state]);
 
   /** The telegraph as the player should see it now: last turn's while this turn animates,
    * so the boss's next move is not revealed before the current one has landed. */
-  const shownTelegraph = pending
+  const shownTelegraph = mode !== 'easy' ? null : pending
     ? pending.telegraph
     : countdown ? {countdown, targetIds: state.bossIntent?.targetIds ?? []} : null;
 
@@ -381,6 +431,9 @@ function Battle({def, catalog, tier, day}:
       bossName: def.actors[def.bossId]!.name,
       partyNames: record.state.party.map(id => def.actors[id]?.name ?? id),
       stars: record.stars ?? 0,
+      // The record's own mode, not the current setting: the card must describe the attempt
+      // that was recorded, which may have been a different day or a different choice.
+      ...(record.mode ? {mode: record.mode} : {}),
       url: window.location.host || undefined,
     });
   }, [record, day, def]);
@@ -397,6 +450,55 @@ function Battle({def, catalog, tier, day}:
     );
   }
 
+  if (showLanding) {
+    return (
+      <main className="dbb-shell dbb-landing">
+        <header className="dbb-header">
+          <span className="dbb-brand">✦ DAILY BOSS BATTLE</span>
+        </header>
+
+        <section className="dbb-landing-card rpg-window">
+          <p className="dbb-landing-day">{day}</p>
+          <h1 className="dbb-landing-title">Today&rsquo;s battle</h1>
+          <p className="dbb-landing-lede">
+            One fight, the same for everyone, decided by choices rather than reflexes.
+            {' '}Difficulty: <strong>{tier}</strong>.
+          </p>
+
+          <fieldset className="dbb-modes">
+            <legend>Choose how much the interface tells you</legend>
+            {(['easy', 'normal'] as const).map(option => (
+              <label key={option} className={`dbb-mode${mode === option ? ' is-chosen' : ''}`}>
+                <input
+                  type="radio" name="dbb-mode" value={option}
+                  checked={mode === option}
+                  onChange={() => setMode(option)}
+                />
+                <span className="dbb-mode-title">{MODE_BLURB[option].title}</span>
+                <span className="dbb-mode-detail">{MODE_BLURB[option].detail}</span>
+              </label>
+            ))}
+          </fieldset>
+
+          <p className="dbb-landing-note">
+            Both modes fight the same boss with the same party. Easy only shows you more;
+            it does not weaken the fight. Your result records which one you chose.
+          </p>
+
+          <button className="dbb-begin" onClick={() => beginBattle(mode)}>
+            Begin battle
+          </button>
+
+          {stats.completed > 0 && (
+            <p className="dbb-landing-stats">
+              {stats.completed} played · {stats.wins} won · {stats.participationStreak} day streak
+            </p>
+          )}
+        </section>
+      </main>
+    );
+  }
+
   return (
     // Capture phase, so the theme starts on the first touch even if a child stops the
     // event. Firing repeatedly is harmless: startAudio is idempotent.
@@ -404,7 +506,7 @@ function Battle({def, catalog, tier, day}:
       <header className="dbb-header">
         <span className="dbb-brand">✦ DAILY BOSS BATTLE</span>
         <span className="dbb-header-right">
-          <span className="dbb-day">{day} · {tier}</span>
+          <span className="dbb-day">{day} · {tier} · {MODE_BLURB[mode].title}</span>
           <button
             className="dbb-mute"
             aria-label={mutedState ? 'Unmute' : 'Mute'}

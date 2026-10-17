@@ -2,7 +2,7 @@
 import {tyrantAI008} from './ai-variant.js';
 import {practiceEncounters} from './encounters.js';
 import {advanceToDecision,applyPlayerAction,createEncounter,replay,starsForResult} from './engine.js';
-import type {BattleInput,BattleState,BattleStep,EncounterDefinition} from './types.js';
+import type {BattleInput,BattleMode,BattleState,BattleStep,EncounterDefinition} from './types.js';
 
 const clone=<T>(v:T):T=>JSON.parse(JSON.stringify(v)) as T;
 export const DAILY_CATALOG_VERSION='v1.0-curated-six';
@@ -77,7 +77,19 @@ export const curatedCatalog:DailyCatalog={
 
 export type DailyRecord={day:string;catalogVersion:string;key:string;definitionId:string;
   inputs:BattleInput[];state:BattleState;
-  completed:boolean;result:'victory'|'defeat'|null;stars:number|null};
+  completed:boolean;result:'victory'|'defeat'|null;stars:number|null;
+  /** Which interface the result was earned under.
+   *
+   * Carried rather than verified, and it is the only field here that cannot be: mode
+   * leaves no trace in the action log, by design, since the engine must not know about it.
+   * Everything else is re-derived by replay and a hand-edited copy is discarded. So this
+   * says what the browser recorded, not what can be proved -- which is consistent with
+   * results being per-browser and unadjudicated anyway.
+   *
+   * Absent on records written before modes existed. Those were played with the telegraph
+   * and statuses on screen, so they are not silently relabelled as `normal`; the card
+   * simply shows no mode for them. */
+  mode?:BattleMode};
 export type DailyLedger={schema:1;records:Record<string,DailyRecord>};
 export function emptyLedger():DailyLedger{return {schema:1,records:{}};}
 export function normalizeLedger(input:unknown,catalog:DailyCatalog=curatedCatalog):DailyLedger {
@@ -97,7 +109,11 @@ export function normalizeLedger(input:unknown,catalog:DailyCatalog=curatedCatalo
       if(verified.result!==v.result)continue;
       if(v.completed!==(verified.result!==null))continue;
       if(v.stars!==(verified.result===null?null:starsForResult(verified)))continue;
-      ledger.records[day]={...clone(v),state:verified};
+      // An unrecognised mode is dropped rather than rejecting the record: it is
+      // unverifiable either way, and a legitimate result should not be lost to it.
+      const mode=v.mode==='easy'||v.mode==='normal'?v.mode:undefined;
+      ledger.records[day]={...clone(v),state:verified,...(mode?{mode}:{})};
+      if(!mode)delete ledger.records[day]!.mode;
     }catch{/* Old/malformed entries are not used as official records. */}
   }
   return ledger;
@@ -110,6 +126,18 @@ export function ensureDay(ledger:DailyLedger,day:string,catalog:DailyCatalog=cur
   const state=advanceToDecision(createEncounter(def),def).state;
   next.records[day]={day,key:catalog.keyFor(day),catalogVersion:catalog.version,definitionId:def.id,
     inputs:[],state,completed:false,result:null,stars:null};
+  return next;
+}
+/** Records which interface the day is being played under.
+ *
+ * Refuses once the day is complete, for the same reason the result itself is locked: the
+ * mode a result was earned under cannot be revised after the fact. Replays are unranked
+ * and never reach this. */
+export function setDayMode(ledger:DailyLedger,day:string,mode:BattleMode):DailyLedger {
+  const record=ledger.records[day];if(!record)throw new Error('Daily record not started');
+  if(record.completed)return ledger;
+  const next=clone(ledger);
+  next.records[day]={...record,mode};
   return next;
 }
 export function stepForDay(ledger:DailyLedger,day:string,catalog:DailyCatalog=curatedCatalog):BattleStep {

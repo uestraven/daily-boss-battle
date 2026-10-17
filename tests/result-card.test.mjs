@@ -172,3 +172,31 @@ test('input is derived from a real finished battle', () => {
   // And it composes without overflowing.
   for (const command of composeResultCard(input)) assert.ok(command.y <= CARD.height);
 });
+
+test('the card says which mode the result was earned under', () => {
+  // Without this, a shared Easy result is indistinguishable from a Normal one, and the
+  // star count implies more than it should.
+  const base = {day: '2026-05-05', bossName: 'The Tide Maw', partyNames: ['A', 'B', 'C'],
+    result: 'victory', stars: 3, heroActions: 12, tick: 40, bossHealthRemoved: 1,
+    survivors: 3, itemsUsed: 0};
+
+  const texts = Object.fromEntries(['easy', 'normal'].map(mode =>
+    [mode, composeResultCard({...base, mode}).filter(c => c.kind === 'text').map(c => c.text)]));
+  assert.ok(texts.easy.some(t => t.includes('EASY')), 'easy is labelled');
+  assert.ok(texts.normal.some(t => t.includes('NORMAL')), 'normal is labelled');
+  assert.ok(texts.easy.every(t => !t.includes('NORMAL')), 'and they are not confused');
+
+  // The day is still shown either way; the mode joins it rather than replacing it.
+  for (const mode of ['easy', 'normal']) {
+    assert.ok(texts[mode].some(t => t.includes(base.day)), `${mode} still shows the day`);
+  }
+
+  // Unlabelled for records written before modes existed, rather than guessing.
+  const plain = composeResultCard(base).filter(c => c.kind === 'text').map(c => c.text);
+  assert.ok(plain.some(t => t === base.day), 'the day alone');
+  assert.ok(plain.every(t => !/EASY|NORMAL/.test(t)), 'and no invented mode');
+
+  // The text summary carries it too, for clipboards that strip the image.
+  assert.ok(resultCardText({...base, mode: 'easy'}).includes('(easy)'));
+  assert.ok(!resultCardText(base).includes('('), 'and omits it when unknown');
+});

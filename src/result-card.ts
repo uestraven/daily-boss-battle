@@ -7,7 +7,7 @@
  * Deliberately spoiler-light. It reports the outcome, mastery and effort, never the
  * winning line, so sharing a result cannot hand someone else the solution.
  */
-import type {BattleState} from './types.js';
+import type {BattleMode, BattleState} from './types.js';
 
 /** Square: shares cleanly to chat apps and social without being re-cropped. */
 export const CARD = {width: 600, height: 600} as const;
@@ -32,6 +32,10 @@ export type ResultCardInput = {
   bossHealthRemoved: number;
   survivors: number;
   itemsUsed: number;
+  /** Which interface it was played under. Shown so an Easy result is not mistaken for a
+   * Normal one when the card is shared. Omitted for records written before modes existed,
+   * which the card then simply does not label. */
+  mode?: BattleMode;
   /** Appears at the foot of the card. */
   url?: string;
 };
@@ -40,7 +44,8 @@ export type ResultCardInput = {
  * numbers that get shared. */
 export function resultCardInputFrom(
   state: BattleState,
-  options: {day: string; bossName: string; partyNames: string[]; stars: number; url?: string},
+  options: {day: string; bossName: string; partyNames: string[]; stars: number;
+    mode?: BattleMode; url?: string},
 ): ResultCardInput {
   const boss = state.actors[state.bossId];
   const maxHp = boss?.stats.hp ?? 1;
@@ -49,6 +54,7 @@ export function resultCardInputFrom(
     day: options.day,
     bossName: options.bossName,
     partyNames: options.partyNames,
+    ...(options.mode ? {mode: options.mode} : {}),
     result: state.result === 'victory' ? 'victory' : 'defeat',
     stars: options.stars,
     heroActions: state.heroActionCount,
@@ -75,8 +81,9 @@ export function composeResultCard(input: ResultCardInput): CardCommand[] {
 
   commands.push({kind: 'text', x: centre, y: 72, text: 'DAILY BOSS BATTLE',
     size: 30, align: 'center', palette: 'title'});
-  commands.push({kind: 'text', x: centre, y: 104, text: input.day,
-    size: 18, align: 'center', palette: 'muted'});
+  commands.push({kind: 'text', x: centre, y: 104, text: input.mode
+    ? `${input.day} · ${input.mode === 'easy' ? 'EASY' : 'NORMAL'}`
+    : input.day, size: 18, align: 'center', palette: 'muted'});
 
   commands.push({kind: 'panel', x: 48, y: 140, width: CARD.width - 96, height: 150, palette: 'inset'});
   commands.push({kind: 'text', x: centre, y: 186, text: won ? 'VICTORY' : 'DEFEAT',
@@ -123,7 +130,7 @@ export function resultCardText(input: ResultCardInput): string {
     ? `beat ${input.bossName} in ${input.heroActions} actions`
     : `fell to ${input.bossName}, brought it to ${100 - Math.round(input.bossHealthRemoved * 100)}%`;
   return [
-    `Daily Boss Battle ${input.day}`,
+    `Daily Boss Battle ${input.day}${input.mode ? ` (${input.mode})` : ''}`,
     `${stars} ${headline}`,
     input.url ?? '',
   ].filter(Boolean).join('\n');

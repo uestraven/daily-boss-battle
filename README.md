@@ -263,6 +263,22 @@ deleting those four files.
 v1 is a website, desktop and mobile web, no accounts and no server:
 
 - **One battle a day**, the same for everyone, drawn from the verified pool.
+- **A landing screen** chooses the mode before the fight starts, so it is a decision rather
+  than a default nobody saw. It is skipped for a day already under way or finished, since
+  the choice was already made and re-offering it would imply it could be changed.
+- **Easy and Normal differ only in what the interface tells you.** Easy shows status badges
+  on both sides and the boss's announced next attack; Normal shows neither. The encounter,
+  the engine and the action log are identical, which is what keeps a replay verifiable and
+  the verified pool valid — mode is never an engine input. Worth being precise about the
+  consequence: the pool proves every encounter is winnable using a solver that sees
+  everything, so Normal is harder in a way the gates do not measure. The win is still
+  there; it is no longer signposted.
+  The mode is recorded against the day and printed on the shared card, so an Easy result is
+  not mistaken for a Normal one. It is the one field in a record that *cannot* be verified
+  by replay — mode leaves no trace in the action log by design — so it reports what the
+  browser recorded, not what can be proved. Consistent with results being per-browser and
+  unadjudicated anyway. A record written before modes existed carries none, and is not
+  relabelled: those attempts were played with the telegraph and statuses on screen.
 - **Replaying is allowed.** The first completed attempt is recorded as the day's result;
   further attempts are unranked and never overwrite it. The shared card always reports
   the recorded result, so sharing cannot be used to inflate an outcome.

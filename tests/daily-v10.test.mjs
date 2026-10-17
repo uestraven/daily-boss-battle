@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {DAILY_CATALOG_VERSION,DAILY_KEYS,dayNumber,dailyKeyFor,utcDateKey,dailyDefinition,
-  emptyLedger,normalizeLedger,ensureDay,stepForDay,playDailyAction,dailyStatistics} from '../dist/src/daily.js';
+  emptyLedger,normalizeLedger,ensureDay,stepForDay,playDailyAction,setDayMode,
+  curatedCatalog,dailyStatistics} from '../dist/src/daily.js';
 import {replay,starsForResult,advanceToDecision,createEncounter} from '../dist/src/engine.js';
 const witnesses=JSON.parse(readFileSync(new URL('../fixtures/daily-witnesses-v10.json',import.meta.url),'utf8'));
 const dateFromDay=d=>new Date(d*86400000).toISOString().slice(0,10);
@@ -116,4 +117,66 @@ test('daily stats track participation, victory, defeat, star totals and breaks i
  assert.equal(stats.bestParticipationStreak,4);
  ledger.records[today].result='defeat';ledger.records[today].state.result='defeat';ledger.records[today].stars=0;
  assert.equal(dailyStatistics(ledger,today).victoryStreak,0);
+});
+
+test('the mode a day is played under is recorded, and locked once it is finished', () => {
+  // Mode is interface-only, so it leaves no trace in the action log and cannot be derived
+  // by replay the way the result and star count are. It is carried instead, which is why
+  // it is worth asserting it survives a round trip at all.
+  const day = '2026-03-04';
+  let ledger = ensureDay(emptyLedger(), day, curatedCatalog);
+  assert.equal(ledger.records[day].mode, undefined, 'unset until chosen');
+
+  ledger = setDayMode(ledger, day, 'normal');
+  assert.equal(ledger.records[day].mode, 'normal');
+  ledger = setDayMode(ledger, day, 'easy');
+  assert.equal(ledger.records[day].mode, 'easy', 'changeable before the first action');
+
+  // Play it out, then confirm the mode is pinned.
+  const def = curatedCatalog.definitionFor(day);
+  let step = stepForDay(ledger, day, curatedCatalog);
+  for (let i = 0; i < 200 && !step.terminal; i++) {
+    const actor = step.readyHeroIds[0];
+    if (!actor) break;
+    const played = playDailyAction(ledger, day, {actorId: actor, abilityId: 'attack',
+      targetIds: [step.state.bossId]}, curatedCatalog);
+    ledger = played.ledger;
+    step = played.step;
+  }
+  assert.ok(ledger.records[day].completed, 'the day finished');
+  assert.equal(ledger.records[day].mode, 'easy', 'the mode came along for the ride');
+
+  const after = setDayMode(ledger, day, 'normal');
+  assert.equal(after.records[day].mode, 'easy',
+    'a finished day cannot be relabelled, for the same reason its result is locked');
+});
+
+test('a reloaded ledger keeps a valid mode and discards a bogus one', () => {
+  const day = '2026-03-05';
+  let ledger = setDayMode(ensureDay(emptyLedger(), day, curatedCatalog), day, 'normal');
+  const reloaded = normalizeLedger(JSON.parse(JSON.stringify(ledger)), curatedCatalog);
+  assert.equal(reloaded.records[day].mode, 'normal', 'survives a round trip');
+
+  // Anything else is dropped rather than rejecting the whole record: the field is
+  // unverifiable either way, and losing a legitimate result over it would be worse.
+  for (const bogus of ['hard', '', 0, null, {}, 'EASY']) {
+    const tampered = JSON.parse(JSON.stringify(ledger));
+    tampered.records[day].mode = bogus;
+    const normalized = normalizeLedger(tampered, curatedCatalog);
+    assert.ok(normalized.records[day], `record survives mode=${JSON.stringify(bogus)}`);
+    assert.equal(normalized.records[day].mode, undefined,
+      `mode=${JSON.stringify(bogus)} is discarded`);
+  }
+});
+
+test('a record written before modes existed stays valid and unlabelled', () => {
+  // Those attempts were played with the telegraph and statuses on screen, so defaulting
+  // them to 'normal' would assert something untrue about how they were earned.
+  const day = '2026-03-06';
+  const ledger = ensureDay(emptyLedger(), day, curatedCatalog);
+  const legacy = JSON.parse(JSON.stringify(ledger));
+  delete legacy.records[day].mode;
+  const normalized = normalizeLedger(legacy, curatedCatalog);
+  assert.ok(normalized.records[day], 'still a usable record');
+  assert.equal('mode' in normalized.records[day], false, 'and carries no mode at all');
 });
