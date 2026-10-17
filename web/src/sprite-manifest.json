@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "heroes": {
+    "warden": {
+      "name": "The Warden",
+      "file": "heroes/warden.png",
+      "pixelArt": true
+    },
+    "lancer": {
+      "name": "The Lancer",
+      "file": "heroes/lancer.png",
+      "pixelArt": true
+    },
+    "oracle": {
+      "name": "The Oracle",
+      "file": "heroes/oracle.png",
+      "pixelArt": true
+    },
+    "blademage": {
+      "name": "The Blademage",
+      "file": "heroes/blademage.png",
+      "pixelArt": true
+    },
+    "channeler": {
+      "name": "The Channeler",
+      "file": "heroes/channeler.png",
+      "pixelArt": true
+    },
+    "nullifier": {
+      "name": "The Nullifier",
+      "file": "heroes/nullifier.png",
+      "pixelArt": true
+    },
+    "monk": {
+      "name": "The Monk",
+      "file": "heroes/monk.png",
+      "pixelArt": true
+    },
+    "machinist": {
+      "name": "The Machinist",
+      "file": "heroes/machinist.png",
+      "pixelArt": true
+    },
+    "vanguard": {
+      "name": "The Vanguard",
+      "file": "heroes/vanguard.png",
+      "pixelArt": false
+    },
+    "brawler": {
+      "name": "The Brawler",
+      "file": "heroes/brawler.png",
+      "pixelArt": false
+    },
+    "magus": {
+      "name": "The Magus",
+      "file": "heroes/magus.png",
+      "pixelArt": false
+    },
+    "thief": {
+      "name": "The Thief",
+      "file": "heroes/thief.png",
+      "pixelArt": false
+    }
+  },
+  "bosses": {
+    "blade_tyrant": {
+      "name": "Blade Tyrant",
+      "file": "bosses/blade_tyrant.png",
+      "pixelArt": true
+    },
+    "tide_maw": {
+      "name": "Tide Maw",
+      "file": "bosses/tide_maw.png",
+      "pixelArt": true
+    },
+    "ink_lurker": {
+      "name": "Ink Lurker",
+      "file": "bosses/ink_lurker.png",
+      "pixelArt": true
+    },
+    "crush_wall": {
+      "name": "Crush Wall",
+      "file": "bosses/crush_wall.png",
+      "pixelArt": true
+    },
+    "storm_keeper": {
+      "name": "Storm Keeper",
+      "file": "bosses/storm_keeper.png",
+      "pixelArt": false
+    },
+    "spell_weaver": {
+      "name": "Spell Weaver",
+      "file": "bosses/spell_weaver.png",
+      "pixelArt": false
+    }
+  }
+}

@@ -1,0 +1,22 @@
+:root {
+  --dbb-bg-black: #000000;
+  --dbb-bg-stage: #050910;
+
+  --dbb-window-top: #2950a5;
+  --dbb-window-mid: #163575;
+  --dbb-window-bottom: #0a1945;
+
+  --dbb-border-outer: #e6ecf5;
+  --dbb-border-inner: #9ba9bf;
+
+  --dbb-text-primary: #f5f8ff;
+  --dbb-text-secondary: #cfd8e8;
+
+  --dbb-hp: #5dd47f;
+  --dbb-mp: #6ec6ff;
+  --dbb-atb: #f5c65a;
+
+  --dbb-danger: #ff8585;
+  --dbb-buff: #73e2cf;
+  --dbb-debuff: #e5a5ff;
+}

@@ -1,0 +1,202 @@
+/* Visual UI v1.2c — side-view battle arena.
+   Import AFTER style.css and retro-windows.css. Engine state is untouched. */
+
+.battle-scene.retro-combat-stage {
+  position: relative;
+  height: min(46vw, 470px);
+  min-height: 360px;
+  background: #000;
+  border: 2px solid var(--dbb-border-outer, #e6ecf5);
+  border-radius: 2px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Preserve uploaded backgrounds without stretching or changing their pixels. */
+.retro-combat-stage .arena-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  z-index: 0;
+}
+.retro-combat-stage .arena-backdrop-tint.has-art {
+  background: linear-gradient(to bottom, transparent 0%, transparent 58%, rgba(0,0,0,.25) 88%, rgba(0,0,0,.50) 100%);
+}
+.retro-combat-stage .scene-stars { display: none; }
+.retro-combat-stage::before { opacity: .22; pointer-events: none; }
+.retro-combat-stage::after { box-shadow: inset 0 0 32px rgba(0,0,0,.35); pointer-events: none; }
+
+/* Enemy on the left, party formation on the right. */
+.retro-combat-stage .boss-zone {
+  position: absolute;
+  z-index: 3;
+  top: 21%;
+  bottom: 112px;
+  left: 2%;
+  right: auto;
+  width: 57%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.retro-combat-stage .boss-figure {
+  width: min(27vw, 260px);
+  height: min(27vw, 260px);
+  max-width: 100%;
+  max-height: 100%;
+  image-rendering: pixelated;
+  filter: drop-shadow(3px 7px 0 rgba(0,0,0,.65));
+}
+.retro-combat-stage .boss-aura { opacity: .14; }
+.retro-combat-stage .boss-ground { opacity: .38; }
+
+.retro-stage-party {
+  position: absolute;
+  z-index: 5;
+  top: 19%;
+  bottom: 111px;
+  right: 4%;
+  width: 32%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-around;
+  pointer-events: none;
+}
+.retro-stage-hero {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 68px;
+  padding: 2px 4px;
+  color: white;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0;
+  font: 700 11px/1.2 ui-monospace, Consolas, monospace;
+  text-align: right;
+  text-shadow: 1px 2px 0 #000, -1px 0 0 #000;
+  box-shadow: none;
+  pointer-events: auto;
+}
+.retro-stage-hero:disabled { opacity: 1; cursor: default; }
+.retro-stage-hero.is-ready:not(:disabled) { cursor: pointer; }
+.retro-stage-hero.is-ready:hover, .retro-stage-hero.is-selected {
+  background: rgba(25,57,119,.32);
+  border-color: rgba(235,240,255,.76);
+}
+.retro-stage-hero:focus-visible { outline: 2px solid white; outline-offset: 1px; }
+.retro-stage-hero.is-ko .retro-stage-sprite-wrap { opacity: .32; filter: grayscale(1); transform: rotate(-88deg); }
+.retro-stage-hero.is-airborne .retro-stage-sprite-wrap { transform: translateY(-19px); opacity: .65; }
+.retro-stage-hero-label { order: 0; min-width: 0; white-space: nowrap; }
+.retro-stage-sprite-wrap {
+  order: 1;
+  width: 42px;
+  height: 58px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(2px 3px 0 rgba(0,0,0,.9));
+}
+.retro-stage-sprite, .retro-stage-fallback {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.retro-stage-ready {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  top: 7px;
+  right: 7px;
+  background: var(--dbb-atb,#f5c65a);
+  border: 1px solid #fff;
+  box-shadow: 0 0 0 2px #000;
+}
+
+/* Compact classic boss HP window below the action stage. */
+.retro-combat-stage .boss-ui {
+  z-index: 7;
+  position: absolute;
+  bottom: 28px;
+  left: 10px;
+  right: 10px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 2px solid var(--dbb-border-outer,#e6ecf5);
+  border-radius: 2px;
+  color: var(--dbb-text-primary,#f5f8ff);
+  background: linear-gradient(180deg,rgba(41,80,165,.96),rgba(10,25,69,.97));
+  box-shadow: inset 0 0 0 1px var(--dbb-border-inner,#9ba9bf);
+}
+.retro-combat-stage .boss-label { align-items: center; }
+.retro-combat-stage .boss-rank { font-size: 9px; color: var(--dbb-text-secondary,#cfd8e8); }
+.retro-combat-stage .boss-name { margin: 2px 0 5px; font: 700 16px/1.3 ui-monospace, Consolas, monospace; color: #fff; }
+.retro-combat-stage .boss-name span { color: #cfd8e8; }
+.retro-combat-stage .boss-numbers { margin: 0 0 6px; color: #fff; font: 700 13px ui-monospace, Consolas, monospace; }
+.retro-combat-stage .boss-numbers span { color: #e0e8f7; }
+.retro-combat-stage .boss-hp-track { height: 7px; border: 1px solid #a3b5d1; border-radius: 0; background: #07132d; }
+.retro-combat-stage .boss-hp-track > div { background: var(--dbb-hp,#5dd47f); }
+.retro-combat-stage .scene-bottom {
+  z-index: 8;
+  height: 26px;
+  background: #07132d;
+  border-top: 1px solid var(--dbb-border-inner,#9ba9bf);
+  color: #e7edfd;
+  letter-spacing: .04em;
+}
+.retro-combat-stage .arena-pill {
+  left: 11px;
+  top: 11px;
+  z-index: 8;
+  background: rgba(5,12,35,.9);
+  color: #f5f8ff;
+  border: 1px solid #a9b8cd;
+  border-radius: 0;
+}
+
+/* Lightweight, display-only action feedback; never changes combat timing. */
+.retro-boss-impacts { position: absolute; z-index: 6; top: 22%; left: 30%; pointer-events: none; }
+.retro-stage-impacts { position: absolute; top: -2px; left: 5px; pointer-events: none; display: flex; flex-direction: column; gap: 1px; }
+.retro-stage-impact {
+  color: #fff;
+  font: bold 17px/1 ui-monospace, Consolas, monospace;
+  text-shadow: -1px -1px #000,1px -1px #000,-1px 1px #000,1px 1px #000;
+  white-space: nowrap;
+  animation: retro-hit-number 950ms steps(6,end) both;
+}
+.retro-stage-impact.is-heal { color: var(--dbb-hp,#5dd47f); }
+@keyframes retro-hit-number {
+  0% { transform: translateY(12px); opacity: 0; }
+  25% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { transform: translateY(-18px); opacity: 0; }
+}
+
+@media (max-width: 650px) {
+  .battle-scene.retro-combat-stage { height: 348px; min-height: 348px; }
+  .retro-combat-stage .boss-zone { left: 0; width: 58%; top: 23%; bottom: 100px; }
+  .retro-combat-stage .boss-figure { width: min(48vw,190px); height: min(48vw,190px); }
+  .retro-stage-party { top: 22%; right: 2%; width: 36%; bottom: 100px; }
+  .retro-stage-hero { min-height: 52px; gap: 3px; font-size: 10px; }
+  .retro-stage-sprite-wrap { width: 32px; height: 45px; flex-basis: 32px; }
+  .retro-combat-stage .boss-ui { bottom: 27px; left: 6px; right: 6px; padding: 6px 8px; }
+  .retro-combat-stage .boss-name { font-size: 13px; }
+  .retro-combat-stage .boss-rank { font-size: 7px; }
+  .retro-combat-stage .boss-numbers { font-size: 11px; }
+  .retro-combat-stage .arena-pill { max-width: 61%; font-size: 7px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .retro-stage-impact { display: none; }
+  .retro-combat-stage .boss-hp-track > div { transition: none; }
+}

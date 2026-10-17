@@ -1,0 +1,225 @@
+{
+  "encounterId": "reference-001",
+  "engineContract": "v0.6-proposal",
+  "description": "A candidate winning input sequence; ticks are expected, not sent as authoritative player input. The reducer determines the ticks.",
+  "playerActions": [
+    {
+      "expectedTick": 8,
+      "actorId": "brawler",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 10,
+      "actorId": "warden",
+      "abilityId": "cover",
+      "targetIds": [
+        "magus"
+      ]
+    },
+    {
+      "expectedTick": 13,
+      "actorId": "magus",
+      "abilityId": "focus",
+      "targetIds": [
+        "magus"
+      ]
+    },
+    {
+      "expectedTick": 16,
+      "actorId": "brawler",
+      "abilityId": "combo_rush",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 20,
+      "actorId": "warden",
+      "abilityId": "cure",
+      "targetIds": [
+        "warden"
+      ]
+    },
+    {
+      "expectedTick": 24,
+      "actorId": "brawler",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 26,
+      "actorId": "magus",
+      "abilityId": "fire",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 30,
+      "actorId": "warden",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 32,
+      "actorId": "brawler",
+      "abilityId": "combo_rush",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 39,
+      "actorId": "magus",
+      "abilityId": "fire",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 40,
+      "actorId": "brawler",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 40,
+      "actorId": "warden",
+      "abilityId": "cure",
+      "targetIds": [
+        "warden"
+      ]
+    },
+    {
+      "expectedTick": 48,
+      "actorId": "brawler",
+      "abilityId": "combo_rush",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 50,
+      "actorId": "warden",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 52,
+      "actorId": "magus",
+      "abilityId": "fire",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 56,
+      "actorId": "brawler",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 60,
+      "actorId": "warden",
+      "abilityId": "cure",
+      "targetIds": [
+        "magus"
+      ]
+    },
+    {
+      "expectedTick": 64,
+      "actorId": "brawler",
+      "abilityId": "combo_rush",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    },
+    {
+      "expectedTick": 65,
+      "actorId": "magus",
+      "abilityId": "fire",
+      "targetIds": [
+        "blade_tyrant"
+      ]
+    }
+  ],
+  "expected": {
+    "result": "victory",
+    "terminalTick": 65,
+    "heroActionCount": 19,
+    "bossCommittedActionCount": 5,
+    "finalHeroes": {
+      "warden": {
+        "hp": 247,
+        "mp": 8
+      },
+      "brawler": {
+        "hp": 160,
+        "mp": 0,
+        "momentum": 0
+      },
+      "magus": {
+        "hp": 116,
+        "mp": 26
+      }
+    },
+    "boss": {
+      "hp": 0,
+      "mp": 6
+    },
+    "inventory": {
+      "potion": 2,
+      "mana_vial": 1,
+      "revive_tonic": 1
+    },
+    "survivors": 3,
+    "starsIfMasteryApproved": 3
+  },
+  "assertions": [
+    {
+      "tick": 24,
+      "condition": "brawler_attack_resolves_before_boss_wind_slash"
+    },
+    {
+      "tick": 32,
+      "condition": "phase2_triggers_but_protect_intent_remains"
+    },
+    {
+      "tick": 36,
+      "condition": "protect_active_expires_tick_60"
+    },
+    {
+      "tick": 48,
+      "condition": "boss_haste_effective_speed_135"
+    },
+    {
+      "tick": 56,
+      "condition": "blade_storm_committed_impact_tick_60"
+    },
+    {
+      "tick": 60,
+      "condition": "blade_storm_impact_precedes_warden_cure"
+    },
+    {
+      "tick": 64,
+      "condition": "boss_protect_expired_brawler_beat_damage_148"
+    },
+    {
+      "tick": 65,
+      "condition": "victory_all_heroes_alive"
+    }
+  ]
+}

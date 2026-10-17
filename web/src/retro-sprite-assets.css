@@ -1,0 +1,35 @@
+/* Character and boss sprite layer — loaded by BattleSprite.tsx.
+   This file does not change position of existing stage or the ATB engine. */
+.retro-combat-stage .rpg-original-sprite {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+  user-select: none;
+}
+.retro-combat-stage .rpg-sprite-pixel {
+  image-rendering: pixelated;
+}
+.retro-combat-stage .rpg-sprite-smooth {
+  /* Original PS-era characters/boss renders are not retro pixel sprites. */
+  image-rendering: auto;
+}
+.retro-combat-stage .boss-figure.rpg-boss-sprite-asset {
+  /* Retain previous boss-size constraints; no distortion. */
+  width: min(27vw, 260px);
+  height: min(27vw, 260px);
+  filter: drop-shadow(3px 6px 0 rgba(0, 0, 0, .7));
+}
+.retro-combat-stage .retro-stage-sprite.rpg-original-sprite {
+  height: 100%;
+  width: 100%;
+  object-position: center bottom;
+}
+@media (max-width: 650px) {
+  .retro-combat-stage .boss-figure.rpg-boss-sprite-asset {
+    width: min(48vw, 190px);
+    height: min(48vw, 190px);
+  }
+}

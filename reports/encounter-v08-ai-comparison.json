@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "algorithm": "seeded-slot-boss-ai-v0.8",
+  "seed": 20261015,
+  "witness": {
+    "tick": 65,
+    "stars": 3,
+    "heroActions": 19,
+    "bossActions": 5,
+    "livingHeroes": [
+      "warden",
+      "brawler",
+      "magus"
+    ],
+    "remainingHP": {
+      "warden": 350,
+      "brawler": 56,
+      "magus": 66
+    },
+    "itemsUsed": 0,
+    "selectedBossIntents": [
+      {
+        "tick": 0,
+        "abilityId": "heavy_slash",
+        "details": "targets=brawler; Seeded random living slot 2; source=script"
+      },
+      {
+        "tick": 12,
+        "abilityId": "boss_protect",
+        "details": "targets=blade_tyrant; Self; source=script"
+      },
+      {
+        "tick": 24,
+        "abilityId": "wind_slash",
+        "details": "targets=warden,brawler,magus; All living party members; source=script"
+      },
+      {
+        "tick": 36,
+        "abilityId": "heavy_slash",
+        "details": "targets=brawler; Seeded random living slot 2; source=script"
+      },
+      {
+        "tick": 39,
+        "abilityId": "counter_slash",
+        "details": "targets=magus; Last attacker; source=counter; retaliate-big-hit"
+      },
+      {
+        "tick": 48,
+        "abilityId": "boss_haste",
+        "details": "targets=blade_tyrant; Self; source=script"
+      },
+      {
+        "tick": 60,
+        "abilityId": "blade_storm",
+        "details": "targets=warden,brawler,magus; All living party members; source=script"
+      }
+    ],
+    "countersTriggered": 1,
+    "conditionalOverrides": 0
+  },
+  "sameBudgetSearch": {
+    "originalCandidate": {
+      "encounterId": "reference-001-v07",
+      "explored": 12062,
+      "expanded": 1235,
+      "budgetExhausted": false,
+      "threeStarSolutionsFound": 8,
+      "bestActions": 21,
+      "caveat": "Bounded beam search; witness count and best count are not exhaustive optimality proofs"
+    },
+    "newAI": {
+      "encounterId": "reference-001-v08-ai",
+      "explored": 12295,
+      "expanded": 1231,
+      "budgetExhausted": false,
+      "threeStarSolutionsFound": 8,
+      "bestActions": 19,
+      "caveat": "Bounded beam search; witness count and best count are not exhaustive optimality proofs"
+    }
+  },
+  "notes": [
+    "Reference v0.6 and v0.7 content are unchanged.",
+    "Every random target is drawn at intent selection from a versioned integer seed and boss action index; no random damage, hit, or critical rolls.",
+    "Counters and status overrides consume a normal boss ATB action, never a free attack.",
+    "The optional Protect-reactive dispel is one-shot and may not trigger in every player strategy.",
+    "Reflect is not an available initial status. The generic status-present trigger can support Reflect after the status roster is expanded.",
+    "Encounter v0.8 remains a playtest candidate pending human difficulty feedback."
+  ]
+}

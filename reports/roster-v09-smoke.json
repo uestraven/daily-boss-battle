@@ -1,0 +1,164 @@
+{
+  "version": "v0.9",
+  "heroes": 12,
+  "newHeroes": [
+    "lancer",
+    "oracle",
+    "blademage",
+    "channeler",
+    "nullifier",
+    "monk",
+    "machinist",
+    "vanguard",
+    "thief"
+  ],
+  "bosses": [
+    {
+      "id": "tide_maw",
+      "boss": "Tide Maw",
+      "party": [
+        "blademage",
+        "nullifier",
+        "warden"
+      ],
+      "attackOnly": "defeat",
+      "boundedSearch": {
+        "bestFound": {
+          "stars": 3,
+          "actions": 22,
+          "heroHP": 412,
+          "tick": 80
+        },
+        "expanded": 1438,
+        "truncated": true,
+        "note": "No result is a proof of impossibility; encounters are practice-only pending curation."
+      }
+    },
+    {
+      "id": "ink_lurker",
+      "boss": "Ink Lurker",
+      "party": [
+        "brawler",
+        "monk",
+        "oracle"
+      ],
+      "attackOnly": "defeat",
+      "boundedSearch": {
+        "bestFound": {
+          "stars": 3,
+          "actions": 21,
+          "heroHP": 274,
+          "tick": 64
+        },
+        "expanded": 1403,
+        "truncated": true,
+        "note": "No result is a proof of impossibility; encounters are practice-only pending curation."
+      }
+    },
+    {
+      "id": "crush_wall",
+      "boss": "Crush Wall",
+      "party": [
+        "lancer",
+        "machinist",
+        "oracle"
+      ],
+      "attackOnly": "defeat",
+      "boundedSearch": {
+        "bestFound": {
+          "stars": 3,
+          "actions": 17,
+          "heroHP": 365,
+          "tick": 64
+        },
+        "expanded": 1408,
+        "truncated": true,
+        "note": "No result is a proof of impossibility; encounters are practice-only pending curation."
+      }
+    },
+    {
+      "id": "storm_keeper",
+      "boss": "Storm Keeper",
+      "party": [
+        "machinist",
+        "nullifier",
+        "warden"
+      ],
+      "attackOnly": "defeat",
+      "boundedSearch": {
+        "bestFound": {
+          "stars": 3,
+          "actions": 14,
+          "heroHP": 452,
+          "tick": 55
+        },
+        "expanded": 1448,
+        "truncated": true,
+        "note": "No result is a proof of impossibility; encounters are practice-only pending curation."
+      }
+    },
+    {
+      "id": "spell_weaver",
+      "boss": "Spell Weaver",
+      "party": [
+        "blademage",
+        "channeler",
+        "thief"
+      ],
+      "attackOnly": "defeat",
+      "boundedSearch": {
+        "bestFound": {
+          "stars": 2,
+          "actions": 20,
+          "heroHP": 112,
+          "tick": 97
+        },
+        "expanded": 1414,
+        "truncated": true,
+        "note": "No result is a proof of impossibility; encounters are practice-only pending curation."
+      }
+    },
+    {
+      "id": "mad_harlequin",
+      "boss": "The Mad Harlequin",
+      "party": [
+        "monk",
+        "oracle",
+        "vanguard"
+      ],
+      "attackOnly": "victory",
+      "boundedSearch": {
+        "bestFound": {
+          "stars": 3,
+          "actions": 18,
+          "heroHP": 517,
+          "tick": 61
+        },
+        "expanded": 1417,
+        "truncated": true,
+        "note": "No result is a proof of impossibility; encounters are practice-only pending curation."
+      }
+    },
+    {
+      "id": "clockwork_emperor",
+      "boss": "The Clockwork Emperor",
+      "party": [
+        "channeler",
+        "machinist",
+        "oracle"
+      ],
+      "attackOnly": "defeat",
+      "boundedSearch": {
+        "bestFound": {
+          "stars": 2,
+          "actions": 13,
+          "heroHP": 256,
+          "tick": 52
+        },
+        "expanded": 844,
+        "truncated": true,
+        "note": "No result is a proof of impossibility; encounters are practice-only pending curation."
+      }
+    }
+  ]
+}

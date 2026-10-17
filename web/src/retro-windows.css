@@ -1,0 +1,388 @@
+/* 16-bit Boss Battle window system */
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: var(--dbb-bg-black);
+}
+
+.app-shell {
+  background: var(--dbb-bg-black);
+}
+
+/* Classic silver-framed blue window */
+.rpg-window {
+  position: relative;
+
+  background: linear-gradient(
+    180deg,
+    var(--dbb-window-top) 0%,
+    var(--dbb-window-mid) 55%,
+    var(--dbb-window-bottom) 100%
+  );
+
+  border: 2px solid var(--dbb-border-outer);
+  border-radius: 2px;
+
+  box-shadow:
+    inset 0 0 0 1px var(--dbb-border-inner),
+    3px 3px 0 rgba(0, 0, 0, 0.85);
+
+  color: var(--dbb-text-primary);
+}
+
+/* Fine inner frame */
+.rpg-window::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+
+  border: 1px solid rgba(200, 215, 240, 0.25);
+  pointer-events: none;
+}
+
+/* Text */
+.rpg-window h2,
+.rpg-window h3 {
+  color: var(--dbb-text-primary);
+}
+
+.rpg-window p {
+  color: var(--dbb-text-secondary);
+}
+
+/* Keyboard accessibility */
+.rpg-window button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* =========================================
+   16-bit Battle UI — Command and Intent Windows
+   ========================================= */
+
+.rpg-window:is(.intent-card, .command-card, .log-card) {
+  background: linear-gradient(
+    180deg,
+    var(--dbb-window-top) 0%,
+    var(--dbb-window-mid) 55%,
+    var(--dbb-window-bottom) 100%
+  );
+
+  border: 2px solid var(--dbb-border-outer);
+  border-radius: 2px;
+  color: var(--dbb-text-primary);
+  padding: 18px;
+}
+
+/* Traditional window labels */
+.rpg-window .sidebar-eyebrow,
+.rpg-window .group-label {
+  color: var(--dbb-text-secondary);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+/* Command headings */
+.rpg-window .command-header h3,
+.rpg-window .intent-heading h3 {
+  color: var(--dbb-text-primary);
+  font-family: inherit;
+}
+
+/* Command menu rows */
+.rpg-window .action-button {
+  position: relative;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--dbb-text-primary);
+  padding: 12px 10px 12px 30px;
+  min-height: 44px;
+  text-align: left;
+  box-shadow: none;
+}
+
+/* Hover */
+.rpg-window .action-button:hover:not(:disabled) {
+  background: rgba(100, 155, 255, 0.2);
+  border-color: rgba(230, 236, 245, 0.3);
+}
+
+/* Currently selected command */
+.rpg-window .action-button.active {
+  background: linear-gradient(
+    180deg,
+    #416cbd 0%,
+    #23488d 100%
+  );
+
+  border: 1px solid var(--dbb-border-outer);
+  color: #ffffff;
+}
+
+/* Classic triangle cursor */
+.rpg-window .action-button.active::before {
+  content: "▶";
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ffffff;
+  font-size: 12px;
+}
+
+/* Disabled commands */
+.rpg-window .action-button:disabled {
+  opacity: 0.4;
+  color: #b8c3d5;
+}
+
+/* MP and resource cost labels */
+.rpg-window .action-button small,
+.rpg-window .action-button.active small {
+  color: #d9e9ff;
+  font-size: 10px;
+}
+
+/* Target selection */
+.rpg-window .target-choice button {
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--dbb-text-primary);
+  border: 1px solid var(--dbb-border-inner);
+  border-radius: 2px;
+}
+
+.rpg-window .target-choice button.active {
+  background: #315aa5;
+  border-color: var(--dbb-border-outer);
+  color: #ffffff;
+}
+
+/* Main confirmation command */
+.rpg-window .primary-button {
+  background: linear-gradient(
+    180deg,
+    #416cbd,
+    #173875
+  );
+
+  border: 2px solid var(--dbb-border-outer);
+  border-radius: 2px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.rpg-window .primary-button:hover:not(:disabled) {
+  background: #4779ce;
+}
+
+/* Forecast and battle information */
+.rpg-window .preview-lines,
+.rpg-window .intent-info,
+.rpg-window .intent-targets {
+  color: var(--dbb-text-primary);
+}
+
+.rpg-window .intent-target-rule {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--dbb-border-inner);
+  border-radius: 2px;
+  color: var(--dbb-text-secondary);
+}
+
+/* =========================================
+   16-bit Party Status Window
+   ========================================= */
+
+.rpg-window.hero-section {
+  margin-top: 14px;
+  padding: 12px 14px;
+}
+
+.rpg-window.hero-section .section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--dbb-text-primary);
+  padding-bottom: 10px;
+  margin-bottom: 3px;
+  border-bottom: 1px solid var(--dbb-border-inner);
+  font-size: 12px;
+  letter-spacing: 0.07em;
+}
+
+/* One party window, three horizontal rows */
+.rpg-window.hero-section .hero-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.rpg-window.hero-section .hero-card {
+  display: grid;
+  grid-template-columns:
+    minmax(125px, 1.6fr)
+    repeat(3, minmax(75px, 1fr));
+  gap: 12px;
+  align-items: center;
+
+  width: 100%;
+  padding: 12px 8px;
+
+  color: var(--dbb-text-primary);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(230,236,245,0.22);
+  border-radius: 0;
+  box-shadow: none;
+
+  text-align: left;
+  font-family: inherit;
+}
+
+.rpg-window.hero-section .hero-card:last-child {
+  border-bottom: 0;
+}
+
+.rpg-window.hero-section .hero-card:hover:not(:disabled) {
+  background: rgba(100,155,255,0.14);
+}
+
+.rpg-window.hero-section .hero-card.is-selected {
+  background: rgba(90,145,235,0.25);
+  box-shadow: inset 3px 0 0 #ffffff;
+}
+
+.rpg-window.hero-section .hero-card.is-ready:not(.is-selected) {
+  border-left: 2px solid var(--dbb-atb);
+}
+
+.rpg-window.hero-section .hero-card.is-ko {
+  opacity: 0.5;
+}
+
+.rpg-window.hero-section .hero-card:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: -3px;
+}
+
+/* Character name and selection cursor */
+.rpg-window.hero-section .hero-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  min-width: 0;
+  position: static;
+}
+
+.rpg-hero-cursor {
+  width: 14px;
+  flex-shrink: 0;
+  color: #ffffff;
+  font-size: 12px;
+}
+
+.rpg-window.hero-section .hero-name {
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.rpg-window.hero-section .hero-class {
+  font-size: 9px;
+  color: var(--dbb-text-secondary);
+  letter-spacing: 0.04em;
+}
+
+.rpg-window.hero-section .ready-tag,
+.rpg-window.hero-section .speed-tag {
+  position: static;
+  margin-left: auto;
+  font-size: 10px;
+}
+
+.rpg-window.hero-section .ready-tag {
+  color: var(--dbb-atb);
+}
+
+/* HP, MP and ATB columns */
+.rpg-hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rpg-stat-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+  color: var(--dbb-text-secondary);
+  font-size: 10px;
+}
+
+.rpg-stat-line strong {
+  color: var(--dbb-text-primary);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Compact classic gauges */
+.rpg-window.hero-section .meter {
+  height: 7px;
+  background: #07132d;
+  border: 1px solid var(--dbb-border-inner);
+  border-radius: 0;
+}
+
+.rpg-window.hero-section .meter-hp .meter-fill {
+  background: var(--dbb-hp);
+}
+
+.rpg-window.hero-section .meter-mp .meter-fill {
+  background: var(--dbb-mp);
+}
+
+.rpg-window.hero-section .meter-atb .meter-fill {
+  background: var(--dbb-atb);
+}
+
+/* Buffs, debuffs and character resources */
+.rpg-window.hero-section .hero-card > .status-row {
+  grid-column: 1 / -1;
+  margin: 0 0 0 21px;
+  font-size: 10px;
+}
+
+/* Narrow screens */
+@media (max-width: 650px) {
+  .rpg-window.hero-section {
+    padding: 10px;
+  }
+
+  .rpg-window.hero-section .hero-card {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px 7px;
+    padding: 12px 4px;
+  }
+
+  .rpg-window.hero-section .hero-top {
+    grid-column: 1 / -1;
+  }
+
+  .rpg-stat-line {
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .rpg-stat-line strong {
+    font-size: 11px;
+  }
+}

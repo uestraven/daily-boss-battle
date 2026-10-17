@@ -1,0 +1,235 @@
+{
+  "reference001": {
+    "behavior": "74531f9d6d990ddc",
+    "events": "143f9ab0edd0a87a",
+    "tick": 65,
+    "result": "victory",
+    "stars": 3,
+    "eventCount": 94
+  },
+  "variant007-focus": {
+    "behavior": "d7e22cd47ec24db6",
+    "events": "63f6b65bd5514d04",
+    "tick": 72,
+    "result": "victory",
+    "stars": 3,
+    "eventCount": 107
+  },
+  "variant007-nofocus": {
+    "behavior": "007d0d3910320b76",
+    "events": "08dfc15976703d98",
+    "tick": 72,
+    "result": "victory",
+    "stars": 3,
+    "eventCount": 106
+  },
+  "ai008": {
+    "behavior": "5e9164279847690a",
+    "events": "22b41d5dac16e358",
+    "tick": 65,
+    "result": "victory",
+    "stars": 3,
+    "eventCount": 92
+  },
+  "witness-blade_tyrant": {
+    "behavior": "5e9164279847690a",
+    "events": "22b41d5dac16e358",
+    "tick": 65,
+    "result": "victory",
+    "stars": 3,
+    "eventCount": 92,
+    "actions": 19
+  },
+  "witness-tide_maw": {
+    "behavior": "302615d0642abef4",
+    "events": "ea8dfbbf8d16d060",
+    "tick": 80,
+    "result": "victory",
+    "stars": 3,
+    "eventCount": 123,
+    "actions": 22
+  },
+  "witness-ink_lurker": {
+    "behavior": "bdb545c44c786060",
+    "events": "25ee80484aae713c",
+    "tick": 64,
+    "result": "victory",
+    "stars": 3,
+    "eventCount": 104,
+    "actions": 21
+  },
+  "witness-crush_wall": {
+    "behavior": "88025096fd384f80",
+    "events": "f25d344aeaf2c721",
+    "tick": 64,
+    "result": "victory",
+    "stars": 3,
+    "eventCount": 96,
+    "actions": 17
+  },
+  "witness-storm_keeper": {
+    "behavior": "718208cc8c7baabc",
+    "events": "cd752e088057b823",
+    "tick": 55,
+    "result": "victory",
+    "stars": 3,
+    "eventCount": 71,
+    "actions": 14
+  },
+  "witness-spell_weaver": {
+    "behavior": "c024deb23c90e52b",
+    "events": "a05e3ff932a42c27",
+    "tick": 88,
+    "result": "victory",
+    "stars": 2,
+    "eventCount": 171,
+    "actions": 19
+  },
+  "practice-tide_maw": {
+    "behavior": "97910860d0cd2f16",
+    "events": "cd6dd922c139a9c3",
+    "tick": 97,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 109
+  },
+  "practice-ink_lurker": {
+    "behavior": "053e82030913d574",
+    "events": "36c789655026e38a",
+    "tick": 102,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 138
+  },
+  "practice-crush_wall": {
+    "behavior": "f106519f46622a21",
+    "events": "d9fbfd4b0912315a",
+    "tick": 81,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 100
+  },
+  "practice-storm_keeper": {
+    "behavior": "80a815d801c701ea",
+    "events": "b817057107748de8",
+    "tick": 72,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 83
+  },
+  "practice-spell_weaver": {
+    "behavior": "315d4ea39a75d99b",
+    "events": "dec5a16e03286480",
+    "tick": 70,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 79
+  },
+  "practice-mad_harlequin": {
+    "behavior": "9fe60a719883d664",
+    "events": "0ac37e1f309a090a",
+    "tick": 126,
+    "result": "victory",
+    "stars": 1,
+    "eventCount": 154
+  },
+  "practice-clockwork_emperor": {
+    "behavior": "cc441e4e85134ce5",
+    "events": "fc283dcfe4adffd8",
+    "tick": 54,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 49
+  },
+  "practice-blade_tyrant": {
+    "behavior": "8118ebfa59f6a83a",
+    "events": "d5208193dc2cf52d",
+    "tick": 90,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 104
+  },
+  "mixed-ref": {
+    "behavior": "db18b132e42dd876",
+    "events": "1601acdcb9910f5a",
+    "tick": 192,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 165
+  },
+  "mixed-tide_maw": {
+    "behavior": "8427c3a5def5765f",
+    "events": "78fc5a1f01164e87",
+    "tick": 143,
+    "result": null,
+    "stars": 0,
+    "eventCount": 182
+  },
+  "mixed-ink_lurker": {
+    "behavior": "4c5daa7bf7251fa6",
+    "events": "654552a20c8a727a",
+    "tick": 144,
+    "result": null,
+    "stars": 0,
+    "eventCount": 177
+  },
+  "mixed-crush_wall": {
+    "behavior": "3f038c6516197a71",
+    "events": "89329cbedea51ec8",
+    "tick": 135,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 155
+  },
+  "mixed-storm_keeper": {
+    "behavior": "380cb6c873b12999",
+    "events": "854a48c99018e86a",
+    "tick": 111,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 132
+  },
+  "mixed-spell_weaver": {
+    "behavior": "98c8d27d446d2d73",
+    "events": "a7acc8d7cde6347f",
+    "tick": 140,
+    "result": null,
+    "stars": 0,
+    "eventCount": 257
+  },
+  "mixed-mad_harlequin": {
+    "behavior": "fdfa97e65c059a68",
+    "events": "bc2be13ec89a44a9",
+    "tick": 162,
+    "result": null,
+    "stars": 0,
+    "eventCount": 188
+  },
+  "mixed-clockwork_emperor": {
+    "behavior": "d9100ee7d9ff7056",
+    "events": "cbce44214fd21998",
+    "tick": 81,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 86
+  },
+  "mixed-blade_tyrant": {
+    "behavior": "3f96fc0d87d3fd4f",
+    "events": "3eca820b16a26e88",
+    "tick": 144,
+    "result": "defeat",
+    "stars": 0,
+    "eventCount": 128
+  },
+  "__damageTable": {
+    "hash": "0d9465736cd7e960",
+    "entries": 3664
+  },
+  "__rotation": {
+    "hash": "f5547148c490ec9a"
+  },
+  "__draftPool": {
+    "hash": "d84ad09a34f03cdb",
+    "count": 158
+  }
+}

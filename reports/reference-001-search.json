@@ -1,0 +1,1306 @@
+{
+  "encounterId": "reference-001",
+  "parameters": {
+    "beamWidth": 96,
+    "maxHeroActions": 24,
+    "maxExpansions": 18000,
+    "maxSolutions": 8,
+    "forbiddenAbilities": []
+  },
+  "explored": 20798,
+  "expanded": 2006,
+  "invalidRejected": 0,
+  "endedInDefeat": 0,
+  "endedInVictory": 1707,
+  "guardFailures": 0,
+  "deduplicated": 521,
+  "truncated": true,
+  "beamPruned": true,
+  "budgetExhausted": false,
+  "depthLimitReached": true,
+  "exhausted": false,
+  "maxReachedDepth": 23,
+  "solutions": [
+    {
+      "actions": [
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "cover",
+          "targetIds": [
+            "magus"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "blizzard",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "fire",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "combo_rush",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "combo_rush",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        }
+      ],
+      "actionTicks": [
+        8,
+        10,
+        13,
+        16,
+        20,
+        24,
+        26,
+        30,
+        32,
+        39,
+        40,
+        40,
+        48,
+        50,
+        52,
+        56,
+        60
+      ],
+      "tick": 60,
+      "stars": 3,
+      "itemUses": 0,
+      "survivors": 3,
+      "remainingHP": 373,
+      "bossActions": 5,
+      "signature": "brawler:attack:blade_tyrant|warden:cover:magus|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|magus:elemental_spell:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:combo_rush:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:combo_rush:blade_tyrant|warden:attack:blade_tyrant"
+    },
+    {
+      "actions": [
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "cover",
+          "targetIds": [
+            "magus"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "blizzard",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "fire",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        }
+      ],
+      "actionTicks": [
+        8,
+        10,
+        13,
+        16,
+        20,
+        24,
+        26,
+        30,
+        32,
+        39,
+        40,
+        40,
+        48,
+        50,
+        52,
+        56,
+        60,
+        64
+      ],
+      "tick": 64,
+      "stars": 3,
+      "itemUses": 0,
+      "survivors": 3,
+      "remainingHP": 373,
+      "bossActions": 5,
+      "signature": "brawler:attack:blade_tyrant|warden:cover:magus|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|magus:elemental_spell:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|warden:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant"
+    },
+    {
+      "actions": [
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "cover",
+          "targetIds": [
+            "magus"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "blizzard",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "fire",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "combo_rush",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        }
+      ],
+      "actionTicks": [
+        8,
+        10,
+        13,
+        16,
+        20,
+        24,
+        26,
+        30,
+        32,
+        39,
+        40,
+        40,
+        48,
+        50,
+        52,
+        56,
+        60,
+        64
+      ],
+      "tick": 64,
+      "stars": 3,
+      "itemUses": 0,
+      "survivors": 3,
+      "remainingHP": 373,
+      "bossActions": 5,
+      "signature": "brawler:attack:blade_tyrant|warden:cover:magus|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|magus:elemental_spell:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|warden:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:combo_rush:blade_tyrant"
+    },
+    {
+      "actions": [
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "cover",
+          "targetIds": [
+            "magus"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "blizzard",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "fire",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "cover",
+          "targetIds": [
+            "magus"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        }
+      ],
+      "actionTicks": [
+        8,
+        10,
+        13,
+        16,
+        20,
+        24,
+        26,
+        30,
+        32,
+        39,
+        40,
+        40,
+        48,
+        50,
+        52,
+        56,
+        60,
+        64
+      ],
+      "tick": 64,
+      "stars": 3,
+      "itemUses": 0,
+      "survivors": 3,
+      "remainingHP": 373,
+      "bossActions": 5,
+      "signature": "brawler:attack:blade_tyrant|warden:cover:magus|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|magus:elemental_spell:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|warden:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:cover:magus|brawler:attack:blade_tyrant"
+    },
+    {
+      "actions": [
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "cover",
+          "targetIds": [
+            "magus"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "blizzard",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "fire",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "cover",
+          "targetIds": [
+            "magus"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "combo_rush",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        }
+      ],
+      "actionTicks": [
+        8,
+        10,
+        13,
+        16,
+        20,
+        24,
+        26,
+        30,
+        32,
+        39,
+        40,
+        40,
+        48,
+        50,
+        52,
+        56,
+        60,
+        64
+      ],
+      "tick": 64,
+      "stars": 3,
+      "itemUses": 0,
+      "survivors": 3,
+      "remainingHP": 373,
+      "bossActions": 5,
+      "signature": "brawler:attack:blade_tyrant|warden:cover:magus|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|magus:elemental_spell:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|warden:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:cover:magus|brawler:combo_rush:blade_tyrant"
+    },
+    {
+      "actions": [
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "cover",
+          "targetIds": [
+            "magus"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "blizzard",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "fire",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "combo_rush",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        }
+      ],
+      "actionTicks": [
+        8,
+        10,
+        13,
+        16,
+        20,
+        24,
+        26,
+        30,
+        32,
+        39,
+        40,
+        40,
+        48,
+        50,
+        52,
+        56,
+        60,
+        64
+      ],
+      "tick": 64,
+      "stars": 3,
+      "itemUses": 0,
+      "survivors": 3,
+      "remainingHP": 373,
+      "bossActions": 5,
+      "signature": "brawler:attack:blade_tyrant|warden:cover:magus|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|magus:elemental_spell:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:combo_rush:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant"
+    },
+    {
+      "actions": [
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "cover",
+          "targetIds": [
+            "magus"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "blizzard",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "fire",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "combo_rush",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "combo_rush",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        }
+      ],
+      "actionTicks": [
+        8,
+        10,
+        13,
+        16,
+        20,
+        24,
+        26,
+        30,
+        32,
+        39,
+        40,
+        40,
+        48,
+        50,
+        52,
+        56,
+        60,
+        64
+      ],
+      "tick": 64,
+      "stars": 3,
+      "itemUses": 0,
+      "survivors": 3,
+      "remainingHP": 373,
+      "bossActions": 5,
+      "signature": "brawler:attack:blade_tyrant|warden:cover:magus|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|magus:elemental_spell:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:combo_rush:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:combo_rush:blade_tyrant"
+    },
+    {
+      "actions": [
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "cover",
+          "targetIds": [
+            "magus"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "blizzard",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "fire",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "combo_rush",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "magus",
+          "abilityId": "thunder",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "warden",
+          "abilityId": "attack",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        },
+        {
+          "actorId": "brawler",
+          "abilityId": "spin_kick",
+          "targetIds": [
+            "blade_tyrant"
+          ]
+        }
+      ],
+      "actionTicks": [
+        8,
+        10,
+        13,
+        16,
+        20,
+        24,
+        26,
+        30,
+        32,
+        39,
+        40,
+        40,
+        48,
+        50,
+        52,
+        56,
+        60,
+        64
+      ],
+      "tick": 64,
+      "stars": 3,
+      "itemUses": 0,
+      "survivors": 3,
+      "remainingHP": 373,
+      "bossActions": 5,
+      "signature": "brawler:attack:blade_tyrant|warden:cover:magus|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant|magus:elemental_spell:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:combo_rush:blade_tyrant|warden:attack:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|magus:elemental_spell:blade_tyrant|brawler:attack:blade_tyrant|warden:attack:blade_tyrant|brawler:spin_kick:blade_tyrant"
+    }
+  ],
+  "note": "Bounded search: no solution found does NOT imply the battle is unwinnable; distinct action traces do NOT prove strategically distinct solutions.",
+  "policyProbes": [
+    {
+      "policy": "attack_only",
+      "result": "defeat",
+      "tick": 102,
+      "heroActions": 18,
+      "bossActions": 9,
+      "stars": 0,
+      "survivors": 0,
+      "itemsUsed": 0
+    },
+    {
+      "policy": "defend_only",
+      "result": "defeat",
+      "tick": 192,
+      "heroActions": 31,
+      "bossActions": 16,
+      "stars": 0,
+      "survivors": 0,
+      "itemsUsed": 0
+    },
+    {
+      "policy": "greedy_damage",
+      "result": "victory",
+      "tick": 100,
+      "heroActions": 18,
+      "bossActions": 8,
+      "stars": 1,
+      "survivors": 1,
+      "itemsUsed": 0
+    }
+  ]
+}

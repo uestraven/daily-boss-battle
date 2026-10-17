@@ -1,0 +1,858 @@
+{
+  "blade_tyrant": {
+    "encounterId": "reference-001-v08-ai",
+    "actions": [
+      {
+        "actorId": "brawler",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "magus",
+        "abilityId": "blizzard",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "spin_kick",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "magus",
+        "abilityId": "blizzard",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "magus",
+        "abilityId": "blizzard",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "spin_kick",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "magus",
+        "abilityId": "blizzard",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "combo_rush",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      },
+      {
+        "actorId": "magus",
+        "abilityId": "blizzard",
+        "targetIds": [
+          "blade_tyrant"
+        ]
+      }
+    ],
+    "expected": {
+      "result": "victory",
+      "stars": 3,
+      "actionCount": 19,
+      "finalTick": 65,
+      "itemUses": 0
+    }
+  },
+  "tide_maw": {
+    "encounterId": "practice-tide_maw-v09",
+    "actions": [
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "cover",
+        "targetIds": [
+          "blademage"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "nullifier_blizzard",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "nullifier_blizzard",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "nullifier_blizzard",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "attack",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "attack",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "nullify",
+        "targetIds": [
+          "nullifier"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "attack",
+        "targetIds": [
+          "tide_maw"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "tide_maw"
+        ]
+      }
+    ],
+    "expected": {
+      "finalTick": 80,
+      "actionCount": 22,
+      "itemUses": 0,
+      "stars": 3,
+      "result": "victory"
+    }
+  },
+  "ink_lurker": {
+    "encounterId": "practice-ink_lurker-v09",
+    "actions": [
+      {
+        "actorId": "brawler",
+        "abilityId": "attack",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "monk",
+        "abilityId": "flurry_fist",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "oracle",
+        "abilityId": "aim",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "attack",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "monk",
+        "abilityId": "flurry_fist",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "spin_kick",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "oracle",
+        "abilityId": "oracle_haste",
+        "targetIds": [
+          "monk"
+        ]
+      },
+      {
+        "actorId": "monk",
+        "abilityId": "flurry_fist",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "attack",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "monk",
+        "abilityId": "flurry_fist",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "oracle",
+        "abilityId": "aim",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "monk",
+        "abilityId": "flurry_fist",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "attack",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "monk",
+        "abilityId": "flurry_fist",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "spin_kick",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "oracle",
+        "abilityId": "oracle_cure",
+        "targetIds": [
+          "monk"
+        ]
+      },
+      {
+        "actorId": "monk",
+        "abilityId": "flurry_fist",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "attack",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "oracle",
+        "abilityId": "aim",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "monk",
+        "abilityId": "attack",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      },
+      {
+        "actorId": "brawler",
+        "abilityId": "combo_rush",
+        "targetIds": [
+          "ink_lurker"
+        ]
+      }
+    ],
+    "expected": {
+      "finalTick": 64,
+      "actionCount": 21,
+      "itemUses": 0,
+      "stars": 3,
+      "result": "victory"
+    }
+  },
+  "crush_wall": {
+    "encounterId": "practice-crush_wall-v09",
+    "actions": [
+      {
+        "actorId": "lancer",
+        "abilityId": "jump",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "oracle",
+        "abilityId": "oracle_haste",
+        "targetIds": [
+          "machinist"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "oracle",
+        "abilityId": "aim",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "lancer",
+        "abilityId": "jump",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "oracle",
+        "abilityId": "oracle_haste",
+        "targetIds": [
+          "machinist"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "lancer",
+        "abilityId": "attack",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "oracle",
+        "abilityId": "aim",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "lancer",
+        "abilityId": "jump",
+        "targetIds": [
+          "crush_wall"
+        ]
+      },
+      {
+        "actorId": "oracle",
+        "abilityId": "oracle_cure",
+        "targetIds": [
+          "machinist"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "crush_wall"
+        ]
+      }
+    ],
+    "expected": {
+      "finalTick": 64,
+      "actionCount": 17,
+      "itemUses": 0,
+      "stars": 3,
+      "result": "victory"
+    }
+  },
+  "storm_keeper": {
+    "encounterId": "practice-storm_keeper-v09",
+    "actions": [
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "attack",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "nullify",
+        "targetIds": [
+          "nullifier"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "attack",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "nullifier",
+        "abilityId": "attack",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "warden",
+        "abilityId": "attack",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      },
+      {
+        "actorId": "machinist",
+        "abilityId": "drill",
+        "targetIds": [
+          "storm_keeper"
+        ]
+      }
+    ],
+    "expected": {
+      "finalTick": 55,
+      "actionCount": 14,
+      "itemUses": 0,
+      "stars": 3,
+      "result": "victory"
+    }
+  },
+  "spell_weaver": {
+    "encounterId": "practice-spell_weaver-v09",
+    "actions": [
+      {
+        "actorId": "thief",
+        "abilityId": "steal",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "channeler",
+        "abilityId": "surge",
+        "targetIds": [
+          "channeler"
+        ]
+      },
+      {
+        "actorId": "thief",
+        "abilityId": "plunder",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "channeler",
+        "abilityId": "channeler_fire2",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "thief",
+        "abilityId": "plunder",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "channeler",
+        "abilityId": "channeler_fire2",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "channeler",
+        "abilityId": "attack",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "channeler",
+        "abilityId": "attack",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "channeler",
+        "abilityId": "channeler_fire2",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "channeler",
+        "abilityId": "revive_tonic",
+        "targetIds": [
+          "blademage"
+        ]
+      },
+      {
+        "actorId": "blademage",
+        "abilityId": "volley",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      },
+      {
+        "actorId": "channeler",
+        "abilityId": "channeler_fire2",
+        "targetIds": [
+          "spell_weaver"
+        ]
+      }
+    ],
+    "expected": {
+      "finalTick": 88,
+      "actionCount": 19,
+      "itemUses": 1,
+      "stars": 2,
+      "result": "victory"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "daily-boss-battle",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Daily Boss Battle — deterministic tactical ATB engine, six daily templates, local daily results and practice mode. Android-first mobile client",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "golden": "npm run build && node scripts/run-golden.mjs",
+    "web:dev": "npm run build && vite --config web/vite.config.ts",
+    "web:build": "npm run build && vite build --config web/vite.config.ts && tsc --project web/tsconfig.json --noEmit",
+    "web:preview": "vite preview --config web/vite.config.ts",
+    "check:all": "npm test && npm run web:build",
+    "roster:check": "npm run build && node scripts/run-roster.mjs",
+    "daily:check": "npm run build && node scripts/run-daily.mjs",
+    "art:check": "node scripts/check-backgrounds.mjs",
+    "audio:manifest": "npm run build && node tools/audio-manifest.mjs",
+    "behavior:check": "npm run build && node tools/behavior-snapshot.mjs --check reports/behavior-baseline.json",
+    "behavior:record": "npm run build && node tools/behavior-snapshot.mjs --write reports/behavior-baseline.json",
+    "draft:check": "npm run build && node tools/draft-report.mjs",
+    "pool:build": "npm run build && node tools/generate-pool.mjs",
+    "pool:quick": "npm run build && node tools/generate-pool.mjs --quick",
+    "pool:check": "npm run build && node tools/check-pool.mjs",
+    "play": "npm run build && node tools/play.mjs",
+    "tune": "npm run build && node tools/tune-boss.mjs",
+    "witnesses:record": "npm run build && node tools/regenerate-witnesses.mjs",
+    "verify": "npm run typecheck && npm test && npm run behavior:check && npm run pool:check && npm run golden"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "vite": "^7.1.0"
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  }
+}

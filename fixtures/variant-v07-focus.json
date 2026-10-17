@@ -1,0 +1,191 @@
+{
+  "encounterId": "reference-001-v07",
+  "contentVersion": "0.7-candidate",
+  "source": "bounded deterministic beam search; independently reducer-replayed",
+  "searchParameters": {
+    "beamWidth": 200,
+    "maxHeroActions": 32,
+    "maxExpansions": 20000,
+    "maxSolutions": 100,
+    "forbiddenAbilities": []
+  },
+  "playerActions": [
+    {
+      "actorId": "brawler",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 8
+    },
+    {
+      "actorId": "warden",
+      "abilityId": "cover",
+      "targetIds": [
+        "magus"
+      ],
+      "expectedTick": 10
+    },
+    {
+      "actorId": "magus",
+      "abilityId": "focus",
+      "targetIds": [
+        "magus"
+      ],
+      "expectedTick": 13
+    },
+    {
+      "actorId": "brawler",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 16
+    },
+    {
+      "actorId": "warden",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 20
+    },
+    {
+      "actorId": "brawler",
+      "abilityId": "spin_kick",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 24
+    },
+    {
+      "actorId": "magus",
+      "abilityId": "blizzard",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 26
+    },
+    {
+      "actorId": "warden",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 30
+    },
+    {
+      "actorId": "brawler",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 32
+    },
+    {
+      "actorId": "magus",
+      "abilityId": "blizzard",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 39
+    },
+    {
+      "actorId": "brawler",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 40
+    },
+    {
+      "actorId": "warden",
+      "abilityId": "cover",
+      "targetIds": [
+        "magus"
+      ],
+      "expectedTick": 40
+    },
+    {
+      "actorId": "brawler",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 48
+    },
+    {
+      "actorId": "warden",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 50
+    },
+    {
+      "actorId": "magus",
+      "abilityId": "blizzard",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 52
+    },
+    {
+      "actorId": "brawler",
+      "abilityId": "combo_rush",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 56
+    },
+    {
+      "actorId": "warden",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 60
+    },
+    {
+      "actorId": "brawler",
+      "abilityId": "combo_rush",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 64
+    },
+    {
+      "actorId": "magus",
+      "abilityId": "blizzard",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 65
+    },
+    {
+      "actorId": "warden",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 70
+    },
+    {
+      "actorId": "brawler",
+      "abilityId": "attack",
+      "targetIds": [
+        "blade_tyrant"
+      ],
+      "expectedTick": 72
+    }
+  ],
+  "expected": {
+    "result": "victory",
+    "stars": 3,
+    "tick": 72,
+    "heroActions": 21,
+    "bossActions": 6,
+    "partyHP": 233,
+    "itemUses": 0
+  }
+}

@@ -1,0 +1,36 @@
+import type { EncounterDefinition, Ability } from './types.js';
+const abilities:Ability[] = [
+  {id:'attack',name:'Attack',owner:'any_hero',kind:'physical',target:'single_living_enemy',power:100,momentumGain:1},
+  {id:'defend',name:'Defend',owner:'any_hero',kind:'status',target:'self',status:'defend'},
+  {id:'potion',name:'Potion',owner:'any_hero',kind:'item',target:'single_living_ally',item:'potion'},
+  {id:'mana_vial',name:'Mana Vial',owner:'any_hero',kind:'item',target:'single_living_ally',item:'mana_vial'},
+  {id:'revive_tonic',name:'Revive Tonic',owner:'any_hero',kind:'item',target:'single_ko_ally',item:'revive_tonic'},
+  {id:'cover',name:'Cover',owner:'warden',kind:'cover',target:'single_other_ally',duration:24},
+  {id:'cure',name:'Cure',owner:'warden',kind:'heal',target:'single_living_ally',mpCost:6,power:100},
+  {id:'protect',name:'Protect',owner:'warden',kind:'status',target:'single_living_ally',mpCost:8,status:'protect',duration:24},
+  {id:'combo_rush',name:'Combo Rush',owner:'brawler',kind:'physical',target:'single_living_enemy',power:170,momentumCost:1},
+  {id:'spin_kick',name:'Spin Kick',owner:'brawler',kind:'physical',target:'single_living_enemy',power:230,momentumCost:2},
+  {id:'focus',name:'Focus',owner:'magus',kind:'focus',target:'self',duration:24},
+  {id:'fire',name:'Fire',owner:'magus',kind:'magical',target:'single_living_enemy',power:100,mpCost:7,element:'fire'},
+  {id:'blizzard',name:'Blizzard',owner:'magus',kind:'magical',target:'single_living_enemy',power:100,mpCost:7,element:'ice'},
+  {id:'thunder',name:'Thunder',owner:'magus',kind:'magical',target:'single_living_enemy',power:100,mpCost:7,element:'lightning'},
+  {id:'heavy_slash',name:'Heavy Slash',owner:'blade_tyrant',kind:'physical',target:'single_living_enemy',power:210},
+  {id:'wind_slash',name:'Wind Slash',owner:'blade_tyrant',kind:'magical',target:'all_living_enemies',power:90},
+  {id:'boss_protect',name:'Protect',owner:'blade_tyrant',kind:'status',target:'self',status:'protect',mpCost:8,duration:24},
+  {id:'boss_haste',name:'Haste',owner:'blade_tyrant',kind:'status',target:'self',status:'haste',mpCost:10,duration:24},
+  {id:'blade_storm',name:'Blade Storm',owner:'blade_tyrant',kind:'physical',target:'all_living_enemies',power:95,delayTicks:4},
+];
+export const reference001: EncounterDefinition = {
+  id:'reference-001',engineVersion:'0.1.0',contentVersion:'0.6-approved-tuning',
+  party:['warden','brawler','magus'],bossId:'blade_tyrant',
+  actors:{
+    warden:{name:'The Warden',stats:{hp:400,mp:26,attack:65,defense:85,magic:50,resistance:75,speed:100}},
+    brawler:{name:'The Brawler',stats:{hp:315,mp:0,attack:92,defense:50,magic:30,resistance:40,speed:125},momentumCap:2},
+    magus:{name:'The Magus',stats:{hp:220,mp:54,attack:30,defense:35,magic:105,resistance:65,speed:80}},
+    blade_tyrant:{name:'Blade Tyrant',stats:{hp:1400,mp:24,attack:90,defense:55,magic:70,resistance:60,speed:90}},
+  },
+  abilities:Object.fromEntries(abilities.map(a=>[a.id,a])),
+  inventory:{potion:2,mana_vial:1,revive_tonic:1},
+  bossProgram:{phaseOne:['heavy_slash','wind_slash','boss_protect'],phaseOneRepeat:['heavy_slash','wind_slash'],phaseTwo:['boss_haste','blade_storm','heavy_slash'],phaseTwoRepeat:['wind_slash','heavy_slash'],transitionPercent:50,fallbackAbility:'heavy_slash'},
+  maxTicks:5000,
+};

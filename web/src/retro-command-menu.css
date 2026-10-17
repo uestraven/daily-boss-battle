@@ -1,0 +1,41 @@
+/* 16-bit command navigation. Imports after retro-windows.css. */
+.rpg-window .rpg-command-menu { color: var(--dbb-text-primary); }
+.rpg-window .rpg-menu-title {
+  color: var(--dbb-text-secondary);
+  letter-spacing: .1em;
+  font-size: 12px;
+  padding: 5px 5px 10px;
+  border-bottom: 1px solid rgba(230,236,245,.35);
+  margin-bottom: 6px;
+}
+.rpg-window .rpg-menu-list { display: flex; flex-direction: column; gap: 2px; }
+.rpg-window .rpg-menu-entry {
+  width: 100%; min-height: 44px;
+  padding: 9px 12px 9px 6px;
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid transparent; border-radius: 0;
+  background: transparent; color: var(--dbb-text-primary);
+  font: inherit; font-size: 17px; text-align: left; cursor: pointer;
+}
+.rpg-window .rpg-menu-entry:hover:not(:disabled),
+.rpg-window .rpg-menu-entry:focus-visible {
+  background: rgba(110,160,250,.25);
+  border-color: rgba(230,236,245,.45);
+}
+.rpg-window .rpg-menu-entry.is-active {
+  background: linear-gradient(180deg,#416cbd,#23488d);
+  border-color: var(--dbb-border-outer);
+}
+.rpg-window .rpg-menu-entry:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+.rpg-window .rpg-menu-entry:disabled { opacity: .5; cursor: not-allowed; }
+.rpg-window .rpg-menu-pointer { width: 16px; flex: 0 0 16px; font-size: 13px; }
+.rpg-window .rpg-menu-name { flex: 1; min-width: 0; }
+.rpg-window .rpg-menu-cost, .rpg-window .rpg-menu-end {
+  margin-left: auto; color: var(--dbb-text-secondary); white-space: nowrap; font-size: 12px;
+}
+.rpg-window .rpg-menu-back { margin-top: 9px; border-top: 1px solid rgba(230,236,245,.35); }
+.rpg-window .rpg-menu-help { margin: 10px 6px 0; font-size: 11px; color: var(--dbb-text-secondary); }
+@media(max-width:650px) {
+  .rpg-window .rpg-menu-entry { font-size: 16px; }
+  .rpg-window .rpg-menu-help { font-size: 10px; }
+}

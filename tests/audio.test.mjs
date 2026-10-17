@@ -1,0 +1,196 @@
+/** Audio cues derived from choreography. Asserts the contract a sound designer and a
+ * renderer both depend on: which sound, when, how loud, and when the music changes. */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {HEAVY_HIT_INTENSITY, PHASE_SILENCE_MS, audioCues, musicChanges,
+  requiredSounds, requiredTracks} from '../dist/src/audio.js';
+import {choreograph} from '../dist/src/presentation.js';
+
+const ev = (type, extra = {}) => ({tick: 1, type, ...extra});
+const script = (events, opts = {}) => choreograph(events, opts);
+
+test('a silent batch produces no cues', () => {
+  assert.deepEqual(audioCues(script([])), []);
+  assert.deepEqual(musicChanges(script([])), []);
+});
+
+test('a physical hit produces one hit cue at the moment of impact', () => {
+  const s = script([
+    ev('action_committed', {actorId: 'monk', abilityId: 'attack'}),
+    ev('damage', {actorId: 'monk', targetId: 'boss', amount: 50, hpAfter: 950}),
+  ], {maxHp: {boss: 1000}});
+  const cues = audioCues(s);
+  const hits = cues.filter(c => c.sound.startsWith('hit_'));
+  assert.equal(hits.length, 1);
+  const impact = s.beats.find(b => b.kind === 'impact');
+  assert.equal(hits[0].at, impact.at, 'the hit sound lands with the impact, not the number');
+});
+
+test('a heavy hit uses the heavy variant and is louder', () => {
+  const light = audioCues(script([ev('damage', {actorId: 'b', targetId: 'm', amount: 5, hpAfter: 995})],
+    {maxHp: {m: 1000}})).find(c => c.sound.startsWith('hit_'));
+  const heavy = audioCues(script([ev('damage', {actorId: 'b', targetId: 'm', amount: 900, hpAfter: 100})],
+    {maxHp: {m: 1000}})).find(c => c.sound.startsWith('hit_'));
+  assert.equal(light.sound, 'hit_physical');
+  assert.equal(heavy.sound, 'hit_heavy');
+  assert.ok(heavy.gain > light.gain, 'heavier hits are louder');
+  for (const cue of [light, heavy]) {
+    assert.ok(cue.gain > 0 && cue.gain <= 1, `gain out of range: ${cue.gain}`);
+  }
+});
+
+test('the heavy threshold is the documented one', () => {
+  // Just under and just over the boundary must differ.
+  const atIntensity = fraction => {
+    const maxHp = 1000;
+    const amount = Math.round(fraction * maxHp);
+    return audioCues(script([ev('damage', {actorId: 'b', targetId: 'm', amount, hpAfter: maxHp - amount})],
+      {maxHp: {m: maxHp}})).find(c => c.sound.startsWith('hit_'));
+  };
+  // Shake intensity is a cube-root curve, so pick clearly-separated fractions.
+  assert.equal(atIntensity(0.01).sound, 'hit_physical');
+  assert.equal(atIntensity(0.9).sound, 'hit_heavy');
+  assert.ok(HEAVY_HIT_INTENSITY > 0 && HEAVY_HIT_INTENSITY < 1);
+});
+
+test('multi-hit abilities produce one cue per hit, in order', () => {
+  const events = [ev('action_committed', {actorId: 'blademage', abilityId: 'volley'})];
+  for (let i = 0; i < 4; i++) {
+    events.push(ev('damage', {actorId: 'blademage', targetId: 'boss', amount: 40, hpAfter: 1000 - 40 * (i + 1)}));
+  }
+  const cues = audioCues(script(events, {maxHp: {boss: 1000}})).filter(c => c.sound.startsWith('hit_'));
+  assert.equal(cues.length, 4);
+  for (let i = 1; i < cues.length; i++) assert.ok(cues[i].at > cues[i - 1].at, 'cues are distinct in time');
+});
+
+test('healing, KO, revive, status and telegraph each map to their own cue', () => {
+  const cases = [
+    [ev('heal', {actorId: 'o', targetId: 'm', amount: 50, hpAfter: 300}), 'heal'],
+    [ev('mp_restored', {actorId: 'o', targetId: 'm', amount: 10}), 'mp_restore'],
+    [ev('ko', {actorId: 'm'}), 'ko'],
+    [ev('revived', {actorId: 'o', targetId: 'm'}), 'revive'],
+    [ev('status_applied', {actorId: 'm', details: 'protect'}), 'status_on'],
+    [ev('status_expired', {actorId: 'm', details: 'protect'}), 'status_off'],
+    [ev('boss_intent', {actorId: 'b', abilityId: 'x'}), 'telegraph'],
+    [ev('channel_started', {actorId: 'b', abilityId: 'x'}), 'cast_start'],
+    [ev('boss_interrupted', {actorId: 'v', targetId: 'b'}), 'interrupt'],
+    [ev('nullify_absorb', {actorId: 'n', amount: 8}), 'nullify'],
+  ];
+  for (const [event, expected] of cases) {
+    const cues = audioCues(script([event], {maxHp: {m: 360}}));
+    assert.ok(cues.some(c => c.sound === expected), `${event.type} should cue ${expected}`);
+  }
+});
+
+test('bookkeeping events stay silent', () => {
+  const cues = audioCues(script([
+    ev('ready', {actorId: 'm'}),
+    ev('momentum', {actorId: 'b', amount: 1}),
+    ev('channel_resolved', {actorId: 'b', abilityId: 'x'}),
+  ]));
+  assert.deepEqual(cues, []);
+});
+
+test('text blips are opt-in and bounded by the text duration', () => {
+  const s = script([ev('boss_intent', {actorId: 'b', abilityId: 'x'})],
+    {names: {b: 'The Clockwork Emperor'}, abilityNames: {x: 'Piston Strike'}});
+  assert.ok(!audioCues(s).some(c => c.sound === 'text_blip'), 'off by default');
+  const blips = audioCues(s, {textBlips: true}).filter(c => c.sound === 'text_blip');
+  assert.ok(blips.length > 1, 'typing produces repeated blips');
+  const telegraph = s.beats.find(b => b.kind === 'telegraph');
+  for (const blip of blips) {
+    assert.ok(blip.at >= telegraph.at && blip.at < telegraph.at + telegraph.duration,
+      'blips stay inside the text beat');
+  }
+  assert.ok(blips.every(b => b.gain < 0.4), 'blips sit under the mix');
+});
+
+test('cues are sorted and deterministic', () => {
+  const events = [
+    ev('action_committed', {actorId: 'monk', abilityId: 'attack'}),
+    ev('damage', {actorId: 'monk', targetId: 'boss', amount: 300, hpAfter: 700}),
+    ev('phase_change', {actorId: 'boss'}),
+    ev('ko', {actorId: 'monk'}),
+  ];
+  const first = audioCues(script(events, {maxHp: {boss: 1000, monk: 360}}));
+  const second = audioCues(script(events, {maxHp: {boss: 1000, monk: 360}}));
+  assert.deepEqual(first, second);
+  for (let i = 1; i < first.length; i++) assert.ok(first[i].at >= first[i - 1].at);
+});
+
+test('a phase change cuts the music, stings, then brings up phase two', () => {
+  const s = script([
+    ev('damage', {actorId: 'm', targetId: 'b', amount: 100, hpAfter: 500}),
+    ev('phase_change', {actorId: 'b'}),
+  ], {maxHp: {b: 1000}, names: {b: 'Tide Maw'}});
+
+  const sting = audioCues(s).find(c => c.sound === 'phase_sting');
+  assert.ok(sting, 'the transition has a sting');
+  assert.equal(sting.gain, 1, 'at full volume');
+
+  const changes = musicChanges(s);
+  assert.equal(changes.length, 2, 'silence then phase two');
+  assert.equal(changes[0].track, 'silence');
+  assert.equal(changes[1].track, 'battle_phase_two');
+  const phase = s.beats.find(b => b.kind === 'phase');
+  assert.equal(changes[0].at, phase.at - PHASE_SILENCE_MS, 'music drops just before the sting');
+  assert.ok(changes[1].at >= phase.at + phase.duration, 'phase two waits for the hold to finish');
+});
+
+test('victory and defeat switch the music once', () => {
+  const win = musicChanges(script([ev('victory')]));
+  assert.deepEqual(win, [{at: win[0].at, track: 'victory'}]);
+  const loss = musicChanges(script([ev('defeat')]));
+  assert.equal(loss[0].track, 'defeat');
+  // Already on a track means no redundant change.
+  assert.deepEqual(musicChanges(script([ev('victory')]), 'victory'), []);
+});
+
+test('music changes never repeat the current track', () => {
+  const s = script([ev('phase_change', {actorId: 'b'}), ev('phase_change', {actorId: 'b'})]);
+  const changes = musicChanges(s);
+  for (let i = 1; i < changes.length; i++) {
+    assert.notEqual(changes[i].track, changes[i - 1].track, 'consecutive changes must differ');
+  }
+});
+
+test('the manifests are complete, unique, and documented', () => {
+  const sounds = requiredSounds();
+  assert.ok(sounds.length >= 15, 'the SFX list is the commissioning list');
+  assert.equal(new Set(sounds.map(s => s.id)).size, sounds.length, 'no duplicate ids');
+  for (const entry of sounds) {
+    assert.ok(entry.purpose.length > 8, `${entry.id} needs a usable description`);
+  }
+  const tracks = requiredTracks();
+  assert.ok(tracks.some(t => t.id === 'battle_main') && tracks.some(t => t.id === 'battle_phase_two'));
+  assert.equal(new Set(tracks.map(t => t.id)).size, tracks.length);
+});
+
+test('every sound the mapper can emit is declared in the manifest', () => {
+  // Drive a broad set of events and confirm no cue escapes the manifest.
+  const declared = new Set(requiredSounds().map(s => s.id));
+  const events = [
+    ev('action_committed', {actorId: 'm', abilityId: 'attack'}),
+    ev('damage', {actorId: 'm', targetId: 'b', amount: 900, hpAfter: 100}),
+    ev('damage', {actorId: 'm', targetId: 'b', amount: 5, hpAfter: 95}),
+    ev('heal', {actorId: 'o', targetId: 'm', amount: 20, hpAfter: 300}),
+    ev('mp_restored', {actorId: 'o', targetId: 'm', amount: 8}),
+    ev('channel_started', {actorId: 'b', abilityId: 'x'}),
+    ev('status_applied', {actorId: 'm', details: 'protect'}),
+    ev('status_expired', {actorId: 'm', details: 'protect'}),
+    ev('boss_intent', {actorId: 'b', abilityId: 'x'}),
+    ev('boss_interrupted', {actorId: 'v', targetId: 'b'}),
+    ev('nullify_absorb', {actorId: 'n', amount: 8}),
+    ev('poison_pulse', {actorId: 'm', amount: 10, hpAfter: 290}),
+    ev('phase_change', {actorId: 'b'}),
+    ev('ko', {actorId: 'm'}),
+    ev('revived', {actorId: 'o', targetId: 'm'}),
+    ev('victory'),
+    ev('defeat'),
+  ];
+  const cues = audioCues(script(events, {maxHp: {b: 1000, m: 360}}), {textBlips: true});
+  assert.ok(cues.length > 10);
+  for (const cue of cues) {
+    assert.ok(declared.has(cue.sound), `${cue.sound} is emitted but not in requiredSounds()`);
+  }
+});

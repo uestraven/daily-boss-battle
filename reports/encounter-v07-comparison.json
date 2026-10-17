@@ -1,0 +1,1168 @@
+{
+  "schemaVersion": 1,
+  "createdBy": "scripts/run-variant.mjs",
+  "options": {
+    "beamWidth": 48,
+    "maxExpansions": 5000,
+    "maxHeroActions": 32
+  },
+  "reference": {
+    "schemaVersion": 1,
+    "encounterId": "reference-001",
+    "engineVersion": "0.1.0",
+    "contentVersion": "0.6-approved-tuning",
+    "searchParameters": {
+      "beamWidth": 48,
+      "maxHeroActions": 32,
+      "maxExpansions": 5000
+    },
+    "golden": {
+      "result": "victory",
+      "stars": 3,
+      "tick": 65,
+      "heroActions": 19,
+      "bossActions": 5,
+      "survivors": 3,
+      "partyHP": 523,
+      "partyMaxHP": 935,
+      "remainingMP": {
+        "warden": 8,
+        "brawler": 0,
+        "magus": 26
+      },
+      "itemUses": 0,
+      "bossDamage": 1400,
+      "partyDamageReceived": 562,
+      "partyHealing": 150,
+      "heroDamageByActor": {
+        "warden": 107,
+        "brawler": 859,
+        "magus": 434
+      },
+      "actionsByAbility": {
+        "attack": 6,
+        "combo_rush": 4,
+        "cover": 1,
+        "cure": 3,
+        "fire": 4,
+        "focus": 1
+      },
+      "phaseChanges": 1,
+      "statusApplications": 3,
+      "fizzles": 0,
+      "planTags": [
+        "cover",
+        "healing",
+        "focus",
+        "brawler_burst",
+        "elemental_magic"
+      ]
+    },
+    "probes": [
+      {
+        "id": "baseline",
+        "description": "Unrestricted search",
+        "forbiddenAbilities": [],
+        "solutionsFound": 8,
+        "bestStars": 3,
+        "shortestWinningActions": 17,
+        "searchedStates": 14096,
+        "expanded": 1409,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 3,
+          "tick": 60,
+          "heroActions": 17,
+          "bossActions": 5,
+          "survivors": 3,
+          "partyHP": 373,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 26
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 562,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 271,
+            "brawler": 749,
+            "magus": 380
+          },
+          "actionsByAbility": {
+            "attack": 9,
+            "blizzard": 1,
+            "combo_rush": 2,
+            "cover": 1,
+            "fire": 1,
+            "spin_kick": 1,
+            "thunder": 2
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "brawler_burst",
+            "elemental_magic"
+          ]
+        }
+      },
+      {
+        "id": "without_focus",
+        "description": "No Magus Focus",
+        "forbiddenAbilities": [
+          "focus"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 3,
+        "shortestWinningActions": 17,
+        "searchedStates": 13575,
+        "expanded": 1409,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 3,
+          "tick": 60,
+          "heroActions": 17,
+          "bossActions": 5,
+          "survivors": 3,
+          "partyHP": 373,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 26
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 562,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 271,
+            "brawler": 749,
+            "magus": 380
+          },
+          "actionsByAbility": {
+            "attack": 9,
+            "blizzard": 1,
+            "combo_rush": 2,
+            "cover": 1,
+            "fire": 1,
+            "spin_kick": 1,
+            "thunder": 2
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "brawler_burst",
+            "elemental_magic"
+          ]
+        }
+      },
+      {
+        "id": "without_brawler_specials",
+        "description": "No Brawler Combo Rush or Spin Kick",
+        "forbiddenAbilities": [
+          "combo_rush",
+          "spin_kick"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 2,
+        "shortestWinningActions": 20,
+        "searchedStates": 12953,
+        "expanded": 1409,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 2,
+          "tick": 80,
+          "heroActions": 20,
+          "bossActions": 6,
+          "survivors": 2,
+          "partyHP": 307,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 33
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 628,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 336,
+            "brawler": 779,
+            "magus": 285
+          },
+          "actionsByAbility": {
+            "attack": 16,
+            "blizzard": 1,
+            "cover": 1,
+            "fire": 1,
+            "thunder": 1
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "elemental_magic"
+          ]
+        }
+      },
+      {
+        "id": "without_cover",
+        "description": "No Warden Cover",
+        "forbiddenAbilities": [
+          "cover"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 2,
+        "shortestWinningActions": 17,
+        "searchedStates": 10963,
+        "expanded": 1405,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 2,
+          "tick": 70,
+          "heroActions": 17,
+          "bossActions": 6,
+          "survivors": 3,
+          "partyHP": 461,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 40
+          },
+          "itemUses": 1,
+          "bossDamage": 1400,
+          "partyDamageReceived": 529,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 306,
+            "brawler": 904,
+            "magus": 190
+          },
+          "actionsByAbility": {
+            "attack": 11,
+            "blizzard": 1,
+            "combo_rush": 1,
+            "fire": 1,
+            "revive_tonic": 1,
+            "spin_kick": 2
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "healing",
+            "brawler_burst",
+            "elemental_magic",
+            "items"
+          ]
+        }
+      },
+      {
+        "id": "without_healing",
+        "description": "No Cure or restorative items",
+        "forbiddenAbilities": [
+          "cure",
+          "potion",
+          "revive_tonic"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 3,
+        "shortestWinningActions": 17,
+        "searchedStates": 6416,
+        "expanded": 1145,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": false,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 3,
+          "tick": 60,
+          "heroActions": 17,
+          "bossActions": 5,
+          "survivors": 3,
+          "partyHP": 373,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 26
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 562,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 271,
+            "brawler": 749,
+            "magus": 380
+          },
+          "actionsByAbility": {
+            "attack": 9,
+            "blizzard": 1,
+            "combo_rush": 2,
+            "cover": 1,
+            "fire": 1,
+            "spin_kick": 1,
+            "thunder": 2
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "brawler_burst",
+            "elemental_magic"
+          ]
+        }
+      },
+      {
+        "id": "without_items",
+        "description": "No shared consumable items",
+        "forbiddenAbilities": [
+          "potion",
+          "mana_vial",
+          "revive_tonic"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 3,
+        "shortestWinningActions": 17,
+        "searchedStates": 6296,
+        "expanded": 1124,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": false,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 3,
+          "tick": 60,
+          "heroActions": 17,
+          "bossActions": 5,
+          "survivors": 3,
+          "partyHP": 373,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 26
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 562,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 271,
+            "brawler": 749,
+            "magus": 380
+          },
+          "actionsByAbility": {
+            "attack": 9,
+            "blizzard": 1,
+            "combo_rush": 2,
+            "cover": 1,
+            "fire": 1,
+            "spin_kick": 1,
+            "thunder": 2
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "brawler_burst",
+            "elemental_magic"
+          ]
+        }
+      },
+      {
+        "id": "without_special_setup",
+        "description": "No Focus or Brawler specials",
+        "forbiddenAbilities": [
+          "focus",
+          "combo_rush",
+          "spin_kick"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 2,
+        "shortestWinningActions": 20,
+        "searchedStates": 13078,
+        "expanded": 1409,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 2,
+          "tick": 80,
+          "heroActions": 20,
+          "bossActions": 6,
+          "survivors": 2,
+          "partyHP": 307,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 33
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 628,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 336,
+            "brawler": 779,
+            "magus": 285
+          },
+          "actionsByAbility": {
+            "attack": 16,
+            "blizzard": 1,
+            "cover": 1,
+            "fire": 1,
+            "thunder": 1
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "elemental_magic"
+          ]
+        }
+      }
+    ],
+    "baselinePolicies": [
+      {
+        "policy": "attack_only",
+        "result": "defeat",
+        "tick": 102,
+        "heroActions": 18,
+        "bossActions": 9,
+        "stars": 0,
+        "survivors": 0,
+        "itemsUsed": 0
+      },
+      {
+        "policy": "defend_only",
+        "result": "defeat",
+        "tick": 192,
+        "heroActions": 31,
+        "bossActions": 16,
+        "stars": 0,
+        "survivors": 0,
+        "itemsUsed": 0
+      },
+      {
+        "policy": "greedy_damage",
+        "result": "victory",
+        "tick": 100,
+        "heroActions": 18,
+        "bossActions": 8,
+        "stars": 1,
+        "survivors": 1,
+        "itemsUsed": 0
+      }
+    ],
+    "findings": [
+      {
+        "severity": "info",
+        "code": "three_star_alternative",
+        "detail": "A separate verified three-star sequence was found by bounded search.",
+        "evidence": [
+          "Actions: 17",
+          "Original golden: 19"
+        ]
+      },
+      {
+        "severity": "review",
+        "code": "focus_optional",
+        "detail": "A verified three-star route does not use Focus; this is not evidence that Focus is always weak.",
+        "evidence": [
+          "Focus forbidden in this probe"
+        ]
+      },
+      {
+        "severity": "review",
+        "code": "healing_not_required_for_three_stars",
+        "detail": "A three-star route exists without Cure, Potion or Revive Tonic.",
+        "evidence": [
+          "Healing actions forbidden; other defenses still available"
+        ]
+      },
+      {
+        "severity": "info",
+        "code": "cover_promising_counterplay",
+        "detail": "The fixed-budget no-Cover search found no three-star witness. This is a bounded-search observation, NOT proof Cover is mandatory.",
+        "evidence": [
+          "Best found: 2",
+          "Search truncated: true"
+        ]
+      },
+      {
+        "severity": "review",
+        "code": "redundant_elemental_choices",
+        "detail": "Fire, Blizzard and Thunder currently share power/cost and have no distinct boss affinity; they provide equivalent tactical results in this encounter.",
+        "evidence": [
+          "Equal power and MP costs",
+          "No elemental affinity on boss"
+        ]
+      }
+    ],
+    "interpretation": [
+      "Search is a bounded beam heuristic. Missing three-star witnesses are NOT proof that a strategy is impossible.",
+      "The number of solutions and their action traces are not estimates of player win rates or a proof of strategic diversity.",
+      "Heuristic findings are review suggestions. This report makes no unapproved changes to game balance or combat rules."
+    ]
+  },
+  "variant": {
+    "schemaVersion": 1,
+    "encounterId": "reference-001-v07",
+    "engineVersion": "0.1.0",
+    "contentVersion": "0.7-candidate",
+    "searchParameters": {
+      "beamWidth": 48,
+      "maxHeroActions": 32,
+      "maxExpansions": 5000
+    },
+    "golden": {
+      "result": "victory",
+      "stars": 3,
+      "tick": 72,
+      "heroActions": 21,
+      "bossActions": 6,
+      "survivors": 3,
+      "partyHP": 233,
+      "partyMaxHP": 935,
+      "remainingMP": {
+        "warden": 26,
+        "brawler": 0,
+        "magus": 7
+      },
+      "itemUses": 0,
+      "bossDamage": 1400,
+      "partyDamageReceived": 702,
+      "partyHealing": 0,
+      "heroDamageByActor": {
+        "warden": 204,
+        "brawler": 671,
+        "magus": 525
+      },
+      "actionsByAbility": {
+        "attack": 11,
+        "blizzard": 4,
+        "combo_rush": 2,
+        "cover": 2,
+        "focus": 1,
+        "spin_kick": 1
+      },
+      "phaseChanges": 1,
+      "statusApplications": 3,
+      "fizzles": 0,
+      "planTags": [
+        "cover",
+        "focus",
+        "brawler_burst",
+        "elemental_magic"
+      ]
+    },
+    "probes": [
+      {
+        "id": "baseline",
+        "description": "Unrestricted search",
+        "forbiddenAbilities": [],
+        "solutionsFound": 8,
+        "bestStars": 3,
+        "shortestWinningActions": 21,
+        "searchedStates": 13711,
+        "expanded": 1409,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 3,
+          "tick": 72,
+          "heroActions": 21,
+          "bossActions": 6,
+          "survivors": 3,
+          "partyHP": 233,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 0
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 702,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 204,
+            "brawler": 671,
+            "magus": 525
+          },
+          "actionsByAbility": {
+            "attack": 11,
+            "blizzard": 5,
+            "combo_rush": 2,
+            "cover": 2,
+            "spin_kick": 1
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "brawler_burst",
+            "elemental_magic"
+          ]
+        }
+      },
+      {
+        "id": "without_focus",
+        "description": "No Magus Focus",
+        "forbiddenAbilities": [
+          "focus"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 3,
+        "shortestWinningActions": 21,
+        "searchedStates": 13457,
+        "expanded": 1409,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 3,
+          "tick": 72,
+          "heroActions": 21,
+          "bossActions": 6,
+          "survivors": 3,
+          "partyHP": 233,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 0
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 702,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 204,
+            "brawler": 671,
+            "magus": 525
+          },
+          "actionsByAbility": {
+            "attack": 11,
+            "blizzard": 5,
+            "combo_rush": 2,
+            "cover": 2,
+            "spin_kick": 1
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "brawler_burst",
+            "elemental_magic"
+          ]
+        }
+      },
+      {
+        "id": "without_brawler_specials",
+        "description": "No Brawler Combo Rush or Spin Kick",
+        "forbiddenAbilities": [
+          "combo_rush",
+          "spin_kick"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 3,
+        "shortestWinningActions": 23,
+        "searchedStates": 12990,
+        "expanded": 1409,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 3,
+          "tick": 80,
+          "heroActions": 23,
+          "bossActions": 6,
+          "survivors": 3,
+          "partyHP": 233,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 0
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 702,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 204,
+            "brawler": 566,
+            "magus": 630
+          },
+          "actionsByAbility": {
+            "attack": 15,
+            "blizzard": 5,
+            "cover": 2,
+            "focus": 1
+          },
+          "phaseChanges": 1,
+          "statusApplications": 3,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "focus",
+            "elemental_magic"
+          ]
+        }
+      },
+      {
+        "id": "without_cover",
+        "description": "No Warden Cover",
+        "forbiddenAbilities": [
+          "cover"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 2,
+        "shortestWinningActions": 21,
+        "searchedStates": 11863,
+        "expanded": 1405,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 2,
+          "tick": 76,
+          "heroActions": 21,
+          "bossActions": 6,
+          "survivors": 3,
+          "partyHP": 452,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 6,
+            "brawler": 0,
+            "magus": 0
+          },
+          "itemUses": 1,
+          "bossDamage": 1400,
+          "partyDamageReceived": 638,
+          "partyHealing": 100,
+          "heroDamageByActor": {
+            "warden": 118,
+            "brawler": 759,
+            "magus": 523
+          },
+          "actionsByAbility": {
+            "attack": 9,
+            "blizzard": 5,
+            "cure": 2,
+            "protect": 1,
+            "revive_tonic": 1,
+            "spin_kick": 3
+          },
+          "phaseChanges": 1,
+          "statusApplications": 3,
+          "fizzles": 0,
+          "planTags": [
+            "mitigation",
+            "healing",
+            "brawler_burst",
+            "elemental_magic",
+            "items"
+          ]
+        }
+      },
+      {
+        "id": "without_healing",
+        "description": "No Cure or restorative items",
+        "forbiddenAbilities": [
+          "cure",
+          "potion",
+          "revive_tonic"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 3,
+        "shortestWinningActions": 21,
+        "searchedStates": 7305,
+        "expanded": 1274,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": false,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 3,
+          "tick": 72,
+          "heroActions": 21,
+          "bossActions": 6,
+          "survivors": 3,
+          "partyHP": 233,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 0
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 702,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 204,
+            "brawler": 671,
+            "magus": 525
+          },
+          "actionsByAbility": {
+            "attack": 11,
+            "blizzard": 5,
+            "combo_rush": 2,
+            "cover": 2,
+            "spin_kick": 1
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "brawler_burst",
+            "elemental_magic"
+          ]
+        }
+      },
+      {
+        "id": "without_items",
+        "description": "No shared consumable items",
+        "forbiddenAbilities": [
+          "potion",
+          "mana_vial",
+          "revive_tonic"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 3,
+        "shortestWinningActions": 21,
+        "searchedStates": 7168,
+        "expanded": 1382,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 3,
+          "tick": 72,
+          "heroActions": 21,
+          "bossActions": 6,
+          "survivors": 3,
+          "partyHP": 233,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 26,
+            "brawler": 0,
+            "magus": 0
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 702,
+          "partyHealing": 0,
+          "heroDamageByActor": {
+            "warden": 204,
+            "brawler": 671,
+            "magus": 525
+          },
+          "actionsByAbility": {
+            "attack": 11,
+            "blizzard": 5,
+            "combo_rush": 2,
+            "cover": 2,
+            "spin_kick": 1
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "brawler_burst",
+            "elemental_magic"
+          ]
+        }
+      },
+      {
+        "id": "without_special_setup",
+        "description": "No Focus or Brawler specials",
+        "forbiddenAbilities": [
+          "focus",
+          "combo_rush",
+          "spin_kick"
+        ],
+        "solutionsFound": 8,
+        "bestStars": 3,
+        "shortestWinningActions": 26,
+        "searchedStates": 12824,
+        "expanded": 1409,
+        "beamPruned": true,
+        "budgetExhausted": false,
+        "depthLimitReached": true,
+        "truncated": true,
+        "verifiedWitness": {
+          "result": "victory",
+          "stars": 3,
+          "tick": 90,
+          "heroActions": 26,
+          "bossActions": 7,
+          "survivors": 3,
+          "partyHP": 159,
+          "partyMaxHP": 935,
+          "remainingMP": {
+            "warden": 14,
+            "brawler": 0,
+            "magus": 0
+          },
+          "itemUses": 0,
+          "bossDamage": 1400,
+          "partyDamageReceived": 876,
+          "partyHealing": 100,
+          "heroDamageByActor": {
+            "warden": 214,
+            "brawler": 641,
+            "magus": 545
+          },
+          "actionsByAbility": {
+            "attack": 17,
+            "blizzard": 5,
+            "cover": 2,
+            "cure": 2
+          },
+          "phaseChanges": 1,
+          "statusApplications": 2,
+          "fizzles": 0,
+          "planTags": [
+            "cover",
+            "healing",
+            "elemental_magic"
+          ]
+        }
+      }
+    ],
+    "baselinePolicies": [
+      {
+        "policy": "attack_only",
+        "result": "defeat",
+        "tick": 116,
+        "heroActions": 18,
+        "bossActions": 10,
+        "stars": 0,
+        "survivors": 0,
+        "itemsUsed": 0
+      },
+      {
+        "policy": "defend_only",
+        "result": "defeat",
+        "tick": 192,
+        "heroActions": 31,
+        "bossActions": 16,
+        "stars": 0,
+        "survivors": 0,
+        "itemsUsed": 0
+      },
+      {
+        "policy": "greedy_damage",
+        "result": "defeat",
+        "tick": 114,
+        "heroActions": 18,
+        "bossActions": 10,
+        "stars": 0,
+        "survivors": 0,
+        "itemsUsed": 0
+      }
+    ],
+    "findings": [
+      {
+        "severity": "info",
+        "code": "three_star_alternative",
+        "detail": "A separate verified three-star sequence was found by bounded search.",
+        "evidence": [
+          "Actions: 21",
+          "Original golden: 21"
+        ]
+      },
+      {
+        "severity": "review",
+        "code": "signature_abilities_optional",
+        "detail": "A three-star winner exists without Magus Focus or Brawler specials; their puzzle value should be reviewed.",
+        "evidence": [
+          "Witness actions: 26"
+        ]
+      },
+      {
+        "severity": "review",
+        "code": "focus_optional",
+        "detail": "A verified three-star route does not use Focus; this is not evidence that Focus is always weak.",
+        "evidence": [
+          "Focus forbidden in this probe"
+        ]
+      },
+      {
+        "severity": "review",
+        "code": "brawler_specials_optional",
+        "detail": "A verified three-star route does not use Combo Rush or Spin Kick.",
+        "evidence": [
+          "Both specials forbidden in this probe"
+        ]
+      },
+      {
+        "severity": "review",
+        "code": "healing_not_required_for_three_stars",
+        "detail": "A three-star route exists without Cure, Potion or Revive Tonic.",
+        "evidence": [
+          "Healing actions forbidden; other defenses still available"
+        ]
+      },
+      {
+        "severity": "info",
+        "code": "cover_promising_counterplay",
+        "detail": "The fixed-budget no-Cover search found no three-star witness. This is a bounded-search observation, NOT proof Cover is mandatory.",
+        "evidence": [
+          "Best found: 2",
+          "Search truncated: true"
+        ]
+      }
+    ],
+    "interpretation": [
+      "Search is a bounded beam heuristic. Missing three-star witnesses are NOT proof that a strategy is impossible.",
+      "The number of solutions and their action traces are not estimates of player win rates or a proof of strategic diversity.",
+      "Heuristic findings are review suggestions. This report makes no unapproved changes to game balance or combat rules."
+    ]
+  },
+  "alternative": {
+    "focus": {
+      "result": "victory",
+      "stars": 3,
+      "tick": 72,
+      "heroActions": 21,
+      "bossActions": 6,
+      "survivors": 3,
+      "partyHP": 233,
+      "partyMaxHP": 935,
+      "remainingMP": {
+        "warden": 26,
+        "brawler": 0,
+        "magus": 7
+      },
+      "itemUses": 0,
+      "bossDamage": 1400,
+      "partyDamageReceived": 702,
+      "partyHealing": 0,
+      "heroDamageByActor": {
+        "warden": 204,
+        "brawler": 671,
+        "magus": 525
+      },
+      "actionsByAbility": {
+        "attack": 11,
+        "blizzard": 4,
+        "combo_rush": 2,
+        "cover": 2,
+        "focus": 1,
+        "spin_kick": 1
+      },
+      "phaseChanges": 1,
+      "statusApplications": 3,
+      "fizzles": 0,
+      "planTags": [
+        "cover",
+        "focus",
+        "brawler_burst",
+        "elemental_magic"
+      ]
+    },
+    "withoutFocus": {
+      "result": "victory",
+      "stars": 3,
+      "tick": 72,
+      "heroActions": 21,
+      "bossActions": 6,
+      "survivors": 3,
+      "partyHP": 233,
+      "partyMaxHP": 935,
+      "remainingMP": {
+        "warden": 26,
+        "brawler": 0,
+        "magus": 0
+      },
+      "itemUses": 0,
+      "bossDamage": 1400,
+      "partyDamageReceived": 702,
+      "partyHealing": 0,
+      "heroDamageByActor": {
+        "warden": 204,
+        "brawler": 671,
+        "magus": 525
+      },
+      "actionsByAbility": {
+        "attack": 11,
+        "blizzard": 5,
+        "combo_rush": 2,
+        "cover": 2,
+        "spin_kick": 1
+      },
+      "phaseChanges": 1,
+      "statusApplications": 2,
+      "fizzles": 0,
+      "planTags": [
+        "cover",
+        "brawler_burst",
+        "elemental_magic"
+      ]
+    }
+  },
+  "caveats": [
+    "New content is a proposal, not a locked revision of approved Reference 001.",
+    "All comparisons use the same bounded beam search settings; absent witnesses do not prove impossibility.",
+    "Solver deduplicates Fire, Blizzard and Thunder into a generic elemental action signature; solution counts underrepresent elemental alternatives.",
+    "The solver does not measure human difficulty or subjective gameplay fun.",
+    "Brawler specials benefit the variant strongly; Focus is an MP-saving option but not required for a three-star win.",
+    "Only two reference witnesses have been explicitly persisted for variant v0.7; further playtesting is required."
+  ]
+}

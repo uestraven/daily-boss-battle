@@ -1,0 +1,12 @@
+import {readFileSync} from 'node:fs';
+import {dailyDefinition,dailyKeyFor,ensureDay,emptyLedger,playDailyAction,utcDateKey,dailyStatistics} from '../dist/src/daily.js';
+const witnesses=JSON.parse(readFileSync(new URL('../fixtures/daily-witnesses-v10.json',import.meta.url),'utf8'));
+const day=process.argv[2]??utcDateKey(new Date());
+const def=dailyDefinition(day),key=dailyKeyFor(day);
+console.log(`UTC ${day}: ${def.actors[def.bossId].name} vs ${def.party.map(id=>def.actors[id].name).join(' / ')}`);
+let ledger=ensureDay(emptyLedger(),day);
+for(const action of witnesses[key].actions)ledger=playDailyAction(ledger,day,action).ledger;
+const r=ledger.records[day];
+if(r.result!=='victory')throw Error(`Witness failed: ${key}`);
+console.log(`Verified result: ${r.result}, ${r.stars} stars, ${r.state.heroActionCount} hero actions, tick ${r.state.tick}`);
+console.log('Local profile example:',JSON.stringify(dailyStatistics(ledger,day)));
