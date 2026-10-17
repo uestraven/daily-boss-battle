@@ -202,6 +202,27 @@ const hp = tweenValue(hpBeat, now);                        // eased bar drain
 music cut around a phase sting. `npm run audio:manifest` prints the commissioning list
 (17 SFX, 4 tracks) derived from the code that plays them, so it cannot drift from the game.
 
+## Web client
+
+`npm run web:dev` serves the portrait-first daily battle screen: stage on top, party
+status beneath, commands in the bottom third, 44px touch targets throughout.
+
+- `src/stage.ts` composes each frame into a flat list of draw commands — layout, shake
+  and float maths, all pure and unit-tested headlessly. Shake is deterministic (hashed,
+  not random) so a replay looks identical.
+- `web/src/BattleStage.tsx` only executes those commands on a canvas and runs the clock.
+  The canvas is the fixed internal resolution (320x180, 16:9) scaled by whole numbers
+  with `image-rendering: pixelated`, which is what keeps pixel art crisp.
+- `web/src/DailyBattle.tsx` is the screen; it draws today's encounter from the verified
+  pool and refuses to run rather than falling back to an unverified one.
+
+Two known warts. Engine imports in `web/` come from `dist/` because `src/` uses NodeNext
+`.js` specifiers that Vite will not rewrite to `.ts`; `web:dev` builds first, so it is
+consistent rather than stale, but engine edits need a rebuild to appear. And the old
+desktop harness `web/src/App.tsx` is still on disk, now unreferenced — it carries the
+background-import studio and battle-version switcher, and can be deleted once those are
+either ported or abandoned.
+
 ## Playing it now
 
 A zero-dependency terminal client runs the real daily loop — no browser, no React:

@@ -1,0 +1,141 @@
+/* Portrait-first daily battle screen. One-thumb reachable: stage up top, party
+ * beneath it, commands in the bottom third. Pixel-aligned to match the canvas. */
+:root {
+  --dbb-gap: 8px;
+}
+
+.dbb-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbb-gap);
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--dbb-gap);
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  background: var(--dbb-bg-black, #05060b);
+  color: var(--dbb-text-primary, #f4f2ea);
+  font-family: 'Pixelify Sans', ui-monospace, monospace;
+  /* No scroll-bounce: this should not feel like a web page. */
+  overscroll-behavior: none;
+}
+
+.dbb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.dbb-brand { font-weight: bold; }
+
+.dbb-boss { padding: 8px 10px; }
+.dbb-boss-name { font-size: 15px; font-weight: bold; letter-spacing: 0.04em; }
+.dbb-boss-hp { font-size: 12px; opacity: 0.85; }
+.dbb-telegraph {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--dbb-debuff, #ff8585);
+}
+
+/* The canvas letterboxes inside this box and scales by whole numbers only. */
+.stage-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  border: 2px solid var(--dbb-border-outer, #8e9bb3);
+  padding: 0;
+  overflow: hidden;
+}
+.stage-canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.dbb-party { display: flex; gap: var(--dbb-gap); }
+.dbb-hero { flex: 1; padding: 6px 7px; min-width: 0; }
+.dbb-hero.is-ready { outline: 2px solid var(--dbb-buff, #ffd36a); }
+.dbb-hero.is-down { opacity: 0.45; }
+.dbb-hero-name {
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dbb-meter {
+  height: 6px;
+  margin: 3px 0;
+  background: #2b1620;
+  border: 1px solid rgba(244, 242, 234, 0.45);
+}
+.dbb-meter > i { display: block; height: 100%; background: #d2566e; }
+.dbb-hero-numbers {
+  display: flex;
+  gap: 6px;
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.dbb-commands { padding: 8px 10px; min-height: 132px; }
+.dbb-prompt {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  opacity: 0.9;
+}
+.dbb-busy { font-size: 18px; text-align: center; padding: 24px 0; opacity: 0.6; }
+
+.dbb-preview {
+  margin: 0 0 8px;
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--dbb-buff, #ffd36a);
+}
+
+.dbb-targets { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* 44px minimum touch targets throughout. */
+.rpg-menu-item,
+.rpg-menu-back {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 13px;
+  color: inherit;
+  background: linear-gradient(#3566c0, #1c3a87);
+  border: 2px solid #d5e4fa;
+  cursor: pointer;
+}
+.dbb-targets .rpg-menu-item,
+.dbb-targets .rpg-menu-back { width: auto; min-width: 88px; justify-content: center; }
+.rpg-menu-back { background: linear-gradient(#444, #222); }
+.rpg-menu-item:focus-visible,
+.rpg-menu-back:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.rpg-menu-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rpg-menu-cost { font-size: 11px; opacity: 0.85; }
+
+.dbb-result { display: flex; flex-direction: column; gap: 4px; align-items: center; padding: 16px 0; }
+.dbb-result strong { font-size: 20px; letter-spacing: 0.1em; }
+.dbb-stars { font-size: 18px; color: var(--dbb-buff, #ffd36a); }
+.dbb-hint { font-size: 11px; opacity: 0.7; }
+
+.dbb-log { font-size: 11px; opacity: 0.65; display: grid; gap: 1px; }
+.dbb-log-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.dbb-error { padding: 16px; }
+.dbb-error h1 { font-size: 18px; margin: 0 0 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-canvas { /* the renderer still paints; motion is the caller's concern */ }
+}

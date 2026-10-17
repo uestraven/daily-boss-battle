@@ -51,8 +51,11 @@ const prior = new Map();
 if (existsSync(outPath)) {
   try {
     const old = JSON.parse(readFileSync(outPath, 'utf8'));
+    const rejectionsFile = `${root}/reports/pool-rejections.json`;
+    const oldRejected = existsSync(rejectionsFile)
+      ? (JSON.parse(readFileSync(rejectionsFile, 'utf8')).rejected ?? []) : [];
     if (old.contentHash === hash && old.gateConfig?.name === (quick ? 'quick' : 'full')) {
-      for (const entry of [...(old.entries ?? []), ...(old.rejected ?? [])]) prior.set(entry.id, entry);
+      for (const entry of [...(old.entries ?? []), ...oldRejected]) prior.set(entry.id, entry);
       console.log(`Reusing ${prior.size} cached assessment(s) for unchanged content.`);
     } else {
       console.log('Content or gate config changed; recomputing from scratch.');
@@ -141,7 +144,7 @@ for (const entry of accepted) {
   byBossCount[entry.bossId] = (byBossCount[entry.bossId] ?? 0) + 1;
 }
 
-const pool = {
+const meta = {
   schemaVersion: 1,
   contentHash: hash,
   generatedAt: new Date().toISOString(),
@@ -155,12 +158,16 @@ const pool = {
     byBoss: byBossCount,
     failureTally: Object.fromEntries([...failureTally].sort((a, b) => b[1] - a[1])),
   },
-  // Sorted so the artifact is reproducible and diffable.
-  entries: accepted.sort((a, b) => (a.id < b.id ? -1 : 1)),
-  rejected: rejected.sort((a, b) => (a.id < b.id ? -1 : 1)),
 };
 
+// The shipped artifact carries only what the app needs: rejection detail is four
+// fifths of the bytes and belongs in a report, not in a mobile bundle.
+const pool = {...meta, entries: accepted.sort((a, b) => (a.id < b.id ? -1 : 1))};
 writeFileSync(outPath, `${JSON.stringify(pool, null, 2)}\n`);
+
+const rejectionsPath = `${root}/reports/pool-rejections.json`;
+writeFileSync(rejectionsPath, `${JSON.stringify(
+  {...meta, rejected: rejected.sort((a, b) => (a.id < b.id ? -1 : 1))}, null, 2)}\n`);
 
 console.log(`\n=== SUMMARY ===`);
 console.log(`  accepted      ${accepted.length} / ${combinations.length} (${((100 * accepted.length) / combinations.length).toFixed(1)}%)`);
@@ -177,4 +184,5 @@ if (starvedBosses.length) {
   console.log(`\n  WARNING: no viable party for: ${starvedBosses.join(', ')}`);
   console.log('  Retune with: node tools/tune-boss.mjs --boss <id>');
 }
-console.log(`\nWrote ${path.relative(root, outPath)}\n`);
+console.log(`\nWrote ${path.relative(root, outPath)} (${(JSON.stringify(pool).length / 1024).toFixed(0)} KiB shipped)`);
+console.log(`Wrote reports/pool-rejections.json (${rejected.length} rejections, for tuning)\n`);
