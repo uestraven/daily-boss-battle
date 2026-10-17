@@ -26,6 +26,37 @@ test('a physical hit produces one hit cue at the moment of impact', () => {
   assert.equal(hits[0].at, impact.at, 'the hit sound lands with the impact, not the number');
 });
 
+test('a spell sounds magical and a sword sounds physical', () => {
+  // Before ability kind was plumbed through, every hit played the physical sample, which
+  // made a caster sound like a swordsman.
+  const abilityInfo = {attack: {kind: 'physical'}, fire: {kind: 'magical'}};
+  const hitSound = (abilityId, amount) => {
+    const script = choreograph(
+      [ev('damage', {actorId: 'a', targetId: 'b', abilityId, amount, hpAfter: 1000 - amount})],
+      {maxHp: {b: 1000}});
+    return audioCues(script, {abilityInfo}).find(c => c.sound.startsWith('hit_')).sound;
+  };
+  assert.equal(hitSound('attack', 60), 'hit_physical');
+  assert.equal(hitSound('fire', 60), 'hit_magical');
+  // Kind decides the family; weight only upgrades a physical hit.
+  assert.equal(hitSound('attack', 800), 'hit_heavy');
+  assert.equal(hitSound('fire', 800), 'hit_magical', 'a heavy spell is still a spell');
+  // With no ability info the mapping degrades to physical rather than failing.
+  const script = choreograph([ev('damage', {actorId: 'a', targetId: 'b', abilityId: 'fire',
+    amount: 60, hpAfter: 940})], {maxHp: {b: 1000}});
+  assert.equal(audioCues(script).find(c => c.sound.startsWith('hit_')).sound, 'hit_physical');
+});
+
+test('poison damage is audible and flashes, like any other damage', () => {
+  const script = choreograph([ev('poison_pulse', {actorId: 'b', amount: 20, hpAfter: 980})],
+    {maxHp: {b: 1000}});
+  assert.ok(script.beats.some(b => b.kind === 'impact' && b.targetId === 'b'), 'it impacts');
+  assert.ok(script.beats.some(b => b.kind === 'hurt' && b.targetId === 'b'), 'the target reacts');
+  const cue = audioCues(script).find(c => c.sound.startsWith('hit_'));
+  assert.ok(cue, 'poison makes a sound');
+  assert.equal(cue.sound, 'hit_magical', 'poison is not a sword hit');
+});
+
 test('a heavy hit uses the heavy variant and is louder', () => {
   const light = audioCues(script([ev('damage', {actorId: 'b', targetId: 'm', amount: 5, hpAfter: 995})],
     {maxHp: {m: 1000}})).find(c => c.sound.startsWith('hit_'));

@@ -269,8 +269,12 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
       case 'poison_pulse': {
         consecutiveHits = 0;
         const amount = event.amount ?? 0;
+        // Poison is damage, so it gets the same impact and reaction treatment as a hit;
+        // without these it landed silently and without a flash.
+        push({duration: TIMING.impact, kind: 'impact', targetId: actor, source: event.type});
+        push({duration: TIMING.hurtReact, kind: 'hurt', targetId: actor, source: event.type});
         push({duration: TIMING.damageNumberHold, kind: 'damage_number', targetId: actor, amount,
-          source: event.type});
+          source: event.type}, cursor + TIMING.impact);
         push({duration: TIMING.hpTween, kind: 'hp_change', targetId: actor,
           from: (event.hpAfter ?? 0) + amount, to: event.hpAfter ?? 0, amount, source: event.type});
         cursor += TIMING.hpTween;

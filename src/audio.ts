@@ -66,6 +66,9 @@ export type AudioOptions = {
   textBlips?: boolean;
   /** Milliseconds between blips while a text beat types out. */
   blipIntervalMs?: number;
+  /** Ability metadata, so an impact can tell a spell from a sword swing. Without it
+   * every hit sounds physical, which is wrong for a caster. */
+  abilityInfo?: Record<string, {kind?: 'physical' | 'magical'}>;
 };
 
 const gainFor = (intensity: number | undefined, floor = 0.45): number => {
@@ -74,13 +77,17 @@ const gainFor = (intensity: number | undefined, floor = 0.45): number => {
 };
 
 /** Maps one beat onto its cue, or null when the beat is silent. */
-function cueFor(beat: Beat): AudioCue | null {
+function cueFor(beat: Beat, options: AudioOptions): AudioCue | null {
   switch (beat.kind) {
     case 'impact': {
-      // Intensity is carried by the paired shake beat; callers merge it in first.
+      // Kind decides the family, weight decides the variant: a spell always sounds
+      // magical, and a heavy *physical* hit gets the heavier sample. Intensity is
+      // carried by the paired shake beat, which the caller merges in first.
       const intensity = beat.intensity ?? 0.3;
-      const sound: SoundId = intensity >= HEAVY_HIT_INTENSITY ? 'hit_heavy'
-        : beat.source === 'poison_pulse' ? 'hit_magical' : 'hit_physical';
+      const kind = beat.abilityId ? options.abilityInfo?.[beat.abilityId]?.kind : undefined;
+      const magical = kind === 'magical' || beat.source === 'poison_pulse';
+      const sound: SoundId = magical ? 'hit_magical'
+        : intensity >= HEAVY_HIT_INTENSITY ? 'hit_heavy' : 'hit_physical';
       return {at: beat.at, sound, gain: gainFor(intensity)};
     }
     case 'cast': return {at: beat.at, sound: 'cast_start', gain: 0.6};
@@ -116,7 +123,7 @@ export function audioCues(script: BeatScript, options: AudioOptions = {}): Audio
 
   const cues: AudioCue[] = [];
   for (const beat of merged) {
-    const cue = cueFor(beat);
+    const cue = cueFor(beat, options);
     if (cue) cues.push(cue);
   }
 

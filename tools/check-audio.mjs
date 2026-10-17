@@ -3,39 +3,73 @@
  *
  *   npm run audio:check
  */
-import {existsSync, statSync} from 'node:fs';
+import {existsSync, readFileSync, statSync} from 'node:fs';
 import {load, repoPath} from './load.mjs';
 
 const {requiredSounds, requiredTracks, TRACK_PLAYBACK} = await load('dist/src/audio.js');
 
-/** A looping track is downloaded before the first battle can start, so size matters more
- * here than in a game that streams. */
+/** What actually matters here.
+ *
+ * The looping theme is fetched before the first battle can start, so its size is a real
+ * cost. Sound effects are loaded lazily on first use and are a few tens of KiB each, so
+ * their size is noise — and judging them by bitrate is misleading, because a third-of-a-
+ * second clip is mostly Ogg header and reads as 200+ kbps however it was encoded.
+ *
+ * So: budget the music, report the effects. */
 const MUSIC_BUDGET_KB = 900;
-const SFX_BUDGET_KB = 60;
+/** Only worth mentioning for an effect that is both sizeable and richly encoded. */
+const SFX_NOTE_KB = 96;
+const SFX_NOTE_KBPS = 180;
 
-const sizeOf = file => (existsSync(file) ? statSync(file).size / 1024 : null);
+/** Duration and size from the Ogg container, without decoding the audio. */
+function probe(file) {
+  if (!existsSync(file)) return null;
+  const bytes = readFileSync(file);
+  const kb = bytes.length / 1024;
+  let rate = 0;
+  const vorbis = bytes.indexOf(Buffer.from('vorbis', 'ascii'));
+  if (vorbis >= 0) rate = bytes.readUInt32LE(vorbis + 6 + 5);
+  else if (bytes.indexOf(Buffer.from('OpusHead', 'ascii')) >= 0) rate = 48000;
+  let seconds = 0;
+  if (rate > 0) {
+    // The final Ogg page's granule position is the total sample count.
+    for (let i = bytes.length - 4; i >= 0; i--) {
+      if (bytes.toString('ascii', i, i + 4) !== 'OggS') continue;
+      const granule = bytes.readUInt32LE(i + 6) + bytes.readUInt32LE(i + 10) * 4294967296;
+      seconds = granule / rate;
+      break;
+    }
+  }
+  const kbps = seconds > 0 ? (bytes.length * 8) / seconds / 1000 : null;
+  return {kb, seconds, kbps};
+}
 const rows = [];
 
 for (const [track, playback] of Object.entries(TRACK_PLAYBACK)) {
-  const path = repoPath('web/public/battle-music', playback.file);
   rows.push({kind: 'music', id: track, file: `battle-music/${playback.file}`,
-    kb: sizeOf(path), budget: MUSIC_BUDGET_KB});
+    ...(probe(repoPath('web/public/battle-music', playback.file)) ?? {kb: null})});
 }
 for (const sound of requiredSounds()) {
-  const path = repoPath('web/public/battle-sfx', `${sound.id}.ogg`);
-  rows.push({kind: 'sfx', id: sound.id, file: `battle-sfx/${sound.id}.ogg`,
-    kb: sizeOf(path), budget: SFX_BUDGET_KB, purpose: sound.purpose});
+  rows.push({kind: 'sfx', id: sound.id, file: `battle-sounds/${sound.id}.ogg`,
+    purpose: sound.purpose,
+    ...(probe(repoPath('web/public/battle-sounds', `${sound.id}.ogg`)) ?? {kb: null})});
 }
 
 console.log('\nAUDIO ASSETS\n');
-let present = 0;
+console.log('       file                               size      length   bitrate');
 let oversize = 0;
 let total = 0;
 for (const row of rows) {
-  const status = row.kb === null ? '--  ' : row.kb > row.budget ? 'BIG ' : 'OK  ';
-  if (row.kb !== null) { present++; total += row.kb; }
-  if (status === 'BIG ') oversize++;
-  console.log(`  ${status} ${row.file.padEnd(34)} ${row.kb === null ? '' : `${row.kb.toFixed(0)} KiB`}`);
+  const hot = row.kb !== null && (row.kind === 'music'
+    ? row.kb > MUSIC_BUDGET_KB
+    : row.kb > SFX_NOTE_KB && (row.kbps ?? 0) > SFX_NOTE_KBPS);
+  const status = row.kb === null ? '--  ' : hot ? 'BIG ' : 'OK  ';
+  if (row.kb !== null) total += row.kb;
+  if (hot) { oversize++; row.hot = true; }
+  console.log(`  ${status} ${row.file.padEnd(34)} ` +
+    `${row.kb === null ? '' : `${row.kb.toFixed(0).padStart(5)} KiB`}` +
+    `${row.seconds ? `  ${row.seconds.toFixed(2).padStart(6)}s` : '         '}` +
+    `${row.kbps ? `  ${row.kbps.toFixed(0).padStart(4)} kbps` : ''}`);
 }
 const musicRows = rows.filter(r => r.kind === 'music');
 const sfxRows = rows.filter(r => r.kind === 'sfx');
@@ -43,10 +77,22 @@ console.log(`\n  music ${musicRows.filter(r => r.kb !== null).length}/${musicRow
   `   sfx ${sfxRows.filter(r => r.kb !== null).length}/${sfxRows.length}` +
   `   total ${total.toFixed(0)} KiB`);
 
+const musicKb = rows.filter(r => r.kind === 'music' && r.kb !== null)
+  .reduce((n, r) => n + r.kb, 0);
+const sfxKb = total - musicKb;
+console.log(`  music ${musicKb.toFixed(0)} KiB fetched at battle start; ` +
+  `effects ${sfxKb.toFixed(0)} KiB loaded lazily`);
+
 if (oversize) {
-  console.log(`\n  ${oversize} file(s) over budget. A looping track is fetched before the first`);
-  console.log('  battle can start, so trim the bitrate rather than the music:');
-  console.log('    ffmpeg -i in.ogg -c:a libvorbis -q:a 4 -ac 2 out.ogg');
+  console.log('');
+  for (const row of rows.filter(r => r.hot)) {
+    console.log(`  ${row.file} is ${row.kb.toFixed(0)} KiB at ${row.kbps.toFixed(0)} kbps.` +
+      (row.kind === 'music' ? ' It is fetched before the first battle can start.' : ''));
+  }
+  console.log('  Trim the bitrate rather than the content; q4 is ample at game-mix levels:');
+  for (const row of rows.filter(r => r.hot)) {
+    console.log(`    ffmpeg -i ${row.file} -c:a libvorbis -q:a 4 -ac 2 trimmed.ogg`);
+  }
 }
 const missingMusic = musicRows.filter(r => r.kb === null).map(r => r.id);
 if (missingMusic.length) {

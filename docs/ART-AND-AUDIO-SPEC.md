@@ -122,6 +122,9 @@ The phase transition is the dramatic beat of the fight. The engine emits silence
 
 ### Sound effects
 
+Files go in `web/public/battle-sounds/`, named exactly after the cue id, as `.ogg`.
+Music goes in `web/public/battle-music/`.
+
 17 cues. Short, dry, and mixed below the music —
 hit sounds fire on a 90 ms beat, and a four-hit ability fires one per hit 120 ms apart, so
 anything with a long tail will smear.

@@ -136,6 +136,12 @@ function Battle({def, catalog, tier, day}:
     () => Object.fromEntries(Object.values(def.abilities).map(a => [a.id, a.name])),
     [def],
   );
+  /** Lets the audio layer tell a spell from a sword swing. */
+  const abilityInfo = useMemo(
+    () => Object.fromEntries(Object.values(def.abilities)
+      .map(a => [a.id, {kind: a.kind === 'magical' ? 'magical' as const : 'physical' as const}])),
+    [def],
+  );
   /** Validated sheets for whoever has one. A sheet that is missing or malformed is simply
    * omitted, and that actor keeps its silhouette. */
   const sheets = useMemo(() => {
@@ -185,7 +191,7 @@ function Battle({def, catalog, tier, day}:
       unlockAudio();
       void playMusic('battle_main');
     }
-    playCues(audioCues(nextScript));
+    playCues(audioCues(nextScript, {abilityInfo}));
     for (const change of musicChanges(nextScript, 'battle_main')) {
       window.setTimeout(() => void playMusic(change.track), Math.max(0, change.at));
     }

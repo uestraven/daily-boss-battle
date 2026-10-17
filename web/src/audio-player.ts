@@ -14,7 +14,7 @@ import {FALLBACK_TRACK, TRACK_PLAYBACK} from '../../dist/src/audio.js';
 import type {AudioCue, MusicTrack, SoundId} from '../../src/audio.js';
 
 const MUSIC_DIR = 'battle-music';
-const SFX_DIR = 'battle-sfx';
+const SFX_DIR = 'battle-sounds';
 const MUTE_KEY = 'daily-boss-battle.muted.v1';
 
 const base = (): string => import.meta.env.BASE_URL.replace(/\/?$/, '/');
