@@ -204,3 +204,71 @@
   opacity: 0.85;
   margin-top: 4px;
 }
+
+/* ---------------------------------------------------------------- share card */
+.dbb-share { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; }
+.dbb-share-canvas {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  border: 2px solid var(--dbb-border-outer, #8e9bb3);
+  background: #0b0d16;
+}
+.dbb-share-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.dbb-share-actions .rpg-menu-item { width: auto; min-width: 104px; justify-content: center; }
+.dbb-share-status { font-size: 11px; opacity: 0.85; }
+
+/* ---------------------------------------------------------------- email signup */
+.dbb-signup { display: flex; flex-direction: column; gap: 4px; width: 100%; margin-top: 4px; }
+.dbb-signup-label { font-size: 11px; opacity: 0.8; }
+.dbb-signup-row { display: flex; gap: 6px; }
+.dbb-signup-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 13px;
+  color: inherit;
+  background: #11162a;
+  border: 2px solid var(--dbb-border-outer, #8e9bb3);
+}
+.dbb-signup-input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.dbb-signup-row .rpg-menu-item { width: auto; min-width: 104px; justify-content: center; }
+.dbb-signup-error { color: var(--dbb-debuff, #ff8585); }
+.dbb-signup-done { text-align: center; }
+
+/* ---------------------------------------------------------------- desktop
+ * Wide viewports get a two-column layout: the stage and boss on the left at a larger
+ * integer scale, status and commands on the right. The stage keeps its fixed internal
+ * resolution either way, so nothing about the rendering changes -- only the frame. */
+@media (min-width: 900px) {
+  .dbb-shell {
+    max-width: 1100px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr);
+    grid-template-areas:
+      'header header'
+      'boss   party'
+      'stage  commands'
+      'stage  log';
+    align-content: start;
+    gap: 12px;
+  }
+  .dbb-header   { grid-area: header; }
+  .dbb-boss     { grid-area: boss; }
+  .dbb-party    { grid-area: party; }
+  .stage-wrap   { grid-area: stage; align-self: start; }
+  .dbb-commands { grid-area: commands; }
+  .dbb-log      { grid-area: log; }
+  .dbb-dev      { grid-column: 1 / -1; }
+  .dbb-party    { flex-direction: column; }
+  .dbb-share-canvas { max-width: 380px; }
+  /* A mouse does not need 44px targets, but they do no harm; keep the menu readable. */
+  .rpg-menu-item, .rpg-menu-back { font-size: 14px; }
+}
+
+/* A very wide monitor should not stretch the text column to absurdity. */
+@media (min-width: 1400px) {
+  .dbb-shell { max-width: 1280px; }
+}

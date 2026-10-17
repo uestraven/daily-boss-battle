@@ -232,13 +232,36 @@ desktop harness `web/src/App.tsx` is still on disk, now unreferenced — it carr
 background-import studio and battle-version switcher, and can be deleted once those are
 either ported or abandoned.
 
+## v1 scope: a daily website
+
+v1 is a website, desktop and mobile web, no accounts and no server:
+
+- **One battle a day**, the same for everyone, drawn from the verified pool.
+- **Replaying is allowed.** The first completed attempt is recorded as the day's result;
+  further attempts are unranked and never overwrite it. The shared card always reports
+  the recorded result, so sharing cannot be used to inflate an outcome.
+- **Share as an image.** The result screen renders a square PNG card and offers Web Share
+  (mobile), copy-image, copy-text and download, so at least one route works in every
+  browser. The card is spoiler-light by design: outcome, mastery and effort, never the
+  winning line. A test asserts the ability names never appear on it.
+- **Optional email reminders.** Provider-agnostic: the form POSTs to whatever
+  `VITE_REMINDER_ENDPOINT` names, so a hosted form service can be swapped without code
+  changes. With no endpoint configured the form does not render, rather than silently
+  discarding addresses. No key is committed.
+- **Desktop and mobile.** Portrait-first single column under 900px; a two-column grid
+  above it, with the stage at a larger whole-number scale. The stage's fixed internal
+  resolution is identical either way — only the frame changes.
+
+Deliberately out of scope for v1: accounts, server-side verification, leaderboards, push
+notifications and native app packaging.
+
 ## The daily loop
 
 The screen is backed by the daily ledger, so it behaves like a daily game rather than a
 battle sandbox:
 
-- **One attempt per UTC day.** A finished day is locked; the screen shows the result,
-  streaks and star total instead of a playable battle.
+- **One recorded attempt per UTC day.** The first completed battle is the day's result,
+  shown with streaks and star total. Replays are offered but stay unranked.
 - **Resumable.** Close the tab mid-fight and it resumes at exactly the same decision,
   because the ledger replays the stored action log rather than trusting a snapshot.
 - **Tamper-evident.** Editing localStorage cannot manufacture a result: normalisation

@@ -18,6 +18,10 @@ import {displayedValue} from '../../dist/src/stage.js';
 import {poolCatalog, selectDaily, targetTierFor, validatePool} from '../../dist/src/pool.js';
 import {dailyStatistics, ensureDay, playDailyAction, stepForDay} from '../../dist/src/daily.js';
 import {loadLedger, saveLedger, clearLedger} from './storage.js';
+import {ShareCard} from './ShareCard.js';
+import {EmailSignup} from './EmailSignup.js';
+import {resultCardInputFrom} from '../../dist/src/result-card.js';
+import {advanceToDecision as freshBattle} from '../../dist/src/engine.js';
 import {heroes} from '../../dist/src/roster.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {ActorId, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
@@ -82,8 +86,10 @@ function Battle({def, catalog, tier, day}:
   /** Playback position for the current batch. Shared by the canvas and the DOM meters,
    * so a health bar can never disagree with the stage about how far a tween has run. */
   const [timeMs, setTimeMs] = useState(0);
-  const terminalRef = useRef(step.terminal);
-  terminalRef.current = step.terminal;
+  /** An unranked replay, kept out of the ledger so it cannot overwrite the day's
+   * recorded result. v1 deliberately lets anyone replay as much as they like. */
+  const [replay, setReplay] = useState<BattleStep | null>(null);
+  const terminalRef = useRef<BattleStep['terminal']>(step.terminal);
 
   // Drive the clock while a batch is playing, then hand control back to the player.
   useEffect(() => {
@@ -116,22 +122,32 @@ function Battle({def, catalog, tier, day}:
     [def],
   );
 
-  const state = step.state;
-  const actorId: ActorId | undefined = step.readyHeroIds[0];
+  const active = replay ?? step;
+  terminalRef.current = active.terminal;
+  const state = active.state;
+  const actorId: ActorId | undefined = active.readyHeroIds[0];
   const boss = state.actors[state.bossId]!;
   const countdown = nextBossCountdown(state);
 
   const commit = useCallback((input: {actorId: string; abilityId: string; targetIds: string[]}) => {
     const before = state.events.length;
-    // Goes through the ledger, so the action log that proves this result is recorded.
-    const played = playDailyAction(ledger, day, input, catalog);
-    const next = played.step;
-    setLedger(played.ledger);
-    saveLedger(played.ledger);
+    let next: BattleStep;
+    if (replay) {
+      // Unranked: played against the engine directly, never recorded.
+      next = applyPlayerAction(state, input, def);
+      setReplay(next);
+    } else {
+      // Official attempt: goes through the ledger, which records the action log that
+      // proves the result.
+      const played = playDailyAction(ledger, day, input, catalog);
+      next = played.step;
+      setLedger(played.ledger);
+      saveLedger(played.ledger);
+      setStep(next);
+    }
     const batch = next.state.events.slice(before);
     setTimeMs(0);
     setScript(choreograph(batch, {names, maxHp, abilityNames}));
-    setStep(next);
     setSelected(null);
     setPhase({kind: 'playing'});
     setLog(previous => [
@@ -141,7 +157,7 @@ function Battle({def, catalog, tier, day}:
           : `${names[e.actorId ?? ''] ?? ''} → ${names[e.targetId ?? ''] ?? ''}: ${e.type === 'heal' ? '+' : '−'}${e.amount}`),
       ...previous,
     ].slice(0, 24));
-  }, [state, ledger, day, catalog, names, maxHp, abilityNames]);
+  }, [state, ledger, day, catalog, def, replay, names, maxHp, abilityNames]);
 
   /** Elemental affinities are decisive information — a fire-immune boss makes a
    * fire-only caster useless — and the player cannot infer them. Surface them. */
@@ -182,8 +198,32 @@ function Battle({def, catalog, tier, day}:
 
   const stars = starsForResult(state);
   const record = ledger.records[day];
-  const locked = Boolean(record?.completed);
   const stats = useMemo(() => dailyStatistics(ledger, day), [ledger, day]);
+  /** Show the result panel once the active battle has finished playing out. */
+  const showResult = Boolean(active.terminal) && phase.kind !== 'playing';
+  const resultOutcome = active.terminal ?? record?.result ?? 'defeat';
+  const resultStars = replay ? stars : (record?.stars ?? stars);
+
+  const startReplay = useCallback(() => {
+    setReplay(freshBattle(createEncounter(def), def));
+    setScript(null);
+    setSelected(null);
+    setTimeMs(0);
+    setPhase({kind: 'choosing'});
+  }, [def]);
+
+  /** The shared card always reports the recorded result for the day, not a replay, so
+   * sharing cannot be used to inflate an outcome. */
+  const cardInput = useMemo(() => {
+    if (!record?.completed) return null;
+    return resultCardInputFrom(record.state, {
+      day,
+      bossName: def.actors[def.bossId]!.name,
+      partyNames: record.state.party.map(id => def.actors[id]?.name ?? id),
+      stars: record.stars ?? 0,
+      url: window.location.host || undefined,
+    });
+  }, [record, day, def]);
 
   return (
     <main className="dbb-shell">
@@ -243,13 +283,15 @@ function Battle({def, catalog, tier, day}:
       <section className="dbb-commands rpg-window">
         {phase.kind === 'playing' && <div className="dbb-busy">…</div>}
 
-        {locked && phase.kind !== 'playing' && (
+        {showResult && (
           <div className="dbb-result">
-            <strong>{record?.result === 'victory' ? 'VICTORY' : 'DEFEAT'}</strong>
+            <strong>{resultOutcome === 'victory' ? 'VICTORY' : 'DEFEAT'}</strong>
             <span className="dbb-stars">
-              {'★'.repeat(record?.stars ?? 0)}{'☆'.repeat(3 - (record?.stars ?? 0))}
+              {'★'.repeat(resultStars)}{'☆'.repeat(3 - resultStars)}
             </span>
-            <span className="dbb-hint">Today is settled. Come back tomorrow.</span>
+            {replay
+              ? <span className="dbb-hint">Replay — your recorded result for today stands.</span>
+              : <span className="dbb-hint">Today&apos;s result is recorded.</span>}
             <div className="dbb-stats">
               <span>played {stats.completed}</span>
               <span>won {stats.wins}</span>
@@ -257,11 +299,18 @@ function Battle({def, catalog, tier, day}:
               <span>win streak {stats.victoryStreak}</span>
               <span>{stats.stars}★ total</span>
             </div>
-            <span className="dbb-hint">Results are stored on this device and are not server verified.</span>
+            <div className="dbb-targets">
+              <button className="rpg-menu-item" onClick={startReplay}>Play again (unranked)</button>
+            </div>
+            {cardInput && <ShareCard input={cardInput} />}
+            <EmailSignup />
+            <span className="dbb-hint">
+              Results are stored in this browser only and are not server verified.
+            </span>
           </div>
         )}
 
-        {!locked && phase.kind === 'choosing' && actorId && !selected && (
+        {!showResult && phase.kind === 'choosing' && actorId && !selected && (
           <>
             <div className="dbb-prompt">{names[actorId]}</div>
             <ul className="rpg-menu-list">
@@ -284,7 +333,7 @@ function Battle({def, catalog, tier, day}:
           </>
         )}
 
-        {!locked && phase.kind === 'choosing' && actorId && selected && (
+        {!showResult && phase.kind === 'choosing' && actorId && selected && (
           <>
             <div className="dbb-prompt">{selected.ability.name}</div>
             {preview && (
@@ -321,7 +370,8 @@ function Battle({def, catalog, tier, day}:
           <div className="dbb-dev-hint">
             Phase {state.phase} · transition at {def.bossProgram.transitionPercent}% ·
             {' '}attack from just above it to see the flash-and-hold ·
-            {' '}stars {stars} · {locked ? 'locked' : 'in progress'}
+            {' '}stars {stars} · {record?.completed ? 'recorded' : 'in progress'}
+            {replay ? ' · unranked replay' : ''}
           </div>
         </section>
       )}
