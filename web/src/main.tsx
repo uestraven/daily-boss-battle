@@ -1,6 +1,7 @@
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 import DailyBattle from './DailyBattle.js';
+import {registerServiceWorker} from './register-sw.js';
 
 import './dbb-portrait.css';
 import './retro-command-menu.css';
@@ -14,3 +15,5 @@ const target = document.getElementById('root');
 
 if (!target) throw new Error('Missing app root');
 createRoot(target).render(<React.StrictMode><DailyBattle /></React.StrictMode>);
+
+registerServiceWorker();

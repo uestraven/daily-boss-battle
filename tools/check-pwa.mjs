@@ -97,21 +97,62 @@ for (const requirement of requirements) {
   if (!ok) advice.push(requirement.missing);
 }
 
-const serviceWorker = existsSync(repoPath('web/public/sw.js'))
-  || /serviceWorker\s*\.\s*register/.test(html);
+console.log('\nSERVICE WORKER\n');
+const swPath = repoPath('web/public/sw.js');
+const swPresent = existsSync(swPath);
+const sw = swPresent ? readFileSync(swPath, 'utf8') : '';
+// Registration moved out of index.html into a module, so look in both places.
+const sources = [html, ...['web/src/main.tsx', 'web/src/register-sw.ts']
+  .filter(file => existsSync(repoPath(file)))
+  .map(file => readFileSync(repoPath(file), 'utf8'))].join('\n');
+const headersPath = repoPath('web/public/_headers');
+const headers = existsSync(headersPath) ? readFileSync(headersPath, 'utf8') : '';
+
+const swChecks = [
+  {ok: swPresent, label: 'web/public/sw.js exists',
+    missing: 'no service worker: Chrome on Android will not offer "Install app", and there ' +
+      'is no offline play'},
+  // Chrome requires a *fetch* handler specifically; an install-only worker is ignored.
+  {ok: /addEventListener\(\s*['"]fetch['"]/.test(sw), label: 'has a fetch handler',
+    missing: 'the worker has no fetch handler, which is what Chrome checks for ' +
+      'installability; an install-only worker does not count'},
+  {ok: /serviceWorker\s*\.\s*register/.test(sources), label: 'registered by the app',
+    missing: 'nothing calls serviceWorker.register(), so the worker is never installed'},
+  // Without this, a broken worker is served from cache and becomes effectively permanent.
+  {ok: /\/sw\.js[\s\S]*?Cache-Control:\s*no-cache/i.test(headers),
+    label: '_headers serves it no-cache',
+    missing: '_headers does not send Cache-Control: no-cache for /sw.js. A worker cached by ' +
+      'the browser cannot be replaced, so a bad deploy would be permanent for return visitors'},
+];
+for (const check of swChecks) {
+  console.log(`  ${check.ok ? 'OK  ' : '--  '} ${check.label}`);
+  if (!check.ok) problems.push(check.missing);
+}
+// The worker installs each shell entry with its own catch, so one missing file does not
+// fail the install — which also means a typo would never be reported at runtime.
+const shellBlock = sw.match(/const SHELL\s*=\s*\[([\s\S]*?)\]/);
+if (shellBlock) {
+  const entries = [...shellBlock[1].matchAll(/['"]([^'"]+)['"]/g)].map(m => m[1]);
+  for (const entry of entries) {
+    const relative = entry.replace(/^\.\//, '');
+    // index.html lives at web/, not web/public/; '/' is the same document.
+    if (relative === '' || relative === 'index.html') continue;
+    if (!existsSync(repoPath('web/public', relative))) {
+      problems.push(`the worker precaches "${entry}", which is not in web/public`);
+    }
+  }
+  console.log(`  OK   precaches ${entries.length} shell files`);
+}
+
+// Match a call, not the word: the worker's own comment explains why it does not do this.
+if (swPresent && /skipWaiting\s*\(/.test(sw) && !/SKIP_WAITING/.test(sw)) {
+  advice.push('the worker calls skipWaiting() unconditionally, so a new version takes over ' +
+    'mid-session; make sure the page can survive its assets changing underneath it');
+}
 
 console.log('');
 for (const problem of problems) console.log(`  PROBLEM  ${problem}`);
 for (const item of advice) console.log(`  ADVICE   ${item}`);
 console.log('');
-if (!serviceWorker) {
-  console.log('  NOTE: there is no service worker.');
-  console.log('  The manifest and icons are enough for iOS "Add to Home Screen", and enough');
-  console.log('  for the icon and splash screen everywhere. But Chrome on Android only offers');
-  console.log('  "Install app" when a service worker with a fetch handler is registered, so');
-  console.log('  the install prompt will not appear until one exists. Offline play also needs');
-  console.log('  it, and this game is fully playable offline by design.');
-  console.log('');
-}
 if (!problems.length) console.log('  Manifest and icons check out.\n');
 process.exit(problems.length ? 1 : 0);

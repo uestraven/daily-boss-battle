@@ -315,12 +315,24 @@ authored at target size, since an icon is judged at 48px.
 
 `npm run pwa:check` validates the manifest against what platforms actually require,
 including checking declared icon sizes against the real PNG headers; a manifest that lies
-about a size is accepted silently and then renders blurry.
+about a size is accepted silently and then renders blurry. It runs as part of
+`npm run verify`.
 
-**There is no service worker yet.** The manifest and icons are enough for iOS "Add to Home
-Screen" and for the icon and splash screen everywhere, but Chrome on Android only offers
-"Install app" once a service worker with a fetch handler is registered. Offline play needs
-one too, and this game is fully playable offline by design, so that is the next step.
+`web/public/sw.js` is the service worker, registered by `web/src/register-sw.ts` in
+production builds only. It is hand-written rather than generated, so it stays short enough
+to read and needs no build-step coupling. It buys the Android **Install app** prompt, which
+Chrome gates on a worker with a fetch handler, and it makes offline play real: the verified
+encounter pool is bundled into the JavaScript and the engine never calls out, so the only
+thing missing offline was the shell.
+
+Because a bad worker persists across visits, it is deliberately conservative — HTML is
+network-first so a deploy always lands, hashed `/assets/*` are cache-first because Vite
+makes them immutable, unhashed media is stale-while-revalidate, cross-origin requests are
+not intercepted at all, and it never calls `skipWaiting`. `_headers` serves `/sw.js` with
+`Cache-Control: no-cache`, which is what makes a bad one replaceable; `pwa:check` asserts
+that, the fetch handler, and that every precached path exists. See
+[docs/DEPLOY.md](docs/DEPLOY.md) for the full rationale and what "offline" does and does
+not cover.
 
 ## Audio
 
