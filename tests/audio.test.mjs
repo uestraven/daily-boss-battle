@@ -2,8 +2,8 @@
  * renderer both depend on: which sound, when, how loud, and when the music changes. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {HEAVY_HIT_INTENSITY, PHASE_SILENCE_MS, audioCues, musicChanges,
-  requiredSounds, requiredTracks} from '../dist/src/audio.js';
+import {HEAVY_HIT_INTENSITY, PHASE_SILENCE_MS, TRACK_FALLBACK, TRACK_PLAYBACK, audioCues,
+  musicChanges, requiredSounds, requiredTracks} from '../dist/src/audio.js';
 import {choreograph} from '../dist/src/presentation.js';
 
 const ev = (type, extra = {}) => ({tick: 1, type, ...extra});
@@ -224,4 +224,51 @@ test('every sound the mapper can emit is declared in the manifest', () => {
   for (const cue of cues) {
     assert.ok(declared.has(cue.sound), `${cue.sound} is emitted but not in requiredSounds()`);
   }
+});
+
+test('a missing victory or defeat track falls silent, not back to battle music', () => {
+  // The blanket fallback restarted the combat loop over a finished battle: on defeat the
+  // battle theme simply kept playing, which is worse than no music at all.
+  assert.equal(TRACK_FALLBACK.victory, 'silence');
+  assert.equal(TRACK_FALLBACK.defeat, 'silence');
+  // Mid-fight is the opposite: keeping the fight scored beats a silent phase two.
+  assert.equal(TRACK_FALLBACK.battle_phase_two, 'battle_main');
+  assert.equal(TRACK_FALLBACK.battle_main, 'silence', 'nothing to substitute for the main theme');
+});
+
+test('every fallback chain terminates', () => {
+  for (const start of Object.keys(TRACK_FALLBACK)) {
+    const seen = new Set();
+    let track = start;
+    while (track !== 'silence') {
+      assert.ok(!seen.has(track), `fallback cycle through ${track}`);
+      seen.add(track);
+      assert.ok(track in TRACK_FALLBACK || track === 'silence', `${track} has no fallback`);
+      track = TRACK_FALLBACK[track];
+      assert.ok(seen.size <= Object.keys(TRACK_FALLBACK).length + 1, 'chain too long');
+    }
+  }
+});
+
+test('every declared track has playback settings and a fallback', () => {
+  for (const track of Object.keys(TRACK_PLAYBACK)) {
+    assert.ok(TRACK_FALLBACK[track] !== undefined, `${track} has no declared fallback`);
+    assert.ok(TRACK_PLAYBACK[track].file.endsWith('.ogg'), `${track} should be an ogg`);
+  }
+  // And the manifest agrees with both.
+  for (const entry of requiredTracks().filter(t => t.id !== 'silence')) {
+    assert.ok(TRACK_PLAYBACK[entry.id], `${entry.id} is in the manifest but has no playback`);
+  }
+});
+
+test('a lost battle asks for defeat music, having first gone quiet', () => {
+  const script = choreograph([
+    ev('damage', {actorId: 'boss', targetId: 'warden', abilityId: 'attack', amount: 400, hpAfter: 0}),
+    ev('ko', {actorId: 'warden'}),
+    ev('defeat'),
+  ], {maxHp: {warden: 400}});
+  const changes = musicChanges(script, 'battle_main');
+  assert.equal(changes.at(-1).track, 'defeat', 'the last change is to defeat music');
+  // Which, with no defeat.ogg present, resolves to silence rather than the battle theme.
+  assert.equal(TRACK_FALLBACK.defeat, 'silence');
 });

@@ -94,10 +94,22 @@ if (oversize) {
     console.log(`    ffmpeg -i ${row.file} -c:a libvorbis -q:a 4 -ac 2 trimmed.ogg`);
   }
 }
+const {TRACK_FALLBACK} = await load('dist/src/audio.js');
 const missingMusic = musicRows.filter(r => r.kb === null).map(r => r.id);
 if (missingMusic.length) {
-  console.log(`\n  Missing tracks fall back to the main theme at runtime, so the game still`);
-  console.log(`  sounds intentional: ${missingMusic.join(', ')}`);
+  console.log('\n  Missing tracks, and what plays instead:');
+  for (const id of missingMusic) {
+    const chain = [];
+    let track = TRACK_FALLBACK[id] ?? 'silence';
+    while (track !== 'silence') {
+      const file = TRACK_PLAYBACK[track]?.file;
+      const present = rows.some(r => r.file.endsWith(file ?? '\u0000') && r.kb !== null);
+      if (present) { chain.push(file); break; }
+      track = TRACK_FALLBACK[track] ?? 'silence';
+    }
+    console.log(`    ${id.padEnd(18)} ${chain.length ? chain.join(' -> ') : 'silence'}`);
+  }
+  console.log('  A finished battle falls silent rather than looping combat music.');
 }
 if (sfxRows.every(r => r.kb === null)) {
   console.log('\n  No sound effects yet. Cues are scheduled and silently skipped, so adding a');

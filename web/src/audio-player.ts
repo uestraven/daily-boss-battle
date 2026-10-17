@@ -10,7 +10,7 @@
  *  - **Assets may not exist yet.** A missing file is normal during production, so a failed
  *    load falls back to the main theme for music and silently no-ops for a cue.
  */
-import {FALLBACK_TRACK, TRACK_PLAYBACK} from '../../dist/src/audio.js';
+import {TRACK_FALLBACK, TRACK_PLAYBACK} from '../../dist/src/audio.js';
 import type {AudioCue, MusicTrack, SoundId} from '../../src/audio.js';
 
 const MUSIC_DIR = 'battle-music';
@@ -90,13 +90,22 @@ export async function playMusic(track: MusicTrack): Promise<void> {
   currentSource = null;
   if (track === 'silence') return;
 
-  const playback = TRACK_PLAYBACK[track] ?? TRACK_PLAYBACK[FALLBACK_TRACK];
-  let buffer = await loadBuffer(`${base()}${MUSIC_DIR}/${playback.file}`);
-  if (!buffer && track !== FALLBACK_TRACK) {
-    // Not written yet: keep the main theme going rather than dropping to silence.
-    buffer = await loadBuffer(`${base()}${MUSIC_DIR}/${TRACK_PLAYBACK[FALLBACK_TRACK].file}`);
+  // Walk the fallback chain until a file exists or it reaches silence. Substituting the
+  // battle theme for a missing victory or defeat track would restart combat music over a
+  // finished battle, so those chains end in silence instead.
+  let candidate: MusicTrack = track;
+  let buffer: AudioBuffer | null = null;
+  const seen = new Set<MusicTrack>();
+  while (candidate !== 'silence' && !seen.has(candidate)) {
+    seen.add(candidate);
+    const attempt = TRACK_PLAYBACK[candidate];
+    buffer = attempt ? await loadBuffer(`${base()}${MUSIC_DIR}/${attempt.file}`) : null;
+    if (buffer) break;
+    candidate = TRACK_FALLBACK[candidate] ?? 'silence';
   }
-  if (!buffer || currentTrack !== track) return;
+  // A later request may have superseded this one while files were loading.
+  if (!buffer || candidate === 'silence' || currentTrack !== track) return;
+  const playback = TRACK_PLAYBACK[candidate]!;
 
   const source = context.createBufferSource();
   source.buffer = buffer;

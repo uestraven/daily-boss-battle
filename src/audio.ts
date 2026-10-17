@@ -199,9 +199,18 @@ export const TRACK_PLAYBACK: Record<Exclude<MusicTrack, 'silence'>, TrackPlaybac
   defeat: {file: 'defeat.ogg', gain: 0.7},
 };
 
-/** Played when a track's own file is not available yet, so a partial soundtrack still
- * sounds intentional rather than cutting to silence mid-fight. */
-export const FALLBACK_TRACK: Exclude<MusicTrack, 'silence'> = 'battle_main';
+/** What to play when a track's own file does not exist yet.
+ *
+ * This has to be per-track, not one global fallback. Substituting the main theme for
+ * phase two keeps the fight scored, which is what you want mid-battle. Substituting it
+ * for victory or defeat restarts the combat loop over a finished battle, which is worse
+ * than silence — so those fall silent until their own music exists. */
+export const TRACK_FALLBACK: Record<Exclude<MusicTrack, 'silence'>, MusicTrack> = {
+  battle_main: 'silence',
+  battle_phase_two: 'battle_main',
+  victory: 'silence',
+  defeat: 'silence',
+};
 
 /** The music manifest. */
 export function requiredTracks(): {id: MusicTrack; purpose: string}[] {
