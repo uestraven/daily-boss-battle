@@ -123,6 +123,48 @@ A 5-frame attack across 180 ms is 36 ms per frame — fast. If an attack should 
 slowly, say so and `TIMING.actorStep` in `src/presentation.ts` can be raised; it is one
 constant and the whole game follows.
 
+### Effects go in their own layer, not the character sheet
+
+**Do not draw slashes, flares or impacts into the character's animation frames.** A
+sweeping crescent slash is two or three times the width of a 32 × 40 cell, so baking it in
+either clips it or forces an enormous frame in which the figure is a few pixels tall. It
+also makes the frames impossible to separate — a first attempt at the Blademage sheet had
+its last three attack poses merge into a single 1165px-wide blob of overlapping effects.
+
+Instead, effects are separate sheets drawn over the stage, anchored on the **target**:
+
+- The character sheet holds the *pose* only — wind-up, swing, recovery. Small and simple.
+- The effect sheet holds the slash or flare. Bigger frames, no cell constraint.
+- One `slash` serves every weapon user, so it is far less art for a better result.
+
+This is also the SNES convention, and it is what `src/effects.ts` implements. Effects are
+spawned by impact beats, so they land exactly with the hit, the damage number and the
+shake.
+
+| Effect | Frame | Use |
+| --- | --- | --- |
+| `slash` | 64 × 48 | Generic physical hit; every weapon user |
+| `flare_neutral` | 64 × 64 | Non-elemental magical hit |
+| `flare_fire` | 64 × 64 | Fire damage |
+| `flare_ice` | 64 × 64 | Ice damage |
+| `flare_lightning` | 64 × 64 | Lightning damage |
+| `flare_holy` | 64 × 64 | Holy damage |
+| `flare_dark` | 64 × 64 | Dark damage |
+
+4–6 frames each, one row, left to right, with `anchorX`/`anchorY` marking the effect's
+visual centre. `slash` alone is enough to make every physical attack in the game read.
+
+### Author at the target resolution
+
+A large illustration reduced to 32 × 40 does not become pixel art; it becomes mud. Set the
+canvas to 32 × 40 and draw there, zoomed in. If a tool only produces large images, treat
+its output as **concept art** — a reference for silhouette, palette and costume — and
+redraw at native size.
+
+`npm run art:lint -- <file> --frame 32x40 --rows idle:2,attack:4` reports this
+mechanically. The colour count is the giveaway: hand-authored pixel art at this size uses
+tens of colours; a downscaled illustration uses thousands.
+
 ### Sheet layout and sizing
 
 The stage renders at a fixed internal **320 × 180**, scaled up by whole numbers only. So

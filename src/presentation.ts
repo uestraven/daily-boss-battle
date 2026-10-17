@@ -42,6 +42,9 @@ export type Beat = {
   kind: BeatKind;
   actorId?: ActorId;
   targetId?: ActorId;
+  /** The ability that produced this beat, where the source event carried one. Lets the
+   * effects layer and a renderer choose per-ability visuals. */
+  abilityId?: string;
   amount?: number;
   /** Health/mana tween endpoints, so a renderer needs no extra state. */
   from?: number;
@@ -164,9 +167,9 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
         const amount = event.amount ?? 0;
         const before = hp.get(target ?? '') ?? (event.hpAfter ?? 0) + amount;
         push({duration: TIMING.impact, kind: 'impact', actorId: actor, targetId: target,
-          source: event.type}, at);
+          abilityId: event.abilityId, source: event.type}, at);
         push({duration: TIMING.damageNumberHold, kind: 'damage_number', targetId: target,
-          amount, source: event.type}, at + TIMING.impact);
+          amount, abilityId: event.abilityId, source: event.type}, at + TIMING.impact);
         push({duration: TIMING.hpTween, kind: 'hp_change', targetId: target,
           from: before, to: event.hpAfter ?? Math.max(0, before - amount), amount,
           source: event.type}, at + TIMING.impact);

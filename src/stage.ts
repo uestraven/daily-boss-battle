@@ -39,9 +39,12 @@ export function heroSlots(count: number): Point[] {
 /** The boss anchors left of centre, high enough to loom over the party. */
 export const bossSlot: Point = {x: 92, y: 104};
 
+/** Matches the sheet frame sizes in docs/ART-AND-AUDIO-SPEC.md, so placeholder
+ * silhouettes occupy exactly the space real sprites will and layout cannot shift when
+ * art lands. A sheet declaring different dimensions overrides these at draw time. */
 export const SPRITE = {
-  hero: {width: 28, height: 36},
-  boss: {width: 88, height: 96},
+  hero: {width: 32, height: 40},
+  boss: {width: 96, height: 96},
 } as const;
 
 export type DrawCommand =
