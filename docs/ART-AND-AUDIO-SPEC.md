@@ -55,6 +55,12 @@ is drawn an item use borrows the `cast` pose.
 Non-looping clips are **stretched to span their beat**, so pick a frame count that reads
 well and ignore timing entirely.
 
+The "per frame" column assumes four frames. Because a clip is fitted to its beat, frame
+count and frame rate are the same decision: eight frames across the same beat is half the
+time per frame. `PACE` in `src/presentation.ts` is the global dial for this, currently 2
+(half the originally tuned speed) — eight frames then land at 80ms each, which reads.
+`?speed=2` on the game URL restores the faster pace for comparison without a rebuild.
+
 **Music.** Four looping tracks as **OGG Vorbis** (`battle_main`, `battle_phase_two`,
 `victory`, `defeat`), 44.1 kHz stereo. **MIDI cannot ship** — no browser can play a `.mid`
 file — so compose in MIDI and render through a soundfont. Plus 17 short sound effects.

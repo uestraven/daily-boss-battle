@@ -1,9 +1,9 @@
 /** Attack effects as their own layer, resolved from impact beats. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DEFAULT_BINDINGS, activeEffects, effectIdFor, effectRect, requiredEffects,
+import {DEFAULT_BINDINGS, DEFAULT_EFFECT_MS, activeEffects, effectIdFor, effectRect, requiredEffects,
   validateEffectSheet} from '../dist/src/effects.js';
-import {choreograph} from '../dist/src/presentation.js';
+import {TIMING, choreograph} from '../dist/src/presentation.js';
 
 const ev = (type, extra = {}) => ({tick: 1, type, ...extra});
 const sheetOf = (overrides = {}) => ({
@@ -105,8 +105,13 @@ test('multi-hit abilities spawn one effect per hit, staggered', () => {
   }
   const script = choreograph(events, {maxHp: {boss: 1000}});
   const impacts = script.beats.filter(b => b.kind === 'impact');
-  // At the last impact, earlier effects are still fading, so several overlap.
-  const overlapping = activeEffects(script, impacts[3].at, {library, durationMs: 260});
+  // At the last impact, earlier effects are still fading, so several overlap. Uses the
+  // default duration on purpose: that default is paced with the rest of the game, and
+  // hardcoding a number here would silently stop testing overlap the moment the pace
+  // changed -- which is exactly what happened when it was fixed at 260ms.
+  assert.ok(DEFAULT_EFFECT_MS > TIMING.multiHitStagger,
+    'an effect must outlast the gap between hits, or a volley cannot read as one flurry');
+  const overlapping = activeEffects(script, impacts[3].at, {library});
   assert.ok(overlapping.length > 1, 'overlapping hits overlap their effects');
   assert.ok(overlapping.every(e => e.id === 'slash'));
 });

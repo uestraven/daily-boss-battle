@@ -11,7 +11,15 @@
  */
 import type {AbilityKind, ActorId, Element} from './types.js';
 import type {Beat, BeatScript} from './presentation.js';
-import {beatsAt} from './presentation.js';
+import {PACE, beatsAt} from './presentation.js';
+
+/** How long an effect runs when the caller does not say.
+ *
+ * Scaled by PACE like every other watched duration. It has to be: an impact beat is
+ * near-instant, so this is what gives an effect its screen time, and leaving it fixed
+ * while the rest of the game slowed down made multi-hit effects stop overlapping -- a
+ * four-hit volley read as four separate hits instead of a flurry. */
+export const DEFAULT_EFFECT_MS = 260 * PACE;
 
 export type EffectSheet = {
   file: string;
@@ -104,7 +112,7 @@ export function activeEffects(
 ): ActiveEffect[] {
   if (!script) return [];
   const bindings = options.bindings ?? DEFAULT_BINDINGS;
-  const duration = options.durationMs ?? 260;
+  const duration = options.durationMs ?? DEFAULT_EFFECT_MS;
   const out: ActiveEffect[] = [];
 
   // Impacts are instants; an effect spawned by one runs for `duration` afterwards, so the

@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ANIMATION_NAMES, CLIP_FALLBACK, CLIP_FOR_KIND, DEFAULT_LOOP_FRAME_MS, animationFor,
   animationsFor, frameFor, frameRect, validateSheet} from '../dist/src/animation.js';
-import {choreograph} from '../dist/src/presentation.js';
+import {PACE, TIMING, choreograph} from '../dist/src/presentation.js';
 import {advanceToDecision, createEncounter} from '../dist/src/engine.js';
 import {buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
@@ -303,4 +303,28 @@ test('a channelled wind-up stays a cast whatever it ends in', () => {
   assert.equal(cast.abilityId, 'slam');
   assert.equal(animationFor('b', {script, timeMs: cast.at + 5, sheet: fullSheet,
     abilityInfo: {slam: {kind: 'physical'}}}).name, 'cast');
+});
+
+test('an eight-frame clip is readable at the shipped pace', () => {
+  // The Oracle's clips have eight frames where the placeholders have two to four, and a
+  // clip is stretched to fit its beat -- so frame rate falls out of beat length. At the
+  // original pace an eight-frame attack was 40ms a frame and over inside a third of a
+  // second, which is what made the attack, cast and item clips indistinguishable even
+  // though the renderer was picking between them correctly.
+  const perFrame = TIMING.actorStep / 8;
+  assert.ok(perFrame >= 70, `${perFrame.toFixed(0)}ms per frame is too fast to read`);
+  // And the distinct pose is on screen long enough to register, not just the clip.
+  assert.ok(TIMING.actorStep >= 500, 'the whole action should outlast a glance');
+});
+
+test('the pace dial moves every watched duration together', () => {
+  // A duration left off the dial plays at a different speed from everything around it.
+  // DEFAULT_EFFECT_MS was exactly that: fixed at 260ms while the game halved its speed,
+  // which stopped multi-hit effects overlapping.
+  assert.ok(PACE >= 1, 'PACE is a slowdown factor');
+  assert.equal(TIMING.actorStep, 320 * PACE, 'durations scale with the dial');
+  assert.equal(TIMING.impact, 110 * PACE);
+  // Rates divide rather than multiply, or text would type faster as the game slows.
+  assert.equal(TIMING.textCharsPerSecond, 42 / PACE);
+  assert.ok(TIMING.textCharsPerSecond < 42, 'slower game, slower typing');
 });

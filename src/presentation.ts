@@ -61,36 +61,60 @@ export type Beat = {
 
 export type BeatScript = {beats: Beat[]; totalMs: number};
 
+/** How much slower than the originally tuned pace everything plays.
+ *
+ * 2 is half speed. The values below keep the relationships that were tuned by eye -- the
+ * flash stays short against a long recoil, the health drain still carries the weight --
+ * and this one number moves all of them together.
+ *
+ * It exists because the per-frame rate falls out of the beat length: a clip is stretched
+ * to fit its beat, so an 8-frame animation across the old 320ms step was 40ms a frame and
+ * finished inside a third of a second. That was too fast to read, which also made the
+ * attack, cast and item clips indistinguishable from each other even though the renderer
+ * was correctly choosing between them.
+ *
+ * `?speed=2` restores the previous pace for comparison without a rebuild.
+ *
+ * Exported so other presentation durations scale with it. Anything timed in milliseconds
+ * that the player watches belongs on this dial; leaving one off means it plays at a
+ * different speed from everything around it. */
+export const PACE = 2;
+
+/** Scales a duration. Rates are divided instead -- see textCharsPerSecond. */
+const slow = (ms: number): number => Math.round(ms * PACE);
+
 /** Single place to tune the feel of the whole game. Milliseconds. */
 export const TIMING = {
   /** An attack clip is fitted to this, so it also sets the animation's frame rate:
-   * four frames across 320ms is 80ms each, which reads. At 180ms it did not. */
-  actorStep: 320,
-  castWindUp: 560,
+   * four frames across the base 320ms is 80ms each, which reads. At 180ms it did not.
+   * The Oracle's eight-frame clips need the slower pace to read at all. */
+  actorStep: slow(320),
+  castWindUp: slow(560),
   /** The hit flash only. Deliberately short and sharp. */
-  impact: 110,
+  impact: slow(110),
   /** The target's reaction. Separate from the flash: a recoil needs time to register,
    * where a flash should not linger. */
-  hurtReact: 240,
-  damageNumberHold: 750,
+  hurtReact: slow(240),
+  damageNumberHold: slow(750),
   /** Health bars drain rather than snap; this is most of the perceived weight. */
-  hpTween: 480,
-  mpTween: 260,
+  hpTween: slow(480),
+  mpTween: slow(260),
   /** Consecutive hits of a multi-hit ability. */
-  multiHitStagger: 150,
-  koCollapse: 720,
-  statusPopup: 300,
+  multiHitStagger: slow(150),
+  koCollapse: slow(720),
+  statusPopup: slow(300),
   /** A boss phase change stops everything. */
-  phaseHold: 900,
-  telegraph: 420,
-  victoryHold: 1200,
-  defeatHold: 1400,
+  phaseHold: slow(900),
+  telegraph: slow(420),
+  victoryHold: slow(1200),
+  defeatHold: slow(1400),
   /** Gap between two separate actors acting in the same batch. */
-  betweenActors: 200,
-  /** Characters per second for typed message text. */
-  textCharsPerSecond: 42,
+  betweenActors: slow(200),
+  /** Characters per second for typed message text. A rate, so slowing the game down
+   * divides it: multiplying would have made text type twice as fast as everything else. */
+  textCharsPerSecond: 42 / PACE,
   /** Floor so one-character messages are still readable. */
-  minMessage: 220,
+  minMessage: slow(220),
 } as const;
 
 export type ChoreographOptions = {

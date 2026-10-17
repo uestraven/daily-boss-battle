@@ -3,7 +3,7 @@
  * dramatic stop on a phase change. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {TIMING, beatsAt, choreograph, tweenValue} from '../dist/src/presentation.js';
+import {PACE, TIMING, beatsAt, choreograph, tweenValue} from '../dist/src/presentation.js';
 import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src/engine.js';
 import {buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
@@ -231,7 +231,10 @@ test('clip frame rates are slow enough to read', () => {
   assert.ok(perFrame(TIMING.koCollapse, 4) >= 140,
     `a 4-frame collapse is ${perFrame(TIMING.koCollapse, 4).toFixed(0)}ms per frame`);
   // ...but not so slow that a turn drags.
-  assert.ok(TIMING.actorStep <= 500, 'an attack beat should not exceed half a second');
+  // Bounded against the pace dial rather than an absolute: the point is that the tuning
+  // has not drifted, and the global pace is a deliberate, separate decision.
+  assert.ok(TIMING.actorStep <= 500 * PACE,
+    `an attack beat should not exceed ${500 * PACE}ms at PACE ${PACE}`);
   assert.ok(TIMING.hurtReact <= TIMING.damageNumberHold, 'the recoil should not outlast its number');
   assert.ok(TIMING.impact < TIMING.hurtReact, 'the flash is sharp; the reaction is not');
 });
