@@ -20,6 +20,12 @@ by whole numbers. So sprites are small and must read as silhouettes.
 | Boss | **96 × 96** | as above |
 
 - PNG, transparent background, uniform grid, **one row per animation**, frames left to right.
+- **Draw the character facing right.** The renderer mirrors heroes, who stand on the right
+  and face the boss; the boss stands on the left and draws unflipped. Author one direction
+  only — a sheet drawn facing left will render facing away from its opponent.
+- **Transparent background, and no grid lines.** The cell border belongs to the tool you
+  author in, not to the exported PNG. A baked-in background fills every frame and leaves
+  the renderer nothing to composite against.
 - **Author at the target size.** A large illustration reduced to 32 × 40 becomes mud. This
   has been tried and measured; there is no automated route.
 - **Under 64 colours**, ideally 16–32. Hard-edged pixels: no anti-aliasing, no gradients,

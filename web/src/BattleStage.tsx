@@ -198,8 +198,11 @@ function paint(
 
         if (image && command.sheet) {
           const {sx, sy, sw, sh} = command.sheet;
-          // Sheets are authored facing one way; mirror horizontally for the other side.
-          const mirror = command.facing === 'right';
+          // Sheets are authored facing RIGHT, which is the usual convention and what the
+          // art actually arrives as. The boss stands on the left and faces right, so it
+          // draws unflipped; heroes stand on the right and face the boss, so they mirror.
+          // This is a presentation-only convention and the only place it is applied.
+          const mirror = command.facing === 'left';
           if (mirror) {
             ctx.save();
             ctx.translate(command.x + command.width, y);

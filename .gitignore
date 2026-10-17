@@ -33,3 +33,8 @@ pool-rejections.json
 # Concept art and reference illustrations: large, not shipped, and not the source of
 # truth for any asset. Keep them locally; the game loads only web/public/.
 art-reference/
+
+# Reference images parked next to the real sheets. Anything under web/public/ is copied
+# into the build and served, so a multi-megabyte illustration left here would ship to
+# every visitor. Suffix a working file `_test` to keep it local.
+web/public/**/*_test.png
