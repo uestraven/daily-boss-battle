@@ -60,12 +60,35 @@ if (raw.summary?.byTier) {
 }
 
 // A pool that validates but cannot serve a daily is still a broken pool.
-const probeDays = Array.from({length: 28}, (_, i) =>
-  new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10));
+//
+// The horizon starts at today rather than a fixed date, because the question this answers
+// is "can the deployed site serve every day it is about to serve". A fixed historical
+// window would keep passing while the next year was broken. Distant dates are probed too,
+// since the day-to-entry mapping must not degrade once the cycle has turned over many
+// times.
+const HORIZON_DAYS = 400;
+const dayStringsFrom = (start, count) => Array.from({length: count}, (_, i) => {
+  const d = new Date(start);
+  d.setUTCDate(d.getUTCDate() + i);
+  return d.toISOString().slice(0, 10);
+});
+
+const today = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+const probeDays = [
+  ...dayStringsFrom(today, HORIZON_DAYS),
+  // Far enough out to catch anything that drifts or overflows with the day index.
+  ...['2030-02-28', '2032-02-29', '2040-12-31'],
+];
+
 const unservable = [];
+const bossByDay = new Map();
 for (const day of probeDays) {
   const entry = selectDaily(day, pool);
-  if (!entry) { unservable.push(day); continue; }
+  if (!entry) { unservable.push(`${day} (no entry selected)`); continue; }
+  // Serving an entry that did not pass the gates would defeat the whole offline
+  // verification scheme, so check the flag rather than trusting selection.
+  if (!entry.passed) { unservable.push(`${day} (selected an unverified entry)`); continue; }
+  bossByDay.set(day, entry.bossId);
   try {
     const def = dailyEncounter(day, pool);
     const step = advanceToDecision(createEncounter(def), def);
@@ -80,7 +103,30 @@ if (unservable.length) {
   for (const day of unservable.slice(0, 10)) console.error(`    ${day}`);
   process.exit(1);
 }
-console.log(`  daily probe     ${probeDays.length}/${probeDays.length} days playable`);
+console.log(`  daily probe     ${probeDays.length}/${probeDays.length} days playable ` +
+  `(${probeDays[0]} onward)`);
+
+// Repeating a boss on consecutive days is the most visible way the schedule can feel
+// broken, and the collision repair in cycleOrder is subtle enough to be worth asserting.
+const horizon = probeDays.slice(0, HORIZON_DAYS);
+const repeats = horizon.filter((day, i) =>
+  i > 0 && bossByDay.get(day) === bossByDay.get(horizon[i - 1]));
+if (repeats.length) {
+  console.error(`\n  FAIL: the same boss appears on consecutive days: ${repeats.slice(0, 5).join(', ')}`);
+  process.exit(1);
+}
+const appearances = new Map();
+for (const day of horizon) {
+  appearances.set(bossByDay.get(day), (appearances.get(bossByDay.get(day)) ?? 0) + 1);
+}
+const starved = bossIds.filter(id => !appearances.has(id));
+if (starved.length) {
+  console.error(`\n  FAIL: these bosses never appear in ${HORIZON_DAYS} days: ${starved.join(', ')}`);
+  process.exit(1);
+}
+const counts = [...appearances.values()];
+console.log(`  schedule        no repeats; all ${appearances.size} bosses appear ` +
+  `(${Math.min(...counts)}-${Math.max(...counts)} times each)`);
 
 if (missing.length) {
   console.error(`\n  FAIL: no verified encounter for: ${missing.join(', ')}`);
