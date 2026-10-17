@@ -191,6 +191,27 @@
 .dbb-affinity-tag.is-resist { color: #ffd36a; }
 .dbb-affinity-tag.is-weak   { color: #78e0a0; }
 
+/* Status badges. Deliberately built like the affinity tags -- outlined, uppercase, colour
+   carrying the meaning -- because they sit in the same places and read as one family.
+   Three hero cards share a row on a phone, so these must wrap and never force a card
+   wider: min-width:0 on .dbb-hero plus flex-wrap here is what keeps the row from
+   overflowing when someone is carrying four statuses. */
+.dbb-statuses { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.dbb-status {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 3px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.dbb-status.is-buff   { color: #78e0a0; }
+.dbb-status.is-debuff { color: #ff8585; }
+.dbb-status.is-charge { color: #ffd36a; }
+/* The boss panel has room, so its badges can carry a little more weight. */
+.dbb-boss .dbb-statuses { gap: 4px; margin-top: 5px; }
+.dbb-boss .dbb-status { font-size: 10px; padding: 1px 5px; }
+
 /* An ability that cannot hurt this boss stays selectable, but says so. */
 .rpg-menu-item.is-no-effect { opacity: 0.6; }
 .dbb-no-effect { color: #ff8585; font-size: 10px; letter-spacing: 0.06em; }

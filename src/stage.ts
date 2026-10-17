@@ -9,7 +9,7 @@
  * makes pixel art look like pixel art instead of a blurry web page: at 320x180 the
  * stage integer-scales to 640x360, 960x540 and 1280x720 exactly.
  */
-import type {ActorId, BattleState} from './types.js';
+import type {ActorId, BattleState, StatusId} from './types.js';
 import type {Beat, BeatScript} from './presentation.js';
 import {beatsAt, tweenValue} from './presentation.js';
 import {animationFor, frameRect} from './animation.js';
@@ -184,6 +184,37 @@ export function displayedValue(
     else break;
   }
   return value;
+}
+
+/** Which statuses an actor should show *at this point in playback*.
+ *
+ * Works backwards from the state the batch ended in, which is the only state the screen
+ * has, undoing every status change that has not happened yet. A status applied later in
+ * the batch is removed; one that expires later is put back. Processed newest-first so a
+ * status that toggles twice in one batch unwinds correctly.
+ *
+ * This is why every status change needed an event carrying its id: a bare delete left no
+ * beat, so a consumed status appeared to drop at the start of the batch rather than at the
+ * moment it was spent. */
+export function statusesAt(
+  script: BeatScript | null,
+  actorId: ActorId,
+  timeMs: number,
+  finalStatuses: Partial<Record<StatusId, unknown>>,
+): StatusId[] {
+  const shown = new Set(Object.keys(finalStatuses) as StatusId[]);
+  if (script) {
+    const future = script.beats
+      .filter(b => (b.kind === 'status_on' || b.kind === 'status_off')
+        && b.actorId === actorId && b.status !== undefined && b.at > timeMs)
+      .sort((a, b) => b.at - a.at);
+    for (const beat of future) {
+      if (beat.kind === 'status_on') shown.delete(beat.status!);
+      else shown.add(beat.status!);
+    }
+  }
+  // Sorted so the badge order cannot flicker between frames.
+  return [...shown].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
 /** Whether an actor reads as down *at this point in playback*, rather than in the state

@@ -11,7 +11,7 @@
  * canvas stage, a React Native view, or the terminal client. Pure and deterministic,
  * so choreography is unit-testable rather than eyeballed.
  */
-import type {ActorId, BattleEvent} from './types.js';
+import type {ActorId, BattleEvent, StatusId} from './types.js';
 
 export type BeatKind =
   | 'actor_step'     // actor moves forward to act
@@ -46,6 +46,8 @@ export type Beat = {
   /** The ability that produced this beat, where the source event carried one. Lets the
    * effects layer and a renderer choose per-ability visuals. */
   abilityId?: string;
+  /** Which status a status_on / status_off beat concerns. */
+  status?: StatusId;
   amount?: number;
   /** Health/mana tween endpoints, so a renderer needs no extra state. */
   from?: number;
@@ -232,14 +234,14 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
       case 'status_applied': {
         consecutiveHits = 0;
         push({duration: TIMING.statusPopup, kind: 'status_on', actorId: actor,
-          text: event.details, source: event.type});
+          status: event.status, text: event.details, source: event.type});
         cursor += TIMING.statusPopup;
         break;
       }
       case 'status_expired':
       case 'status_removed': {
         push({duration: TIMING.statusPopup, kind: 'status_off', actorId: actor ?? target,
-          text: event.details, source: event.type});
+          status: event.status, text: event.details, source: event.type});
         cursor += TIMING.statusPopup;
         break;
       }

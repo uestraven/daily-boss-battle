@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {STAGE, bossSlot, composeFrame, displayedValue, downAt, floatProgress, heroSlots,
-  integerScale, shakeOffset, tintForRole} from '../dist/src/stage.js';
+  integerScale, shakeOffset, statusesAt, tintForRole} from '../dist/src/stage.js';
 import {choreograph} from '../dist/src/presentation.js';
 import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src/engine.js';
 import {bossIds, buildEncounter} from '../dist/src/generate.js';
@@ -684,4 +684,110 @@ test('the canvas and the panel cannot disagree about who is down', () => {
       .find(c => c.kind === 'sprite' && c.actorId === victim);
     assert.equal(sprite.dim, downAt(script, victim, t, 0), `disagreement at ${t}ms`);
   }
+});
+
+// --- Status badges, resolved against playback ----------------------------------------
+
+test('a status appears when the spell granting it plays, not when it is chosen', () => {
+  const id = 'oracle';
+  const script = choreograph([
+    ev('action_committed', {actorId: id, abilityId: 'protect_spell'}),
+    ev('status_applied', {actorId: id, status: 'protect', details: 'protect; expires at 40'}),
+  ], {});
+  const on = script.beats.find(b => b.kind === 'status_on');
+  assert.ok(on && on.at > 0, 'the badge has a moment to appear at');
+  assert.equal(on.status, 'protect', 'the beat carries the id, not just prose');
+
+  // `{protect: ...}` is the post-batch state, which is all the screen has.
+  const final = {protect: {expiresAt: 40}};
+  assert.deepEqual(statusesAt(script, id, 0, final), [], 'nothing before the spell plays');
+  assert.deepEqual(statusesAt(script, id, on.at - 1, final), []);
+  assert.deepEqual(statusesAt(script, id, on.at, final), ['protect'], 'on at the beat');
+  assert.deepEqual(statusesAt(script, id, script.totalMs, final), ['protect']);
+});
+
+test('a status that ends mid-batch is shown until it does', () => {
+  const id = 'blademage';
+  const script = choreograph([
+    ev('action_committed', {actorId: id, abilityId: 'ready'}),
+    ev('status_applied', {actorId: id, status: 'focus', details: 'focus; expires at 30'}),
+    ev('action_committed', {actorId: id, abilityId: 'strike'}),
+    ev('status_removed', {actorId: id, status: 'focus', details: 'focus'}),
+  ], {});
+  const on = script.beats.find(b => b.kind === 'status_on');
+  const off = script.beats.find(b => b.kind === 'status_off');
+  assert.ok(on.at > 0 && on.at < off.at);
+  // Applied and spent within one batch, so the final state does not have it at all.
+  assert.deepEqual(statusesAt(script, id, 0, {}), [], 'not yet granted');
+  assert.deepEqual(statusesAt(script, id, on.at, {}), ['focus'], 'granted');
+  assert.deepEqual(statusesAt(script, id, off.at - 1, {}), ['focus'], 'still held');
+  assert.deepEqual(statusesAt(script, id, off.at, {}), [], 'spent');
+});
+
+test('a status held from before the batch shows throughout', () => {
+  // There is no beat for it: it was applied turns ago, so the final state is the evidence.
+  const script = choreograph([ev('damage', {actorId: 'b', targetId: 'monk', amount: 10, hpAfter: 90})],
+    {maxHp: {monk: 100}});
+  const final = {haste: {expiresAt: 99}};
+  for (const t of [0, 200, script.totalMs]) {
+    assert.deepEqual(statusesAt(script, 'monk', t, final), ['haste']);
+  }
+});
+
+test('a status expiring later in the batch is still shown now', () => {
+  const id = 'monk';
+  const script = choreograph([
+    ev('action_committed', {actorId: id, abilityId: 'attack'}),
+    ev('status_expired', {actorId: id, status: 'protect', details: 'protect'}),
+  ], {});
+  const off = script.beats.find(b => b.kind === 'status_off');
+  // Gone by the end, so absent from the final state; present until the beat.
+  assert.deepEqual(statusesAt(script, id, 0, {}), ['protect']);
+  assert.deepEqual(statusesAt(script, id, off.at - 1, {}), ['protect']);
+  assert.deepEqual(statusesAt(script, id, off.at, {}), []);
+});
+
+test('a status toggling twice in one batch unwinds in the right order', () => {
+  // Newest-first processing is what makes this work; forwards would land on the wrong set.
+  const id = 'thief';
+  const script = choreograph([
+    ev('action_committed', {actorId: id, abilityId: 'open'}),
+    ev('status_applied', {actorId: id, status: 'surge', details: 'surge'}),
+    ev('action_committed', {actorId: id, abilityId: 'a'}),
+    ev('status_removed', {actorId: id, status: 'surge', details: 'surge'}),
+    ev('action_committed', {actorId: id, abilityId: 'b'}),
+    ev('status_applied', {actorId: id, status: 'surge', details: 'surge'}),
+  ], {});
+  const beats = script.beats.filter(b => b.kind === 'status_on' || b.kind === 'status_off')
+    .sort((a, b) => a.at - b.at);
+  assert.equal(beats.length, 3);
+  assert.ok(beats[0].at > 0, 'the batch opens with an action, so there is a "before"');
+  const final = {surge: {expiresAt: 50}};
+  assert.deepEqual(statusesAt(script, id, 0, final), [], 'not yet granted');
+  assert.deepEqual(statusesAt(script, id, beats[0].at, final), ['surge']);
+  assert.deepEqual(statusesAt(script, id, beats[1].at, final), [], 'spent');
+  assert.deepEqual(statusesAt(script, id, beats[2].at, final), ['surge'], 'granted again');
+});
+
+test('statuses are only read for the actor they belong to', () => {
+  const script = choreograph([
+    ev('status_applied', {actorId: 'oracle', status: 'protect', details: 'protect'}),
+  ], {});
+  const on = script.beats.find(b => b.kind === 'status_on');
+  // The warden's own badge must not be driven by the oracle's beat.
+  assert.deepEqual(statusesAt(script, 'warden', on.at, {protect: {expiresAt: 40}}), ['protect']);
+  assert.deepEqual(statusesAt(script, 'warden', 0, {protect: {expiresAt: 40}}), ['protect']);
+});
+
+test('badge order is stable, so it cannot flicker between frames', () => {
+  const final = {surge: {}, protect: {}, poison: {}, haste: {}};
+  const first = statusesAt(null, 'x', 0, final);
+  assert.deepEqual(first, statusesAt(null, 'x', 0, {poison: {}, haste: {}, protect: {}, surge: {}}),
+    'order cannot depend on insertion order of the state object');
+  assert.deepEqual([...first].sort(), first, 'and is deterministic');
+});
+
+test('with no script, the state is the only truth', () => {
+  assert.deepEqual(statusesAt(null, 'x', 0, {poison: {expiresAt: 9}}), ['poison']);
+  assert.deepEqual(statusesAt(null, 'x', 0, {}), []);
 });

@@ -83,6 +83,10 @@ export type Cover = {guardianId:ActorId; protectedId:ActorId; expiresAt:number};
 export type BattleEvent = {
   tick:number; type:string; actorId?:ActorId; abilityId?:string;
   targetId?:ActorId; amount?:number; details?:string; hpAfter?:number;
+  /** Which status a status_applied / status_expired / status_removed event concerns.
+   * `details` carries the human-readable form; this is the machine-readable one, so a
+   * renderer can show the right badge without parsing prose. */
+  status?:StatusId;
 };
 export type BattleState = {
   encounterId:string; engineVersion:string; contentVersion:string;

@@ -62,10 +62,21 @@ export function calculateDamage(def:EncounterDefinition,source:ActorState,target
 }
 
 function status(state:BattleState,actor:ActorState,name:StatusId,duration:number,element?:Element):void{
-  if(name==='haste')delete actor.statuses.slow;
-  if(name==='slow')delete actor.statuses.haste;
+  if(name==='haste')clearStatus(state,actor,'slow');
+  if(name==='slow')clearStatus(state,actor,'haste');
   actor.statuses[name]={expiresAt:state.tick+duration,...(name==='poison'?{nextPulseAt:state.tick+12}:{}),...(element?{element}:{})};
-  event(state,'status_applied',{actorId:actor.id,details:`${name}; expires at ${state.tick+duration}`});
+  event(state,'status_applied',{actorId:actor.id,status:name,details:`${name}; expires at ${state.tick+duration}`});
+}
+/** Ends a status early, as opposed to letting it expire.
+ *
+ * Every removal goes through here so each one leaves a `status_removed` event carrying the
+ * status id. Removals used to be bare deletes, which meant a consumed or cancelled status
+ * vanished with no record on the timeline -- so a renderer had no way to know when during a
+ * batch the badge should disappear, and showed it dropping at the wrong moment. */
+function clearStatus(state:BattleState,actor:ActorState,name:StatusId):void{
+  if(actor.statuses[name]===undefined)return;
+  delete actor.statuses[name];
+  event(state,'status_removed',{actorId:actor.id,status:name,details:name});
 }
 function checkTerminal(s:BattleState):void{
   if(s.result!==null)return;
@@ -105,7 +116,7 @@ function restoreHp(s:BattleState,source:ActorState,target:ActorState,value:numbe
 function resolveDamage(s:BattleState,def:EncounterDefinition,source:ActorState,ability:Ability,targets:ActorId[]):void{
   if(source.team==='boss' && ability.kind==='magical'){
     const nullifyHero=s.party.map(id=>s.actors[id]!).find(x=>living(x)&&active(x,'nullify'));
-    if(nullifyHero){delete nullifyHero.statuses.nullify;const gained=Math.min(8,nullifyHero.stats.mp-nullifyHero.mp);nullifyHero.mp+=gained;
+    if(nullifyHero){clearStatus(s,nullifyHero,'nullify');const gained=Math.min(8,nullifyHero.stats.mp-nullifyHero.mp);nullifyHero.mp+=gained;
       event(s,'nullify_absorb',{actorId:nullifyHero.id,abilityId:ability.id,amount:gained});return;}
   }
   if(!targets.length && ability.target==='single_living_enemy'){
@@ -132,10 +143,10 @@ function resolveDamage(s:BattleState,def:EncounterDefinition,source:ActorState,a
     }
   }
   if(ability.kind==='physical' && active(source,'elemental_edge')){
-    delete source.statuses.elemental_edge;event(s,'elemental_edge_consumed',{actorId:source.id});
+    clearStatus(s,source,'elemental_edge');event(s,'elemental_edge_consumed',{actorId:source.id});
   }
   if(ability.kind==='magical'&&active(source,'focus')){
-    delete source.statuses.focus;event(s,'focus_consumed',{actorId:source.id,abilityId:ability.id});
+    clearStatus(s,source,'focus');event(s,'focus_consumed',{actorId:source.id,abilityId:ability.id});
   }
 }
 function resolveEffect(s:BattleState,def:EncounterDefinition,source:ActorState,ability:Ability,targets:ActorId[]):void{
@@ -151,7 +162,7 @@ function resolveEffect(s:BattleState,def:EncounterDefinition,source:ActorState,a
     for(const id of targets){const target=s.actors[id]!;
       if(living(target)){
         if(ability.status==='defend'){
-          target.statuses.defend={expiresAt:-1};event(s,'status_applied',{actorId:id,details:'defend until next action'});
+          target.statuses.defend={expiresAt:-1};event(s,'status_applied',{actorId:id,status:'defend',details:'defend until next action'});
         }else status(s,target,ability.status!,ability.duration??24,ability.riderElement);
       }
     }
@@ -226,7 +237,7 @@ function commit(s:BattleState,def:EncounterDefinition,actor:ActorState,ability:A
   actor.abilityUses[ability.id]=(actor.abilityUses[ability.id]??0)+1;
   if(ability.item){s.inventory[ability.item]--;s.itemUses++;}
   actor.ready=false;actor.atb=0;actor.availableFrom=s.tick+1;
-  delete actor.statuses.defend; // Defend ends exactly when this actor starts its next action.
+  clearStatus(s,actor,'defend'); // Defend ends exactly when this actor starts its next action.
   if(isHero)s.heroActionCount++;else s.bossActionCount++;
   event(s,'action_committed',{actorId:actor.id,abilityId:ability.id,details:`targets=${targets.join(',')}`});
   if(ability.interruptCast && actor.team==='heroes'){
@@ -240,6 +251,11 @@ function commit(s:BattleState,def:EncounterDefinition,actor:ActorState,ability:A
   if((ability.delayTicks??0)>0){
     const at=s.tick+ability.delayTicks!;
     actor.channelingUntil=at;
+    // Deliberately silent, and deliberately not routed through clearStatus below either.
+    // `airborne` is an internal marker for "mid-channel, so untargetable"; channel_started
+    // already tells the player the lancer is in the air, and content-v09 asserts that Jump
+    // applies no player-facing status. It is hidden from the status badges for the same
+    // reason.
     if(ability.airborneDuringDelay)actor.statuses.airborne={expiresAt:at};
     s.pending.push({at,sequence:s.nextSequence++,actorId:actor.id,abilityId:ability.id,targetIds:targets});
     event(s,'channel_started',{actorId:actor.id,abilityId:ability.id,details:`impact tick ${at}`});
@@ -328,7 +344,7 @@ function tickOnce(s:BattleState,def:EncounterDefinition):void{
   for(const id of [...s.party,s.bossId]){
     const a=s.actors[id]!;
     for(const [key,value] of Object.entries(a.statuses)){
-      if(value.expiresAt>=0&&value.expiresAt<=s.tick){delete a.statuses[key as StatusId];event(s,'status_expired',{actorId:id,details:key});}
+      if(value.expiresAt>=0&&value.expiresAt<=s.tick){delete a.statuses[key as StatusId];event(s,'status_expired',{actorId:id,status:key as StatusId,details:key});}
     }
   }
   s.covers=s.covers.filter(c=>c.expiresAt>s.tick&&living(s.actors[c.guardianId]!));

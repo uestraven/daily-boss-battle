@@ -157,3 +157,56 @@ test('Storm Keeper Fire immunity, Spell Weaver spells, and optional statuses are
   assert.deepEqual(replay(def,actions).state,step.state);
  }
 });
+
+test('every status event names its status, applied, expired or removed',()=>{
+ // The contract the status badges rest on. Removals used to be bare deletes and
+ // applications described themselves in prose ("protect; expires at 40"), so a renderer
+ // had to parse English to know which badge to show, and had no record at all of a status
+ // being spent partway through a batch.
+ const def=withHeroes(['oracle','blademage','channeler']);
+ const state=play(def,(step,ready)=>{
+  const kit={oracle:'oracle_protect',blademage:'elemental_edge',channeler:'surge'};
+  const abilityId=kit[ready];
+  const ability=abilityId?def.abilities[abilityId]:undefined;
+  // Fall back to attacking once the buff is unaffordable or already held, so the run
+  // keeps going rather than throwing on MP.
+  if(!ability)return attack(step.state,ready);
+  const actor=step.state.actors[ready];
+  if(actor.mp<(ability.mpCost??0)||actor.statuses[ability.status])return attack(step.state,ready);
+  return {actorId:ready,abilityId,targetIds:[ready]};
+ },40);
+
+ const events=state.events.filter(e=>e.type.startsWith('status_'));
+ assert.ok(events.length>0,'the run should apply some statuses');
+ for(const e of events){
+  assert.ok(e.status,`${e.type} at tick ${e.tick} carries no status id`);
+  assert.ok(e.details,`${e.type} should still carry readable detail for the log`);
+ }
+ // And all three kinds are reachable, so none of the three paths is dead.
+ assert.ok(events.some(e=>e.type==='status_applied'),'statuses are applied');
+ assert.ok(events.some(e=>e.type==='status_expired'||e.type==='status_removed'),
+  'and they end, with a record of it');
+}); 
+
+test('a status spent early leaves a status_removed event, not a silent delete',()=>{
+ // Elemental Edge is consumed by the next attack. Before, that delete emitted only
+ // elemental_edge_consumed, so the badge had no idea when to disappear.
+ const def=withHeroes(['blademage','oracle','monk']);
+ let step=stepFor(def);
+ while(!step.readyHeroIds.includes('blademage'))
+  step=applyPlayerAction(step.state,attack(step.state,step.readyHeroIds[0]),def);
+ step=applyPlayerAction(step.state,{actorId:'blademage',abilityId:'elemental_edge',targetIds:['blademage']},def);
+ assert.ok(step.state.actors.blademage.statuses.elemental_edge,'the edge is held');
+ const applied=step.state.events.filter(e=>e.type==='status_applied'&&e.status==='elemental_edge');
+ assert.equal(applied.length,1);
+
+ while(!step.readyHeroIds.includes('blademage'))
+  step=applyPlayerAction(step.state,attack(step.state,step.readyHeroIds[0]),def);
+ const before=step.state.events.length;
+ step=applyPlayerAction(step.state,attack(step.state,'blademage'),def);
+ const batch=step.state.events.slice(before);
+ assert.ok(batch.some(e=>e.type==='elemental_edge_consumed'),'still reports the consumption');
+ assert.ok(batch.some(e=>e.type==='status_removed'&&e.status==='elemental_edge'),
+  'and now also records that the status ended');
+ assert.equal(step.state.actors.blademage.statuses.elemental_edge,undefined);
+});

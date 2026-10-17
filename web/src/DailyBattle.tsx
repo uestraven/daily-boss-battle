@@ -14,7 +14,7 @@ import {advanceToDecision, applyPlayerAction, calculateDamage, createEncounter,
   nextBossCountdown, previewAction, starsForResult} from '../../dist/src/engine.js';
 import {availableActions, eligibleTargets, previewDisplay, actionInput} from '../../dist/src/play-ui.js';
 import {choreograph} from '../../dist/src/presentation.js';
-import {displayedValue, downAt} from '../../dist/src/stage.js';
+import {displayedValue, downAt, statusesAt} from '../../dist/src/stage.js';
 import {poolCatalog, selectDaily, targetTierFor, validatePool} from '../../dist/src/pool.js';
 import {dailyStatistics, ensureDay, playDailyAction, stepForDay} from '../../dist/src/daily.js';
 import {loadLedger, saveLedger, clearLedger} from './storage.js';
@@ -29,6 +29,7 @@ import {spriteSheet} from './sprite-catalog.js';
 import {effectLibrary} from './effect-catalog.js';
 import {backgroundForBoss, battleBackgrounds, hasBackgroundArt} from './background-catalog.js';
 import {BackgroundStudio} from './BackgroundStudio.js';
+import {STATUS_DISPLAY, visibleStatuses} from './status-display.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {ActorId, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
 import type {DailyCatalog, DailyLedger} from '../../src/daily.js';
@@ -241,6 +242,27 @@ function Battle({def, catalog, tier, day}:
   const actorId: ActorId | undefined = active.readyHeroIds[0];
   const boss = state.actors[state.bossId]!;
   const countdown = nextBossCountdown(state);
+  /** Status badges for one actor, resolved against playback rather than the state the
+   * batch ended in -- the same rule as the health bars, so a buff cannot appear before the
+   * spell that granted it has played. */
+  const statusBadges = useCallback((id: ActorId) => {
+    const ids = visibleStatuses(statusesAt(script, id, timeMs, state.actors[id]?.statuses ?? {}));
+    if (!ids.length) return null;
+    return (
+      <div className="dbb-statuses">
+        {ids.map(status => {
+          const display = STATUS_DISPLAY[status];
+          return (
+            <span key={status} className={`dbb-status is-${display.tone}`} title={display.hint}
+              aria-label={`${display.label}: ${display.hint}`}>
+              {display.label}
+            </span>
+          );
+        })}
+      </div>
+    );
+  }, [script, timeMs, state]);
+
   /** The telegraph as the player should see it now: last turn's while this turn animates,
    * so the boss's next move is not revealed before the current one has landed. */
   const shownTelegraph = pending
@@ -408,6 +430,7 @@ function Battle({def, catalog, tier, day}:
           {Math.round(displayedValue(script, state.bossId, timeMs, boss.hp)).toLocaleString()}
           {' / '}{boss.stats.hp.toLocaleString()}
         </div>
+        {statusBadges(state.bossId)}
         {affinityNotes.length > 0 && (
           <div className="dbb-affinity">
             {affinityNotes.map(note => (
@@ -454,6 +477,7 @@ function Battle({def, catalog, tier, day}:
                 {actor.stats.mp > 0 && <span>MP {shownMp}</span>}
                 {shownMomentum > 0 && <span>◆{shownMomentum}</span>}
               </div>
+              {statusBadges(id)}
             </div>
           );
         })}
