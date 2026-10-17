@@ -272,3 +272,17 @@
 @media (min-width: 1400px) {
   .dbb-shell { max-width: 1280px; }
 }
+
+/* Sound toggle, in the header beside the date. */
+.dbb-header-right { display: flex; align-items: center; gap: 8px; }
+.dbb-mute {
+  min-width: 32px;
+  min-height: 32px;
+  font-size: 14px;
+  line-height: 1;
+  color: inherit;
+  background: #11162a;
+  border: 2px solid var(--dbb-border-outer, #8e9bb3);
+  cursor: pointer;
+}
+.dbb-mute:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }

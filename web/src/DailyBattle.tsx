@@ -21,6 +21,8 @@ import {loadLedger, saveLedger, clearLedger} from './storage.js';
 import {ShareCard} from './ShareCard.js';
 import {EmailSignup} from './EmailSignup.js';
 import {resultCardInputFrom} from '../../dist/src/result-card.js';
+import {audioCues, musicChanges} from '../../dist/src/audio.js';
+import {isMuted, playCues, playMusic, setMuted, unlockAudio} from './audio-player.js';
 import {advanceToDecision as freshBattle} from '../../dist/src/engine.js';
 import {heroes} from '../../dist/src/roster.js';
 import {spriteSheet} from './sprite-catalog.js';
@@ -98,6 +100,10 @@ function Battle({def, catalog, tier, day}:
   /** An unranked replay, kept out of the ledger so it cannot overwrite the day's
    * recorded result. v1 deliberately lets anyone replay as much as they like. */
   const [replay, setReplay] = useState<BattleStep | null>(null);
+  const [mutedState, setMutedState] = useState(() => isMuted());
+  /** Autoplay is blocked until a gesture, so the battle theme starts on the first
+   * committed action rather than on load. */
+  const audioStarted = useRef(false);
   const terminalRef = useRef<BattleStep['terminal']>(step.terminal);
 
   // Drive the clock while a batch is playing, then hand control back to the player.
@@ -169,7 +175,20 @@ function Battle({def, catalog, tier, day}:
     }
     const batch = next.state.events.slice(before);
     setTimeMs(0);
-    setScript(choreograph(batch, {names, maxHp, abilityNames, speed: SPEED}));
+    const nextScript = choreograph(batch, {names, maxHp, abilityNames, speed: SPEED});
+    setScript(nextScript);
+
+    // Audio is driven by the same choreography the visuals use, so a hit sound cannot
+    // drift from the hit it belongs to.
+    if (!audioStarted.current) {
+      audioStarted.current = true;
+      unlockAudio();
+      void playMusic('battle_main');
+    }
+    playCues(audioCues(nextScript));
+    for (const change of musicChanges(nextScript, 'battle_main')) {
+      window.setTimeout(() => void playMusic(change.track), Math.max(0, change.at));
+    }
     setSelected(null);
     setPhase({kind: 'playing'});
     setLog(previous => [
@@ -251,7 +270,25 @@ function Battle({def, catalog, tier, day}:
     <main className="dbb-shell">
       <header className="dbb-header">
         <span className="dbb-brand">✦ DAILY BOSS BATTLE</span>
-        <span className="dbb-day">{day} · {tier}</span>
+        <span className="dbb-header-right">
+          <span className="dbb-day">{day} · {tier}</span>
+          <button
+            className="dbb-mute"
+            aria-label={mutedState ? 'Unmute' : 'Mute'}
+            aria-pressed={mutedState}
+            onClick={() => {
+              unlockAudio();
+              const next = !mutedState;
+              setMuted(next);
+              setMutedState(next);
+              // Unmuting before the first action should still start the theme.
+              if (!next && !audioStarted.current) {
+                audioStarted.current = true;
+                void playMusic('battle_main');
+              }
+            }}
+          >{mutedState ? '🔇' : '🔊'}</button>
+        </span>
       </header>
 
       <section className="dbb-boss rpg-window">

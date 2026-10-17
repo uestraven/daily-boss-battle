@@ -295,6 +295,26 @@ no longer exist.
 
 Results are local and unverified until there is a server, and the UI says so.
 
+## Audio
+
+`src/audio.ts` turns choreography beats into timed cues and music transitions; it is pure
+and tested. `web/src/audio-player.ts` plays them through Web Audio, which matters for two
+reasons: an `AudioBufferSourceNode` loop is sample-accurate where `<audio loop>` can gap,
+and it supports `loopStart`/`loopEnd` for a track with an intro that plays once.
+
+Autoplay is blocked until a user gesture, so the theme starts on the first committed
+action. A mute toggle sits in the header and persists.
+
+Assets are optional by design. A missing track falls back to the main theme, and a missing
+sound effect is scheduled and silently skipped — so adding a file is all that is needed,
+with no code change. `npm run audio:check` reports what is present and flags anything over
+budget.
+
+```bash
+npm run audio:check     # inventory and size budget
+npm run audio:manifest  # the commissioning list: 17 SFX, 4 tracks
+```
+
 ## Playing it now
 
 A zero-dependency terminal client runs the real daily loop — no browser, no React:
