@@ -40,6 +40,11 @@ by whole numbers. So sprites are small and must read as silhouettes.
 | 3 | `hurt` | no | 2 | a 240 ms beat | 120 ms |
 | 4 | `ko` | no | 3–4 | a 720 ms beat, holds last frame | 240 ms |
 | 5 | `victory` | yes | 2–3 | its own cadence | 400 ms |
+| 6 | `item` | no | 2–3 | a 320 ms beat | 107 ms |
+
+Row order is whatever the manifest says; the numbers above match the twelve hero and eight
+boss sheets that ship. `item` is the one row none of them has yet — it is new, and until it
+is drawn an item use borrows the `cast` pose.
 
 Non-looping clips are **stretched to span their beat**, so pick a frame count that reads
 well and ignore timing entirely.
@@ -141,19 +146,26 @@ numbers, screen shake and health drain. There is no separate animation timeline 
 
 ### Animation set
 
-Six clips per combatant. One row of the sheet per clip, frames left to right.
+Seven clips per combatant. One row of the sheet per clip, frames left to right.
 
 | Clip | Loops | Plays when | Suggested frames |
 | --- | --- | --- | --- |
 | `idle` | yes | default; **required** | 2–4 |
-| `attack` | no | stepping in and striking | 3–5 |
-| `cast` | no | channelled or magical wind-up | 3–4 |
+| `attack` | no | a physical ability: a swing, a lunge, a steal | 3–5 |
+| `cast` | no | a spell, cure, buff, debuff or dispel | 3–4 |
+| `item` | no | using a potion or tonic | 2–3 |
 | `hurt` | no | taking a hit | 2 |
 | `ko` | no | collapsing; holds its last frame | 3–4 |
 | `victory` | yes | surviving heroes, after a win | 2–3 |
 
-Only `idle` is mandatory. A missing clip degrades to `idle` rather than drawing nothing,
-so you can ship idle-only sheets and add clips incrementally.
+Which clip plays is decided by the **ability's kind**, not by who is acting: a magus
+swinging a staff plays `attack`, and a knight drinking a potion plays `item`. The mapping
+is `CLIP_FOR_KIND` in `src/animation.ts`.
+
+Only `idle` is mandatory. A missing clip degrades along a chain rather than vanishing —
+`item` falls back to `cast`, then `attack`, then `idle`, and `ko` falls back to `hurt` —
+so an idle-only sheet works and clips can land one at a time without ever showing an actor
+standing still mid-action.
 
 ### Non-looping clips are stretched to fit their beat
 
@@ -208,8 +220,24 @@ shake.
 | `flare_holy` | 64 × 64 | Holy damage |
 | `flare_dark` | 64 × 64 | Dark damage |
 
-4–6 frames each, one row, left to right, with `anchorX`/`anchorY` marking the effect's
-visual centre. `slash` alone is enough to make every physical attack in the game read.
+4–6 frames each, one row, left to right, with `anchorX`/`anchorY` marking the point that
+lands on the target's feet — so a value near the frame height sits the effect on the ground
+and about half centres it on the body. `slash` alone is enough to make every physical attack
+in the game read.
+
+The layer is wired up and declared in `web/src/effect-manifest.json`, including frame sizes
+and counts. **Enabling one takes two steps:** put the PNG in `web/public/battle-effects/`,
+then add its id to the manifest's `shipped` array. Until an id is listed the renderer never
+asks for it, so an uncommissioned effect costs nothing and the hit flash and shake carry the
+moment on their own.
+
+`npm run effects:check` reports the status of all seven, fails if `shipped` and the
+directory disagree either way, and measures declared frame counts against the real PNG
+width — a count that does not divide the image blits a sliver of the neighbouring frame.
+
+Set `behind: true` on a sheet to draw it under the actors instead of over them, which is
+what a ground crack or an aura wants. Front effects draw over the actors but under the HUD,
+so a flare can never hide a damage number.
 
 ### How to actually produce a sheet
 
