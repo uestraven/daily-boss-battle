@@ -51,10 +51,10 @@
     },
     "blademage": {
       "file": "heroes/blademage.png",
-      "frameWidth": 32,
+      "frameWidth": 48,
       "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 40,
+      "anchorX": 24,
+      "anchorY": 38,
       "clips": {
         "idle": {
           "row": 0,

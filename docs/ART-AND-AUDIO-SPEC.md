@@ -165,6 +165,27 @@ redraw at native size.
 mechanically. The colour count is the giveaway: hand-authored pixel art at this size uses
 tens of colours; a downscaled illustration uses thousands.
 
+`tools/fit-sprite-sheet.mjs` can mechanically convert a large multi-pose illustration into
+a grid-aligned, palette-reduced sheet. **It was tried and the result is unusable**: a 15x
+reduction plus a 16-colour palette eats every highlight and leaves a dark silhouette. The
+tool remains useful for *measurement* — it is what established that the Blademage poses
+need a 48-wide cell — but not for producing shippable art. There is no automated route
+from illustration to pixel art.
+
+### A weapon that reaches past the body needs a wider cell
+
+Frame size is **per sheet**, declared in the manifest, so characters need not share one.
+Measured on the Blademage poses, whose sword reaches about as far as the figure is tall:
+
+| Frame | Result |
+| --- | --- |
+| 32 x 40 | limited by pose width; body reaches only 26 of 36px available |
+| 40 x 40 | limited by pose width; body reaches 34 of 36px |
+| **48 x 40** | limited by body height; **the figure fills the cell** |
+
+So either draw the weapon tighter to the body and keep 32 x 40, or use 48 x 40 and let the
+sword have room. The Blademage manifest entry is set to 48 x 40 for this reason.
+
 ### Sheet layout and sizing
 
 The stage renders at a fixed internal **320 × 180**, scaled up by whole numbers only. So
