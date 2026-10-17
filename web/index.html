@@ -20,7 +20,10 @@
   <meta name="apple-mobile-web-app-title" content="Boss Battle" />
   <meta name="color-scheme" content="dark" />
 
-  <!-- Open Graph, so a shared link previews as a game rather than a bare URL. -->
+  <!-- Open Graph, so a shared link previews as a game rather than a bare URL.
+       og:image is relative, which some crawlers resolve against the page and others
+       ignore. Make it absolute, and add og:url, once the domain is known; see
+       docs/DEPLOY.md, "After the domain is live". -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Daily Boss Battle" />
   <meta property="og:description" content="One tactical boss fight a day. The same battle for everyone." />

@@ -1,3 +1,11 @@
+/** Background authoring tool: import art, crop it to the stage, export a PNG to drop into
+ * `web/public/battle-backgrounds/`.
+ *
+ * NOT CURRENTLY MOUNTED. Its only entry point was the `App.tsx` desktop harness, which has
+ * been deleted. It is kept because the background feature is unfinished rather than
+ * abandoned: no backdrop art ships yet, and `BattleStage` draws a flat colour with a ground
+ * band instead. Reaching it again means mounting it behind a dev flag in `DailyBattle` and
+ * teaching the stage's `background` draw case to load a bundled PNG. */
 import {useEffect,useState} from 'react';
 import {backgroundForBoss,battleBackgrounds,backgroundIds,bundledBackgroundUrl} from './background-catalog.js';
 import type {BackgroundId} from './background-catalog.js';

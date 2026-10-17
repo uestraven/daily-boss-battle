@@ -7,6 +7,10 @@
 #     still propagates without a cache bust.
 #   - index.html and the manifest must revalidate, or a deploy never reaches anyone.
 
+# There is deliberately no Content-Security-Policy yet. A candidate policy and the
+# procedure for verifying it against a preview deployment are in docs/DEPLOY.md; a wrong
+# CSP is a blank page, so it is not worth guessing from here.
+
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

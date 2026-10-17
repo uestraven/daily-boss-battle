@@ -244,12 +244,19 @@ edge-to-edge and iOS 26 draws under the home indicator, so the screen uses
 `viewport-fit=cover` with `env(safe-area-inset-*)` padding rather than assuming a
 rectangular viewport.
 
-Two known warts. Engine imports in `web/` come from `dist/` because `src/` uses NodeNext
-`.js` specifiers that Vite will not rewrite to `.ts`; `web:dev` builds first, so it is
-consistent rather than stale, but engine edits need a rebuild to appear. And the old
-desktop harness `web/src/App.tsx` is still on disk, now unreferenced — it carries the
-background-import studio and battle-version switcher, and can be deleted once those are
-either ported or abandoned.
+One known wart: engine imports in `web/` come from `dist/` because `src/` uses NodeNext
+`.js` specifiers that Vite will not rewrite to `.ts`. `web:dev` builds first, so it is
+consistent rather than stale, but engine edits need a rebuild to appear.
+
+The old desktop harness `App.tsx` has been deleted. What it carried is split: the
+battle-version switcher is gone with it, and the background pipeline
+(`BackgroundStudio.tsx`, `background-catalog.ts`, `background-storage.ts`,
+`components/`) is still on disk but not mounted anywhere. That is an unfinished feature
+rather than dead weight — no background art ships yet
+(`web/public/battle-backgrounds/` holds only a README), and `BattleStage` deliberately
+draws a flat backdrop with a ground band instead. Finishing it means mounting the studio
+behind a dev flag and teaching the live stage to load a backdrop; abandoning it means
+deleting those four files.
 
 ## v1 scope: a daily website
 

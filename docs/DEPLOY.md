@@ -135,8 +135,54 @@ The worker only runs over HTTPS or on `localhost`, so a Cloudflare preview URL o
 
 ## Known gaps at launch
 
-- **No Content-Security-Policy.** Worth adding, but a wrong one is a blank page, so it
-  should be set and verified against a preview deployment rather than guessed. The email
-  endpoint needs to be allowed in `connect-src` if one is configured.
+- **No Content-Security-Policy.** See the next section: there is a candidate policy, but it
+  needs verifying against a preview rather than shipping on faith.
 - **Results are per-browser and unverified.** There is no account and no server
   adjudication; the UI says so. See the technical plan for what a backend would add.
+- **`og:image` is a relative path**, so a strict crawler will show a link preview with no
+  image. Fixed by one edit once the domain is known — see below.
+
+## After the domain is live
+
+### Make the social preview absolute
+
+`web/index.html` declares `<meta property="og:image" content="icons/icon-512.png" />`. Some
+crawlers resolve that against the page URL and some ignore it, so once there is a real
+hostname, make it absolute and add the canonical URL:
+
+```html
+<meta property="og:url" content="https://your-domain.example/" />
+<meta property="og:image" content="https://your-domain.example/icons/icon-512.png" />
+```
+
+It is a square app icon, which renders as a small `summary` card. A purpose-drawn 1200×630
+banner would preview much better; nothing generates one yet.
+
+### Add a Content-Security-Policy
+
+Worth doing, and the app is unusually easy to lock down: it has no analytics, no fonts, no
+CDN, and the engine never calls out. The one external request is the optional reminder
+endpoint. Candidate policy, as an entry under `/*` in `web/public/_headers`:
+
+```
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; media-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'
+```
+
+Three things to settle against a **preview** deployment, not from reading this:
+
+1. **Vite's modulepreload polyfill is an inline `<script>`**, which `script-src 'self'`
+   blocks — that would be the blank page. Either set
+   `build: {modulePreload: {polyfill: false}}` in `web/vite.config.ts`, which is safe at the
+   `es2022` target this already builds for, or add the polyfill's `'sha256-…'` to
+   `script-src`.
+2. **`style-src 'self'`** should hold: production CSS arrives as a `<link>`, and React's
+   `style` prop sets properties through the CSSOM, which CSP does not police. If the console
+   reports a style violation, add `'unsafe-inline'` to `style-src` only.
+3. **`connect-src 'self'`** must gain the reminder endpoint's origin if
+   `VITE_REMINDER_ENDPOINT` is configured, or signups will fail silently.
+
+`blob:` in `img-src` is for the result card, which renders to a canvas and shares a blob.
+
+Deploy it to a preview first, open the console, play a full battle through victory *and*
+defeat, and share the result card — the violations surface at the moment the feature runs,
+not on load.
