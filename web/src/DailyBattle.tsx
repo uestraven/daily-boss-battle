@@ -8,12 +8,13 @@
  * Vite will not rewrite to `.ts`. `npm run web:dev` builds first, so this is consistent
  * rather than stale — see the README note.
  */
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {BattleStage} from './BattleStage.js';
 import {advanceToDecision, applyPlayerAction, createEncounter, nextBossCountdown,
   previewAction, starsForResult} from '../../dist/src/engine.js';
 import {availableActions, eligibleTargets, previewDisplay, actionInput} from '../../dist/src/play-ui.js';
 import {choreograph} from '../../dist/src/presentation.js';
+import {displayedValue} from '../../dist/src/stage.js';
 import {dailyEncounter, selectDaily, targetTierFor, validatePool} from '../../dist/src/pool.js';
 import {heroes} from '../../dist/src/roster.js';
 import type {BeatScript} from '../../src/presentation.js';
@@ -26,6 +27,12 @@ const todayUtc = () => new Date().toISOString().slice(0, 10);
 const ROLE_BY_ID: Record<string, string> = Object.fromEntries(heroes.map(h => [h.id, h.role]));
 
 type Phase = {kind: 'choosing'} | {kind: 'playing'} | {kind: 'over'};
+
+/** `?dev` enables presentation-testing controls. Phase two, KOs and the defeat screen
+ * are all hard to reach by playing well, which makes them hard to verify; these jump
+ * straight to the state under test. No daily result is persisted by this screen, so
+ * nothing here can corrupt a record. */
+const DEV = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('dev');
 
 export default function DailyBattle() {
   const day = todayUtc();
@@ -64,6 +71,29 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
   const [phase, setPhase] = useState<Phase>({kind: 'choosing'});
   const [selected, setSelected] = useState<OfferedAction | null>(null);
   const [log, setLog] = useState<string[]>([]);
+  /** Playback position for the current batch. Shared by the canvas and the DOM meters,
+   * so a health bar can never disagree with the stage about how far a tween has run. */
+  const [timeMs, setTimeMs] = useState(0);
+  const terminalRef = useRef(step.terminal);
+  terminalRef.current = step.terminal;
+
+  // Drive the clock while a batch is playing, then hand control back to the player.
+  useEffect(() => {
+    if (!script) return;
+    let raf = 0;
+    const startedAt = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - startedAt;
+      setTimeMs(elapsed);
+      if (elapsed >= script.totalMs) {
+        setPhase(terminalRef.current ? {kind: 'over'} : {kind: 'choosing'});
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [script]);
 
   const names = useMemo(
     () => Object.fromEntries(Object.entries(def.actors).map(([id, a]) => [id, a.name])),
@@ -87,6 +117,7 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
     const before = state.events.length;
     const next = applyPlayerAction(state, input, def);
     const batch = next.state.events.slice(before);
+    setTimeMs(0);
     setScript(choreograph(batch, {names, maxHp, abilityNames}));
     setStep(next);
     setSelected(null);
@@ -99,10 +130,6 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
       ...previous,
     ].slice(0, 24));
   }, [state, def, names, maxHp, abilityNames]);
-
-  const onPlaybackEnd = useCallback(() => {
-    setPhase(step.terminal ? {kind: 'over'} : {kind: 'choosing'});
-  }, [step.terminal]);
 
   const offered = useMemo(
     () => (actorId ? availableActions(state, def, actorId).filter(o => o.enabled) : []),
@@ -133,7 +160,10 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
 
       <section className="dbb-boss rpg-window">
         <div className="dbb-boss-name">{def.actors[state.bossId]!.name}</div>
-        <div className="dbb-boss-hp">{boss.hp.toLocaleString()} / {boss.stats.hp.toLocaleString()}</div>
+        <div className="dbb-boss-hp">
+          {Math.round(displayedValue(script, state.bossId, timeMs, boss.hp)).toLocaleString()}
+          {' / '}{boss.stats.hp.toLocaleString()}
+        </div>
         {countdown && (
           <div className="dbb-telegraph">
             ▶ {abilityNames[countdown.abilityId] ?? countdown.abilityId}
@@ -146,23 +176,19 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
         )}
       </section>
 
-      <BattleStage
-        state={state}
-        script={script}
-        onPlaybackEnd={onPlaybackEnd}
-        roles={ROLE_BY_ID}
-      />
+      <BattleStage state={state} script={script} timeMs={timeMs} roles={ROLE_BY_ID} />
 
       <section className="dbb-party">
         {state.party.map(id => {
           const actor = state.actors[id]!;
           const ready = actor.ready && actor.hp > 0;
+          const shownHp = Math.round(displayedValue(script, id, timeMs, actor.hp));
           return (
             <div key={id} className={`dbb-hero rpg-window${ready ? ' is-ready' : ''}${actor.hp === 0 ? ' is-down' : ''}`}>
               <div className="dbb-hero-name">{names[id]}</div>
-              <div className="dbb-meter"><i style={{width: `${(100 * actor.hp) / actor.stats.hp}%`}} /></div>
+              <div className="dbb-meter"><i style={{width: `${(100 * shownHp) / actor.stats.hp}%`}} /></div>
               <div className="dbb-hero-numbers">
-                <span>{actor.hp}/{actor.stats.hp}</span>
+                <span>{shownHp}/{actor.stats.hp}</span>
                 {actor.stats.mp > 0 && <span>MP {actor.mp}</span>}
                 {actor.momentum > 0 && <span>◆{actor.momentum}</span>}
               </div>
@@ -225,9 +251,43 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
         )}
       </section>
 
+      {DEV && (
+        <section className="dbb-dev rpg-window">
+          <div className="dbb-dev-label">DEV · presentation testing</div>
+          <div className="dbb-dev-row">
+            <button onClick={() => setStep(nudgeBoss(step, def, 0.52))}>Boss → 52%</button>
+            <button onClick={() => setStep(nudgeBoss(step, def, 0.46))}>Boss → 46%</button>
+            <button onClick={() => setStep(nudgeBoss(step, def, 0.04))}>Boss → 4%</button>
+            <button onClick={() => setStep(hurtParty(step, 0.25))}>Party → 25%</button>
+          </div>
+          <div className="dbb-dev-hint">
+            Phase {state.phase} · transition at {def.bossProgram.transitionPercent}% ·
+            {' '}attack from just above it to see the flash-and-hold
+          </div>
+        </section>
+      )}
+
       <section className="dbb-log">
         {log.map((line, index) => <div key={index} className="dbb-log-line">{line}</div>)}
       </section>
     </main>
   );
+}
+
+/** Sets the boss to a fraction of max HP, for reaching a phase transition on demand. */
+function nudgeBoss(step: BattleStep, def: EncounterDefinition, fraction: number): BattleStep {
+  const state: BattleState = JSON.parse(JSON.stringify(step.state));
+  const boss = state.actors[state.bossId]!;
+  boss.hp = Math.max(1, Math.round(boss.stats.hp * fraction));
+  return {...step, state};
+}
+
+/** Drops the party to a fraction of max HP, for reaching KO and defeat presentation. */
+function hurtParty(step: BattleStep, fraction: number): BattleStep {
+  const state: BattleState = JSON.parse(JSON.stringify(step.state));
+  for (const id of state.party) {
+    const actor = state.actors[id]!;
+    actor.hp = Math.max(1, Math.round(actor.stats.hp * fraction));
+  }
+  return {...step, state};
 }

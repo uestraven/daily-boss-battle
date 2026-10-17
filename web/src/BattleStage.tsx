@@ -30,22 +30,17 @@ export type BattleStageProps = {
   state: BattleState;
   /** Choreography for the batch currently playing, or null when idle. */
   script: BeatScript | null;
-  /** Called once playback of the current script finishes. */
-  onPlaybackEnd?: () => void;
+  /** Playback position, owned by the screen so the canvas and the DOM meters share
+   * one clock and cannot disagree about how far a tween has run. */
+  timeMs: number;
   /** Role per hero id, used to tint placeholder silhouettes. */
   roles?: Record<string, string>;
-  paused?: boolean;
 };
 
-export function BattleStage({state, script, onPlaybackEnd, roles, paused}: BattleStageProps) {
+export function BattleStage({state, script, timeMs, roles}: BattleStageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
-  // Mutable refs so the animation loop never restarts mid-playback.
-  const startedAt = useRef<number | null>(null);
-  const finished = useRef(false);
-  const latest = useRef({state, script, roles});
-  latest.current = {state, script, roles};
 
   // Whole-number scaling against the available width.
   useLayoutEffect(() => {
@@ -53,7 +48,6 @@ export function BattleStage({state, script, onPlaybackEnd, roles, paused}: Battl
       const wrap = wrapRef.current;
       if (!wrap) return;
       const {width} = wrap.getBoundingClientRect();
-      // Allow a taller box than 16:9; the stage letterboxes inside it.
       setScale(integerScale(width, (width * STAGE.height) / STAGE.width));
     };
     measure();
@@ -61,35 +55,13 @@ export function BattleStage({state, script, onPlaybackEnd, roles, paused}: Battl
     return () => window.removeEventListener('resize', measure);
   }, []);
 
-  // Restart the clock whenever a new batch arrives.
+  // Paint on every change of clock or state. The screen drives the clock, so this
+  // component holds no animation state of its own.
   useEffect(() => {
-    startedAt.current = null;
-    finished.current = false;
-  }, [script]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext('2d');
-    if (!canvas || !context) return;
-    let raf = 0;
-
-    const loop = (now: number) => {
-      const {state: currentState, script: currentScript, roles: currentRoles} = latest.current;
-      if (startedAt.current === null) startedAt.current = now;
-      const timeMs = paused ? 0 : now - startedAt.current;
-
-      const frame = composeFrame({state: currentState, script: currentScript, timeMs});
-      paint(context, frame, currentState, currentRoles);
-
-      if (currentScript && !finished.current && timeMs >= currentScript.totalMs) {
-        finished.current = true;
-        onPlaybackEnd?.();
-      }
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [onPlaybackEnd, paused]);
+    const context = canvasRef.current?.getContext('2d');
+    if (!context) return;
+    paint(context, composeFrame({state, script, timeMs}), state, roles);
+  }, [state, script, timeMs, roles, scale]);
 
   return (
     <div className="stage-wrap" ref={wrapRef}>

@@ -2,8 +2,8 @@
  * can be asserted without a browser. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {STAGE, bossSlot, composeFrame, floatProgress, heroSlots, integerScale,
-  shakeOffset, tintForRole} from '../dist/src/stage.js';
+import {STAGE, bossSlot, composeFrame, displayedValue, floatProgress, heroSlots,
+  integerScale, shakeOffset, tintForRole} from '../dist/src/stage.js';
 import {choreograph} from '../dist/src/presentation.js';
 import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src/engine.js';
 import {buildEncounter} from '../dist/src/generate.js';
@@ -247,4 +247,76 @@ test('frames compose over a real battle without producing invalid commands', () 
     }
   }
   assert.ok(framesChecked > 100, `only sampled ${framesChecked} frames`);
+});
+
+test('REGRESSION: a meter never jumps upward during a damage batch', () => {
+  // Battle state already holds the post-action value. Reading it directly made the bar
+  // show the new value, snap back up as the tween began, then drain -- a visible flash.
+  const state = freshState();
+  const bossMax = state.actors[state.bossId].stats.hp;
+  const script = choreograph([
+    ev('action_committed', {actorId: state.party[0], abilityId: 'attack'}),
+    ev('damage', {actorId: state.party[0], targetId: state.bossId, amount: 86, hpAfter: bossMax - 86}),
+  ], {maxHp: {[state.bossId]: bossMax}});
+  state.actors[state.bossId].hp = bossMax - 86;
+
+  let previous = Infinity;
+  for (let t = 0; t <= script.totalMs + 200; t += 8) {
+    const fraction = composeFrame({state, script, timeMs: t}).commands
+      .find(c => c.kind === 'bar' && c.palette === 'hp').fraction;
+    const shown = fraction * bossMax;
+    assert.ok(shown <= previous + 0.001, `bar rose from ${previous} to ${shown} at ${t}ms`);
+    previous = shown;
+  }
+  // And it starts full, ending on the post-damage value.
+  const at = t => composeFrame({state, script, timeMs: t}).commands
+    .find(c => c.kind === 'bar').fraction * bossMax;
+  assert.equal(Math.round(at(0)), bossMax, 'holds the pre-damage value until the tween runs');
+  assert.equal(Math.round(at(script.totalMs + 100)), bossMax - 86, 'settles on the new value');
+});
+
+test('REGRESSION: chained multi-hit tweens never jump upward either', () => {
+  const state = freshState();
+  const bossMax = state.actors[state.bossId].stats.hp;
+  const events = [ev('action_committed', {actorId: state.party[0], abilityId: 'volley'})];
+  for (let i = 0; i < 4; i++) {
+    events.push(ev('damage', {actorId: state.party[0], targetId: state.bossId,
+      amount: 40, hpAfter: bossMax - 40 * (i + 1)}));
+  }
+  const script = choreograph(events, {maxHp: {[state.bossId]: bossMax}});
+  state.actors[state.bossId].hp = bossMax - 160;
+
+  let previous = Infinity;
+  for (let t = 0; t <= script.totalMs + 200; t += 8) {
+    const shown = composeFrame({state, script, timeMs: t}).commands
+      .find(c => c.kind === 'bar').fraction * bossMax;
+    assert.ok(shown <= previous + 0.001, `rose from ${previous} to ${shown} at ${t}ms`);
+    previous = shown;
+  }
+});
+
+test('displayedValue resolves the whole tween sequence, not just active beats', () => {
+  const script = {
+    totalMs: 1000,
+    beats: [
+      {at: 100, duration: 200, kind: 'hp_change', targetId: 'boss', from: 1000, to: 900},
+      {at: 500, duration: 200, kind: 'hp_change', targetId: 'boss', from: 900, to: 700},
+    ],
+  };
+  const at = t => displayedValue(script, 'boss', t, 700);
+  assert.equal(at(0), 1000, 'before the first tween: its starting value');
+  assert.equal(at(100), 1000, 'at the first tween start');
+  assert.equal(at(300), 900, 'first tween complete');
+  assert.equal(at(400), 900, 'between tweens: the last completed value');
+  assert.equal(at(700), 700, 'second tween complete');
+  assert.equal(at(5000), 700, 'after everything');
+  const mid = at(200);
+  assert.ok(mid < 1000 && mid > 900, 'interpolates inside a tween');
+});
+
+test('displayedValue falls back to state when there is nothing to animate', () => {
+  assert.equal(displayedValue(null, 'boss', 0, 555), 555, 'no script');
+  assert.equal(displayedValue({totalMs: 0, beats: []}, 'boss', 0, 555), 555, 'no beats');
+  const other = {totalMs: 100, beats: [{at: 0, duration: 50, kind: 'hp_change', targetId: 'someone_else', from: 1, to: 0}]};
+  assert.equal(displayedValue(other, 'boss', 10, 555), 555, 'tweens for a different actor');
 });

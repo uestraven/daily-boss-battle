@@ -113,6 +113,42 @@ const TINTS: Record<string, string> = {
   default: '#8899aa',
 };
 
+/** The value a meter should show at a playback position.
+ *
+ * Reading battle state directly is wrong during playback: the state already holds the
+ * post-action value, so before a tween begins the meter would show the new value, jump
+ * back up to the old one as the tween starts, and drain again — a visible flash. This
+ * resolves the whole tween sequence instead:
+ *   before the first tween -> its `from`
+ *   inside a tween         -> the eased interpolation
+ *   between/after tweens   -> the most recently completed `to`
+ *   no tweens at all       -> the fallback (actual state)
+ */
+export function displayedValue(
+  script: BeatScript | null,
+  actorId: ActorId,
+  timeMs: number,
+  fallback: number,
+  kind: 'hp_change' | 'mp_change' = 'hp_change',
+): number {
+  if (!script) return fallback;
+  const tweens = script.beats
+    .filter(b => b.kind === kind && b.targetId === actorId && b.from !== undefined)
+    .sort((a, b) => a.at - b.at);
+  if (!tweens.length) return fallback;
+
+  const first = tweens[0]!;
+  if (timeMs < first.at) return first.from!;
+
+  let value = fallback;
+  for (const tween of tweens) {
+    if (timeMs >= tween.at + tween.duration) value = tween.to ?? value;
+    else if (timeMs >= tween.at) return tweenValue(tween, timeMs);
+    else break;
+  }
+  return value;
+}
+
 /** Composes a single frame. Pure: identical inputs give an identical frame. */
 export function composeFrame(input: ComposeInput): Frame {
   const {state, script, timeMs} = input;
@@ -173,9 +209,7 @@ export function composeFrame(input: ComposeInput): Frame {
 
   // --- boss health bar across the top ---
   if (boss) {
-    // A live tween beat takes precedence, so the bar drains rather than snaps.
-    const tween = active.find(b => b.kind === 'hp_change' && b.targetId === state.bossId);
-    const shown = tween ? tweenValue(tween, timeMs) : boss.hp;
+    const shown = displayedValue(script, state.bossId, timeMs, boss.hp);
     commands.push({
       kind: 'bar', x: 16, y: 12, width: STAGE.width - 32, height: 6,
       fraction: Math.max(0, Math.min(1, shown / Math.max(1, boss.stats.hp))), palette: 'hp',

@@ -156,3 +156,24 @@
 @media (prefers-reduced-motion: reduce) {
   .dbb-hero, .rpg-menu-item, .rpg-menu-back { transition: none !important; }
 }
+
+/* Dev-only presentation testing controls, shown with ?dev. */
+.dbb-dev { padding: 6px 8px; border-color: var(--dbb-buff, #ffd36a) !important; }
+.dbb-dev-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--dbb-buff, #ffd36a);
+  margin-bottom: 4px;
+}
+.dbb-dev-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.dbb-dev-row button {
+  min-height: 32px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 11px;
+  color: inherit;
+  background: #2b2f44;
+  border: 1px solid var(--dbb-buff, #ffd36a);
+  cursor: pointer;
+}
+.dbb-dev-hint { margin-top: 4px; font-size: 10px; opacity: 0.7; }
