@@ -182,13 +182,17 @@ export function composeFrame(input: ComposeInput): Frame {
     return Math.round(6 * Math.sin(progress * Math.PI));
   };
 
+  /** Down according to playback, not according to the final state. */
+  const downNow = (id: ActorId, actualHp: number): boolean =>
+    displayedValue(script, id, timeMs, actualHp) <= 0;
+
   const boss = state.actors[state.bossId];
   if (boss) {
     commands.push({
       kind: 'sprite', actorId: state.bossId,
       x: bossSlot.x - SPRITE.boss.width / 2, y: bossSlot.y - SPRITE.boss.height,
       width: SPRITE.boss.width, height: SPRITE.boss.height,
-      facing: 'right', tint: TINTS.boss!, dim: boss.hp === 0,
+      facing: 'right', tint: TINTS.boss!, dim: downNow(state.bossId, boss.hp),
       flash: flashFor(state.bossId), offsetY: -stepFor(state.bossId),
     });
   }
@@ -202,7 +206,7 @@ export function composeFrame(input: ComposeInput): Frame {
       kind: 'sprite', actorId: id,
       x: slot.x - SPRITE.hero.width / 2 - stepFor(id), y: slot.y - SPRITE.hero.height,
       width: SPRITE.hero.width, height: SPRITE.hero.height,
-      facing: 'left', tint: TINTS.default!, dim: actor.hp === 0,
+      facing: 'left', tint: TINTS.default!, dim: downNow(id, actor.hp),
       flash: flashFor(id), offsetY: 0,
     });
   });
@@ -238,8 +242,18 @@ export function composeFrame(input: ComposeInput): Frame {
     commands.push({kind: 'overlay', alpha: (strongest.intensity ?? 0) * (1 - progress), palette: 'flash'});
   }
 
-  // --- a defeated party dims the whole stage ---
-  if (state.result === 'defeat') commands.push({kind: 'overlay', alpha: 0.55, palette: 'dim'});
+  // --- a defeated party dims the whole stage, once the defeat beat has landed ---
+  // Keyed on the timeline, not on `state.result`: the state is already terminal at the
+  // start of the batch that ends the battle, so reading it directly washed the stage out
+  // before the killing blow had even animated.
+  const defeatBeat = script?.beats.find(b => b.kind === 'defeat');
+  const defeated = defeatBeat ? timeMs >= defeatBeat.at : (!script && state.result === 'defeat');
+  if (defeated) {
+    const progress = defeatBeat
+      ? Math.min(1, (timeMs - defeatBeat.at) / Math.max(1, defeatBeat.duration))
+      : 1;
+    commands.push({kind: 'overlay', alpha: 0.55 * progress, palette: 'dim'});
+  }
 
   return {shakeX, shakeY, commands};
 }

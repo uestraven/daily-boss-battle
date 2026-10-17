@@ -161,13 +161,17 @@ encounter enters the pool only if all six hold:
 | `no_forced_ability` | no single ability is load-bearing for every line |
 | `losable` | a greedy policy does not master it |
 | `length_band` | the best line is 12–32 actions, a 3–6 minute session |
+| `no_dead_kit` | no hero's signature offence is nullified by this boss |
 
 The solver is a bounded beam heuristic and is never trusted alone: **every line it reports
 is replayed through the authoritative engine** before it counts, and a gate that cannot be
 established within budget fails closed.
 
 `tools/generate-pool.mjs` writes `dist-content/verified-pool.json`, stamped with a
-`contentHash` of all behavior-affecting content. `npm run pool:check` refuses a pool built
+`contentHash` of all behavior-affecting content plus the gate suite's identity
+(`GATE_IDS` and `GATES_VERSION`) — content alone is not enough, because the gates are
+code and a new gate must invalidate cached verdicts. Bump `GATES_VERSION` when the logic
+inside an existing gate changes. `npm run pool:check` refuses a pool built
 from different content than the repo holds — that gate is what stops a retuned boss from
 reaching players unverified.
 

@@ -1,9 +1,19 @@
 {
   "schemaVersion": 1,
   "contentHash": "b8dfe3ea-19183",
-  "generatedAt": "2026-10-17T02:34:33.137Z",
+  "generatedAt": "2026-10-17T05:00:22.666Z",
   "gateConfig": {
     "name": "quick",
+    "gatesVersion": 2,
+    "gates": [
+      "winnable",
+      "non_trivial",
+      "multi_path",
+      "no_forced_ability",
+      "losable",
+      "length_band",
+      "no_dead_kit"
+    ],
     "beamWidth": 48,
     "maxHeroActions": 36,
     "maxExpansions": 1800,
@@ -15,22 +25,22 @@
   },
   "summary": {
     "combinations": 1264,
-    "accepted": 276,
-    "rejected": 988,
+    "accepted": 263,
+    "rejected": 1001,
     "errors": 0,
     "byTier": {
-      "approachable": 110,
-      "standard": 103,
-      "punishing": 63
+      "approachable": 107,
+      "standard": 97,
+      "punishing": 59
     },
     "byBoss": {
       "tide_maw": 27,
       "ink_lurker": 36,
       "crush_wall": 31,
-      "storm_keeper": 48,
+      "storm_keeper": 39,
       "spell_weaver": 27,
       "mad_harlequin": 39,
-      "clockwork_emperor": 26,
+      "clockwork_emperor": 22,
       "blade_tyrant": 42
     },
     "failureTally": {
@@ -39,7 +49,8 @@
       "losable": 378,
       "length_band": 257,
       "non_trivial": 209,
-      "no_forced_ability": 197
+      "no_forced_ability": 197,
+      "no_dead_kit": 110
     }
   },
   "entries": [
@@ -899,25 +910,6 @@
       "tier": "standard"
     },
     {
-      "id": "gen-clockwork_emperor-blademage-machinist-nullifier",
-      "bossId": "clockwork_emperor",
-      "party": [
-        "blademage",
-        "machinist",
-        "nullifier"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 14,
-        "bestTick": 55,
-        "distinctStrategies": 3,
-        "marginPercent": 30
-      },
-      "tier": "standard"
-    },
-    {
       "id": "gen-clockwork_emperor-blademage-machinist-oracle",
       "bossId": "clockwork_emperor",
       "party": [
@@ -973,25 +965,6 @@
         "marginPercent": 37
       },
       "tier": "approachable"
-    },
-    {
-      "id": "gen-clockwork_emperor-blademage-nullifier-vanguard",
-      "bossId": "clockwork_emperor",
-      "party": [
-        "blademage",
-        "nullifier",
-        "vanguard"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 19,
-        "bestTick": 70,
-        "distinctStrategies": 3,
-        "marginPercent": 25
-      },
-      "tier": "standard"
     },
     {
       "id": "gen-clockwork_emperor-blademage-oracle-vanguard",
@@ -1087,25 +1060,6 @@
         "marginPercent": 55
       },
       "tier": "approachable"
-    },
-    {
-      "id": "gen-clockwork_emperor-lancer-monk-nullifier",
-      "bossId": "clockwork_emperor",
-      "party": [
-        "lancer",
-        "monk",
-        "nullifier"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 18,
-        "bestTick": 72,
-        "distinctStrategies": 4,
-        "marginPercent": 21
-      },
-      "tier": "standard"
     },
     {
       "id": "gen-clockwork_emperor-lancer-monk-oracle",
@@ -1218,25 +1172,6 @@
         "bestTick": 45,
         "distinctStrategies": 4,
         "marginPercent": 31
-      },
-      "tier": "standard"
-    },
-    {
-      "id": "gen-clockwork_emperor-machinist-nullifier-warden",
-      "bossId": "clockwork_emperor",
-      "party": [
-        "machinist",
-        "nullifier",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 19,
-        "bestTick": 70,
-        "distinctStrategies": 4,
-        "marginPercent": 28
       },
       "tier": "standard"
     },
@@ -3863,25 +3798,6 @@
       "tier": "punishing"
     },
     {
-      "id": "gen-storm_keeper-blademage-brawler-channeler",
-      "bossId": "storm_keeper",
-      "party": [
-        "blademage",
-        "brawler",
-        "channeler"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 14,
-        "bestTick": 48,
-        "distinctStrategies": 5,
-        "marginPercent": 36
-      },
-      "tier": "approachable"
-    },
-    {
       "id": "gen-storm_keeper-blademage-brawler-warden",
       "bossId": "storm_keeper",
       "party": [
@@ -3899,63 +3815,6 @@
         "marginPercent": 40
       },
       "tier": "approachable"
-    },
-    {
-      "id": "gen-storm_keeper-blademage-channeler-lancer",
-      "bossId": "storm_keeper",
-      "party": [
-        "blademage",
-        "channeler",
-        "lancer"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 15,
-        "bestTick": 60,
-        "distinctStrategies": 3,
-        "marginPercent": 6
-      },
-      "tier": "punishing"
-    },
-    {
-      "id": "gen-storm_keeper-blademage-channeler-monk",
-      "bossId": "storm_keeper",
-      "party": [
-        "blademage",
-        "channeler",
-        "monk"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 13,
-        "bestTick": 45,
-        "distinctStrategies": 6,
-        "marginPercent": 41
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-storm_keeper-blademage-channeler-thief",
-      "bossId": "storm_keeper",
-      "party": [
-        "blademage",
-        "channeler",
-        "thief"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 18,
-        "bestTick": 60,
-        "distinctStrategies": 4,
-        "marginPercent": 9
-      },
-      "tier": "punishing"
     },
     {
       "id": "gen-storm_keeper-blademage-lancer-nullifier",
@@ -4148,44 +4007,6 @@
       "tier": "punishing"
     },
     {
-      "id": "gen-storm_keeper-brawler-channeler-machinist",
-      "bossId": "storm_keeper",
-      "party": [
-        "brawler",
-        "channeler",
-        "machinist"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 12,
-        "bestTick": 44,
-        "distinctStrategies": 3,
-        "marginPercent": 34
-      },
-      "tier": "standard"
-    },
-    {
-      "id": "gen-storm_keeper-brawler-channeler-monk",
-      "bossId": "storm_keeper",
-      "party": [
-        "brawler",
-        "channeler",
-        "monk"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 14,
-        "bestTick": 45,
-        "distinctStrategies": 3,
-        "marginPercent": 35
-      },
-      "tier": "standard"
-    },
-    {
       "id": "gen-storm_keeper-brawler-lancer-nullifier",
       "bossId": "storm_keeper",
       "party": [
@@ -4353,63 +4174,6 @@
         "bestTick": 48,
         "distinctStrategies": 3,
         "marginPercent": 39
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-storm_keeper-channeler-machinist-oracle",
-      "bossId": "storm_keeper",
-      "party": [
-        "channeler",
-        "machinist",
-        "oracle"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 15,
-        "bestTick": 60,
-        "distinctStrategies": 5,
-        "marginPercent": 6
-      },
-      "tier": "punishing"
-    },
-    {
-      "id": "gen-storm_keeper-channeler-machinist-thief",
-      "bossId": "storm_keeper",
-      "party": [
-        "channeler",
-        "machinist",
-        "thief"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 15,
-        "bestTick": 55,
-        "distinctStrategies": 3,
-        "marginPercent": 6
-      },
-      "tier": "punishing"
-    },
-    {
-      "id": "gen-storm_keeper-channeler-monk-vanguard",
-      "bossId": "storm_keeper",
-      "party": [
-        "channeler",
-        "monk",
-        "vanguard"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 13,
-        "bestTick": 45,
-        "distinctStrategies": 3,
-        "marginPercent": 43
       },
       "tier": "approachable"
     },

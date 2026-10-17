@@ -320,3 +320,75 @@ test('displayedValue falls back to state when there is nothing to animate', () =
   const other = {totalMs: 100, beats: [{at: 0, duration: 50, kind: 'hp_change', targetId: 'someone_else', from: 1, to: 0}]};
   assert.equal(displayedValue(other, 'boss', 10, 555), 555, 'tweens for a different actor');
 });
+
+test('REGRESSION: the defeat wash waits for the defeat beat', () => {
+  // state.result is already terminal at the start of the batch that ends the battle, so
+  // reading it directly washed the stage out before the killing blow had animated.
+  const state = freshState();
+  state.result = 'defeat';
+  for (const id of state.party) state.actors[id].hp = 0;
+  const script = choreograph([
+    ev('damage', {actorId: state.bossId, targetId: state.party[0], amount: 300, hpAfter: 0}),
+    ev('ko', {actorId: state.party[0]}),
+    ev('defeat'),
+  ], {maxHp: {[state.party[0]]: 330}});
+  const defeatBeat = script.beats.find(b => b.kind === 'defeat');
+  const dimAt = t => composeFrame({state, script, timeMs: t}).commands
+    .find(c => c.kind === 'overlay' && c.palette === 'dim');
+
+  assert.equal(dimAt(0), undefined, 'no wash at the start of the batch');
+  assert.equal(dimAt(defeatBeat.at - 1), undefined, 'none right up to the defeat beat');
+  assert.ok(dimAt(defeatBeat.at + 10), 'appears once the defeat beat lands');
+  assert.ok(dimAt(defeatBeat.at + defeatBeat.duration).alpha
+    > dimAt(defeatBeat.at + 10).alpha, 'fades in rather than snapping');
+});
+
+test('REGRESSION: a hero dying this batch stands until its KO beat', () => {
+  const state = freshState();
+  const victim = state.party[0];
+  const fullHp = state.actors[victim].stats.hp;
+  state.actors[victim].hp = 0; // final state: already dead
+  const script = choreograph([
+    ev('action_committed', {actorId: state.bossId, abilityId: 'attack'}),
+    ev('damage', {actorId: state.bossId, targetId: victim, amount: fullHp, hpAfter: 0}),
+    ev('ko', {actorId: victim}),
+  ], {maxHp: {[victim]: fullHp}});
+  const dimmed = t => composeFrame({state, script, timeMs: t}).commands
+    .find(c => c.kind === 'sprite' && c.actorId === victim).dim;
+
+  assert.equal(dimmed(0), false, 'still standing when the batch starts');
+  assert.equal(dimmed(script.totalMs), true, 'down by the end');
+  // The transition happens once, and only forward.
+  let flips = 0;
+  let previous = dimmed(0);
+  for (let t = 0; t <= script.totalMs; t += 8) {
+    const now = dimmed(t);
+    if (now !== previous) { flips++; previous = now; }
+  }
+  assert.equal(flips, 1, `dim state flipped ${flips} times, expected exactly one`);
+});
+
+test('a hero already dead before this batch stays dimmed throughout', () => {
+  const state = freshState();
+  const corpse = state.party[0];
+  state.actors[corpse].hp = 0;
+  const script = choreograph([
+    ev('damage', {actorId: state.party[1], targetId: state.bossId, amount: 50, hpAfter: 2260}),
+  ], {maxHp: {[state.bossId]: 2310}});
+  for (const t of [0, 100, script.totalMs]) {
+    const sprite = composeFrame({state, script, timeMs: t}).commands
+      .find(c => c.kind === 'sprite' && c.actorId === corpse);
+    assert.equal(sprite.dim, true, `not dimmed at ${t}ms`);
+  }
+});
+
+test('with no script the stage still reflects actual state', () => {
+  const state = freshState();
+  state.result = 'defeat';
+  assert.ok(composeFrame({state, script: null, timeMs: 0}).commands
+    .some(c => c.kind === 'overlay' && c.palette === 'dim'), 'idle defeat still washes out');
+  state.result = null;
+  state.actors[state.party[0]].hp = 0;
+  assert.equal(composeFrame({state, script: null, timeMs: 0}).commands
+    .find(c => c.kind === 'sprite' && c.actorId === state.party[0]).dim, true);
+});

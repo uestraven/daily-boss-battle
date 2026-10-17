@@ -8,7 +8,7 @@
  * winning line it reports is replayed through the authoritative engine before it
  * counts. A gate that cannot be established within budget fails closed.
  */
-import {replay, starsForResult} from './engine.js';
+import {calculateDamage, createEncounter, replay, starsForResult} from './engine.js';
 import {runBaselinePolicy, solveEncounter} from './solver.js';
 import type {BattleInput, EncounterDefinition} from './types.js';
 
@@ -18,9 +18,20 @@ export type GateId =
   | 'multi_path'        // G3: several structurally different winning lines
   | 'no_forced_ability' // G4: no single ability is load-bearing for every line
   | 'losable'           // G5: a plausible greedy player does not master it
-  | 'length_band';      // G6: the fight lasts a session, not a formality
+  | 'length_band'       // G6: the fight lasts a session, not a formality
+  | 'no_dead_kit';      // G7: no hero's signature offence is nullified outright
 
 export type GateVerdict = {ok: boolean; detail: string};
+
+/** Every gate, in a stable order. Part of the pool cache key, so adding or removing a
+ * gate automatically invalidates cached assessments. */
+export const GATE_IDS: GateId[] = ['winnable', 'non_trivial', 'multi_path',
+  'no_forced_ability', 'losable', 'length_band', 'no_dead_kit'];
+
+/** Bump when the logic *inside* an existing gate changes in a way that could alter a
+ * verdict. The gate id list cannot detect that on its own, and a stale pool is exactly
+ * the failure the freshness gate exists to prevent. */
+export const GATES_VERSION = 2;
 
 export type GateConfig = {
   beamWidth: number;
@@ -86,6 +97,32 @@ export type Assessment = {
 const usageOf = (actions: BattleInput[]): string[] =>
   [...new Set(actions.map(a => a.abilityId))].sort();
 
+/** Heroes whose entire signature offensive kit does nothing to this boss.
+ *
+ * A fire-immune boss paired with a fire-only caster produces a daily where one of three
+ * heroes cannot hurt the enemy at all. The fight may still be winnable through the other
+ * two, so the other gates pass, but discovering it mid-battle reads as the boss
+ * "countering" every spell. The universal Attack is excluded: every hero has it, so it
+ * would mask the problem.
+ */
+export function heroesWithDeadKits(def: EncounterDefinition): string[] {
+  const state = createEncounter(def);
+  const boss = state.actors[def.bossId];
+  if (!boss) return [];
+  const dead: string[] = [];
+  for (const id of def.party) {
+    const actor = state.actors[id];
+    if (!actor) continue;
+    const signature = Object.values(def.abilities).filter(a =>
+      a.owner === id && (a.kind === 'physical' || a.kind === 'magical') && (a.power ?? 0) > 0);
+    if (!signature.length) continue; // a pure support hero has no offence to nullify
+    const best = signature.reduce(
+      (most, a) => Math.max(most, calculateDamage(def, actor, boss, a, 0)), 0);
+    if (best <= 0) dead.push(id);
+  }
+  return dead;
+}
+
 /** Replays a solver line through the engine and rejects any disagreement. */
 function verify(def: EncounterDefinition, actions: BattleInput[]): VerifiedWin | null {
   const state = replay(def, actions).state;
@@ -130,6 +167,12 @@ export function assessEncounter(def: EncounterDefinition, config: Partial<GateCo
   let solverRuns = 0;
   let expansions = 0;
 
+  // --- G7 no dead kit (cheap, no search needed) --------------------------------
+  const deadKits = heroesWithDeadKits(def);
+  gates.no_dead_kit = deadKits.length === 0
+    ? {ok: true, detail: 'every hero can damage this boss with its own abilities'}
+    : {ok: false, detail: `signature offence nullified for: ${deadKits.join(', ')}`};
+
   // --- G1 winnable -------------------------------------------------------------
   const base = searchWins(def, cfg);
   solverRuns++; expansions += base.expansions;
@@ -145,11 +188,13 @@ export function assessEncounter(def: EncounterDefinition, config: Partial<GateCo
 
   // Without a verified win the remaining gates are unanswerable: fail closed.
   if (!best) {
-    const failed: GateId[] = ['winnable', 'non_trivial', 'multi_path', 'no_forced_ability', 'losable', 'length_band'];
+    const failed: GateId[] = ['winnable', 'non_trivial', 'multi_path', 'no_forced_ability',
+      'losable', 'length_band', 'no_dead_kit'];
     for (const id of failed) gates[id] ??= {ok: false, detail: 'not evaluated: no verified win'};
+    const failedNow = failed.filter(id => !gates[id].ok);
     return {
       encounterId: def.id, bossId: def.bossId, party: [...def.party],
-      passed: false, failedGates: failed, gates, difficulty: null, witness: null,
+      passed: false, failedGates: failedNow, gates, difficulty: null, witness: null,
       cost: {expansions, solverRuns},
     };
   }

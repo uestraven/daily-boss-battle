@@ -10,8 +10,8 @@
  */
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {BattleStage} from './BattleStage.js';
-import {advanceToDecision, applyPlayerAction, createEncounter, nextBossCountdown,
-  previewAction, starsForResult} from '../../dist/src/engine.js';
+import {advanceToDecision, applyPlayerAction, calculateDamage, createEncounter,
+  nextBossCountdown, previewAction, starsForResult} from '../../dist/src/engine.js';
 import {availableActions, eligibleTargets, previewDisplay, actionInput} from '../../dist/src/play-ui.js';
 import {choreograph} from '../../dist/src/presentation.js';
 import {displayedValue} from '../../dist/src/stage.js';
@@ -131,10 +131,29 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
     ].slice(0, 24));
   }, [state, def, names, maxHp, abilityNames]);
 
-  const offered = useMemo(
-    () => (actorId ? availableActions(state, def, actorId).filter(o => o.enabled) : []),
-    [state, def, actorId],
-  );
+  /** Elemental affinities are decisive information — a fire-immune boss makes a
+   * fire-only caster useless — and the player cannot infer them. Surface them. */
+  const affinityNotes = useMemo(() => {
+    const table = def.affinities?.[def.bossId] ?? {};
+    return Object.entries(table)
+      .filter(([, affinity]) => affinity && affinity !== 'neutral')
+      .map(([element, affinity]) => ({element, affinity: affinity as string}));
+  }, [def]);
+
+  const offered = useMemo(() => {
+    if (!actorId) return [];
+    return availableActions(state, def, actorId).filter(o => o.enabled).map(option => {
+      // Flag offensive abilities that would land for nothing against this boss.
+      const isOffensive = option.ability.kind === 'physical' || option.ability.kind === 'magical';
+      let noEffect = false;
+      if (isOffensive && (option.ability.power ?? 0) > 0) {
+        const actor = state.actors[actorId];
+        const boss = state.actors[state.bossId];
+        if (actor && boss) noEffect = calculateDamage(def, actor, boss, option.ability, state.tick) <= 0;
+      }
+      return {...option, noEffect};
+    });
+  }, [state, def, actorId]);
   const targets = useMemo(
     () => (selected && actorId ? eligibleTargets(state, actorId, selected.ability) : []),
     [selected, actorId, state],
@@ -164,6 +183,15 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
           {Math.round(displayedValue(script, state.bossId, timeMs, boss.hp)).toLocaleString()}
           {' / '}{boss.stats.hp.toLocaleString()}
         </div>
+        {affinityNotes.length > 0 && (
+          <div className="dbb-affinity">
+            {affinityNotes.map(note => (
+              <span key={note.element} className={`dbb-affinity-tag is-${note.affinity}`}>
+                {note.element} {note.affinity}
+              </span>
+            ))}
+          </div>
+        )}
         {countdown && (
           <div className="dbb-telegraph">
             ▶ {abilityNames[countdown.abilityId] ?? countdown.abilityId}
@@ -214,10 +242,14 @@ function Battle({def, tier, day}: {def: EncounterDefinition; tier: string; day: 
             <ul className="rpg-menu-list">
               {offered.map(option => (
                 <li key={option.ability.id}>
-                  <button className="rpg-menu-item" onClick={() => setSelected(option)}>
+                  <button
+                    className={`rpg-menu-item${option.noEffect ? ' is-no-effect' : ''}`}
+                    onClick={() => setSelected(option)}
+                  >
                     <span>{option.ability.name}</span>
                     <span className="rpg-menu-cost">
-                      {option.ability.mpCost ? `${option.ability.mpCost} MP` : ''}
+                      {option.noEffect && <b className="dbb-no-effect">NO EFFECT</b>}
+                      {option.ability.mpCost ? ` ${option.ability.mpCost} MP` : ''}
                       {option.ability.momentumCost ? ` ◆${option.ability.momentumCost}` : ''}
                     </span>
                   </button>

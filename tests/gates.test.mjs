@@ -3,13 +3,13 @@
  * do not move when live content is retuned. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DEFAULT_GATES, QUICK_GATES, TIER_MARGIN_P33, TIER_PUNISHING_ACTIONS,
-  assessEncounter, tierFor} from '../dist/src/gates.js';
+import {DEFAULT_GATES, GATES_VERSION, GATE_IDS, QUICK_GATES, TIER_MARGIN_P33,
+  TIER_PUNISHING_ACTIONS, assessEncounter, heroesWithDeadKits, tierFor} from '../dist/src/gates.js';
 import {buildEncounter, bossIds} from '../dist/src/generate.js';
 import {bossProfiles} from '../dist/src/encounters.js';
 import {balancedParties} from '../dist/src/draft.js';
 
-const GATE_IDS = ['winnable', 'non_trivial', 'multi_path', 'no_forced_ability', 'losable', 'length_band'];
+
 const party = balancedParties()[0];
 const clone = v => JSON.parse(JSON.stringify(v));
 /** Small budgets: these tests assert gate logic, not search depth. */
@@ -43,11 +43,15 @@ test('an unwinnable encounter fails closed with no witness', () => {
   assert.equal(assessment.gates.winnable.ok, false);
   assert.equal(assessment.difficulty, null);
   assert.equal(assessment.witness, null);
-  // Nothing may be asserted about a fight nobody can win.
-  assert.deepEqual([...assessment.failedGates].sort(), [...GATE_IDS].sort());
-  for (const id of GATE_IDS.filter(g => g !== 'winnable')) {
+  // Nothing may be asserted about a fight nobody can win -- except the cheap gates that
+  // need no search and therefore still have a real answer.
+  const searchGates = GATE_IDS.filter(id => id !== 'no_dead_kit');
+  assert.deepEqual([...assessment.failedGates].sort(), [...searchGates].sort());
+  for (const id of searchGates.filter(g => g !== 'winnable')) {
     assert.match(assessment.gates[id].detail, /no verified win/);
   }
+  assert.ok(assessment.gates.no_dead_kit, 'the search-free gate still reports');
+  assert.doesNotMatch(assessment.gates.no_dead_kit.detail, /no verified win/);
 });
 
 test('a trivial encounter is rejected for being trivial, not for being unwinnable', () => {
@@ -139,4 +143,56 @@ test('gate thresholds are coherent', () => {
     assert.ok(cfg.maxSolutions >= cfg.minDistinctStrategies, 'cannot find N strategies in fewer solutions');
     assert.ok(cfg.maxExpansions > 0 && cfg.beamWidth > 0);
   }
+});
+
+test('G7 catches a hero whose signature offence the boss nullifies', () => {
+  // Storm Keeper is fire-immune; the Channeler's only offensive spells are fire. The
+  // fight stays winnable through the other two heroes, so the search gates pass, but
+  // one of three heroes cannot hurt the boss at all.
+  const dead = heroesWithDeadKits(buildEncounter('storm_keeper', ['blademage', 'channeler', 'lancer']));
+  assert.deepEqual(dead, ['channeler']);
+
+  const clean = heroesWithDeadKits(buildEncounter('tide_maw', ['blademage', 'channeler', 'lancer']));
+  assert.deepEqual(clean, [], 'no immunity, no dead kit');
+});
+
+test('G7 ignores the universal Attack, which every hero has', () => {
+  // If Attack counted, no hero would ever register as nullified and the gate would be
+  // inert. Build a boss immune to everything the party's signatures use.
+  const def = buildEncounter('storm_keeper', ['blademage', 'channeler', 'lancer']);
+  const attack = Object.values(def.abilities).find(a => a.id === 'attack');
+  assert.equal(attack.owner, 'any_hero', 'Attack is universal');
+  assert.ok(heroesWithDeadKits(def).includes('channeler'),
+    'the gate must look past Attack to the hero own kit');
+});
+
+test('G7 is reported as a gate and blocks a combination', () => {
+  const def = buildEncounter('storm_keeper', ['blademage', 'channeler', 'lancer']);
+  const assessment = assessEncounter(def, {...FAST, forcedAbilityProbes: 0});
+  assert.equal(assessment.gates.no_dead_kit.ok, false);
+  assert.match(assessment.gates.no_dead_kit.detail, /channeler/);
+  assert.ok(assessment.failedGates.includes('no_dead_kit'));
+  assert.equal(assessment.passed, false, 'a dead kit must keep the combination out of the pool');
+});
+
+test('G7 is evaluated even when there is no verified win', () => {
+  // The cheap gates should still report a real verdict rather than being masked.
+  const unbeatable = JSON.parse(JSON.stringify(bossProfiles.find(b => b.id === 'storm_keeper')));
+  unbeatable.stats.hp = 500_000;
+  const assessment = assessEncounter(
+    buildEncounter(unbeatable, ['blademage', 'channeler', 'lancer']), FAST);
+  assert.equal(assessment.gates.winnable.ok, false);
+  assert.equal(assessment.gates.no_dead_kit.ok, false, 'G7 has its own answer');
+  assert.match(assessment.gates.no_dead_kit.detail, /channeler/);
+  assert.ok(assessment.failedGates.includes('no_dead_kit'),
+    'a dead kit is reported even when the fight is unwinnable');
+});
+
+test('the gate suite declares its own identity for cache invalidation', () => {
+  // The pool cache keys on these: a new gate or changed logic must invalidate it.
+  assert.ok(Number.isInteger(GATES_VERSION) && GATES_VERSION >= 1);
+  assert.equal(new Set(GATE_IDS).size, GATE_IDS.length, 'no duplicate gate ids');
+  const assessment = assessEncounter(buildEncounter(bossIds[0], party), FAST);
+  assert.deepEqual([...Object.keys(assessment.gates)].sort(), [...GATE_IDS].sort(),
+    'GATE_IDS must match what an assessment actually reports');
 });

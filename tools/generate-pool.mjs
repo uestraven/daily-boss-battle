@@ -22,7 +22,7 @@ import {load, repoPath, root} from './load.mjs';
 
 const {bossProfiles} = await load('dist/src/encounters.js');
 const {buildEncounter, contentHash, encounterIdFor} = await load('dist/src/generate.js');
-const {assessEncounter, tierFor, DEFAULT_GATES, QUICK_GATES} = await load('dist/src/gates.js');
+const {assessEncounter, tierFor, DEFAULT_GATES, QUICK_GATES, GATE_IDS, GATES_VERSION} = await load('dist/src/gates.js');
 const {balancedParties} = await load('dist/src/draft.js');
 
 const args = process.argv.slice(2);
@@ -53,11 +53,15 @@ if (existsSync(outPath)) {
     const rejectionsFile = path.join(path.dirname(outPath), 'pool-rejections.json');
     const oldRejected = existsSync(rejectionsFile)
       ? (JSON.parse(readFileSync(rejectionsFile, 'utf8')).rejected ?? []) : [];
-    if (old.contentHash === hash && old.gateConfig?.name === (quick ? 'quick' : 'full')) {
+    // Content hash alone is not enough: the gate suite is code, and a new or changed
+    // gate must invalidate cached verdicts.
+    const sameSuite = old.gateConfig?.gatesVersion === GATES_VERSION
+      && JSON.stringify(old.gateConfig?.gates ?? []) === JSON.stringify(GATE_IDS);
+    if (old.contentHash === hash && old.gateConfig?.name === (quick ? 'quick' : 'full') && sameSuite) {
       for (const entry of [...(old.entries ?? []), ...oldRejected]) prior.set(entry.id, entry);
       console.log(`Reusing ${prior.size} cached assessment(s) for unchanged content.`);
     } else {
-      console.log('Content or gate config changed; recomputing from scratch.');
+      console.log('Content or gate suite changed; recomputing from scratch.');
     }
   } catch { /* unreadable prior pool: recompute */ }
 }
@@ -147,7 +151,7 @@ const meta = {
   schemaVersion: 1,
   contentHash: hash,
   generatedAt: new Date().toISOString(),
-  gateConfig: {name: quick ? 'quick' : 'full', ...config},
+  gateConfig: {name: quick ? 'quick' : 'full', gatesVersion: GATES_VERSION, gates: GATE_IDS, ...config},
   summary: {
     combinations: combinations.length,
     accepted: accepted.length,
@@ -184,4 +188,4 @@ if (starvedBosses.length) {
   console.log('  Retune with: node tools/tune-boss.mjs --boss <id>');
 }
 console.log(`\nWrote ${path.relative(root, outPath)} (${(JSON.stringify(pool).length / 1024).toFixed(0)} KiB shipped)`);
-console.log(`Wrote reports/pool-rejections.json (${rejected.length} rejections, for tuning)\n`);
+console.log(`Wrote ${path.relative(root, rejectionsPath)} (${rejected.length} rejections, for tuning)\n`);
