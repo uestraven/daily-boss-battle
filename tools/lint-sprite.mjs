@@ -107,6 +107,7 @@ function cellStats(image, x0, y0, w, h) {
   let minX = Infinity, minY = Infinity, maxX = -1, maxY = -1;
   const colours = new Set();
   let edge = 0;
+  let baseline = 0;
   for (let y = y0; y < y0 + h; y++) {
     for (let x = x0; x < x0 + w; x++) {
       if (x >= image.width || y >= image.height) continue;
@@ -116,11 +117,15 @@ function cellStats(image, x0, y0, w, h) {
       colours.add((image.rgba[i] << 16) | (image.rgba[i + 1] << 8) | image.rgba[i + 2]);
       if (x < minX) minX = x; if (x > maxX) maxX = x;
       if (y < minY) minY = y; if (y > maxY) maxY = y;
-      if (x === x0 || x === x0 + w - 1 || y === y0 || y === y0 + h - 1) edge++;
+      // The bottom row is counted separately: a ground-anchored sprite is *supposed* to
+      // reach it, that being where the feet go, so flagging it produced one warning per
+      // frame and buried the real ones.
+      if (x === x0 || x === x0 + w - 1 || y === y0) edge++;
+      else if (y === y0 + h - 1) baseline++;
     }
   }
   return {
-    opaque, colours: colours.size, edge,
+    opaque, colours: colours.size, edge, baseline,
     bounds: opaque ? {x: minX - x0, y: minY - y0, width: maxX - minX + 1, height: maxY - minY + 1} : null,
   };
 }
@@ -223,7 +228,8 @@ if (clips && Number.isInteger(cols) && Number.isInteger(rows)) {
       } else {
         if (stats.edge > 0) {
           notes.push(`${stats.edge}px on the cell edge`);
-          warnings.push(`clip "${name}" frame ${frame} touches the cell edge in ${stats.edge} places; ` +
+          warnings.push(`clip "${name}" frame ${frame} touches the left, right or top edge in ` +
+            `${stats.edge} places; ` +
             `content will clip or bleed into the neighbouring frame`);
         }
         if (anchorY !== null && stats.bounds) {

@@ -1,847 +1,852 @@
 {
-  "schemaVersion": 2,
-  "heroes": {
-    "warden": {
-      "file": "heroes/warden.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Warden"
+ "schemaVersion": 2,
+ "heroes": {
+  "warden": {
+   "file": "heroes/warden.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
     },
-    "lancer": {
-      "file": "heroes/lancer.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Lancer"
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
     },
-    "oracle": {
-      "file": "heroes/oracle.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Oracle"
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
     },
-    "blademage": {
-      "file": "heroes/blademage.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Blademage"
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
     },
-    "channeler": {
-      "file": "heroes/channeler.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Channeler"
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
     },
-    "nullifier": {
-      "file": "heroes/nullifier.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Nullifier"
-    },
-    "monk": {
-      "file": "heroes/monk.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Monk"
-    },
-    "machinist": {
-      "file": "heroes/machinist.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Machinist"
-    },
-    "vanguard": {
-      "file": "heroes/vanguard.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Vanguard"
-    },
-    "brawler": {
-      "file": "heroes/brawler.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Brawler"
-    },
-    "magus": {
-      "file": "heroes/magus.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Magus"
-    },
-    "thief": {
-      "file": "heroes/thief.png",
-      "frameWidth": 32,
-      "frameHeight": 40,
-      "anchorX": 16,
-      "anchorY": 38,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "The Thief"
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
     }
+   },
+   "name": "The Warden"
   },
-  "bosses": {
-    "blade_tyrant": {
-      "file": "bosses/blade_tyrant.png",
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchorX": 48,
-      "anchorY": 94,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "blade_tyrant"
+  "lancer": {
+   "file": "heroes/lancer.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
     },
-    "tide_maw": {
-      "file": "bosses/tide_maw.png",
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchorX": 48,
-      "anchorY": 94,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "tide_maw"
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
     },
-    "ink_lurker": {
-      "file": "bosses/ink_lurker.png",
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchorX": 48,
-      "anchorY": 94,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "ink_lurker"
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
     },
-    "crush_wall": {
-      "file": "bosses/crush_wall.png",
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchorX": 48,
-      "anchorY": 94,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "crush_wall"
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
     },
-    "storm_keeper": {
-      "file": "bosses/storm_keeper.png",
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchorX": 48,
-      "anchorY": 94,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "storm_keeper"
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
     },
-    "spell_weaver": {
-      "file": "bosses/spell_weaver.png",
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchorX": 48,
-      "anchorY": 94,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "spell_weaver"
-    },
-    "mad_harlequin": {
-      "file": "bosses/mad_harlequin.png",
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchorX": 48,
-      "anchorY": 94,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "mad_harlequin"
-    },
-    "clockwork_emperor": {
-      "file": "bosses/clockwork_emperor.png",
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchorX": 48,
-      "anchorY": 94,
-      "clips": {
-        "idle": {
-          "row": 0,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 320
-        },
-        "attack": {
-          "row": 1,
-          "frames": 4,
-          "loop": false
-        },
-        "cast": {
-          "row": 2,
-          "frames": 3,
-          "loop": false
-        },
-        "hurt": {
-          "row": 3,
-          "frames": 2,
-          "loop": false
-        },
-        "ko": {
-          "row": 4,
-          "frames": 3,
-          "loop": false
-        },
-        "victory": {
-          "row": 5,
-          "frames": 2,
-          "loop": true,
-          "frameMs": 400
-        }
-      },
-      "name": "clockwork_emperor"
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
     }
+   },
+   "name": "The Lancer"
+  },
+  "oracle": {
+   "file": "heroes/oracle.png",
+   "frameWidth": 48,
+   "frameHeight": 40,
+   "anchorX": 24,
+   "anchorY": 40,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 8,
+     "loop": true,
+     "frameMs": 160
+    },
+    "attack": {
+     "row": 1,
+     "frames": 8,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 8,
+     "loop": false
+    },
+    "item": {
+     "row": 3,
+     "frames": 8,
+     "loop": false
+    },
+    "hurt": {
+     "row": 4,
+     "frames": 8,
+     "loop": false
+    },
+    "ko": {
+     "row": 5,
+     "frames": 8,
+     "loop": false
+    },
+    "victory": {
+     "row": 6,
+     "frames": 8,
+     "loop": true,
+     "frameMs": 150
+    }
+   },
+   "name": "The Oracle"
+  },
+  "blademage": {
+   "file": "heroes/blademage.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "The Blademage"
+  },
+  "channeler": {
+   "file": "heroes/channeler.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "The Channeler"
+  },
+  "nullifier": {
+   "file": "heroes/nullifier.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "The Nullifier"
+  },
+  "monk": {
+   "file": "heroes/monk.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "The Monk"
+  },
+  "machinist": {
+   "file": "heroes/machinist.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "The Machinist"
+  },
+  "vanguard": {
+   "file": "heroes/vanguard.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "The Vanguard"
+  },
+  "brawler": {
+   "file": "heroes/brawler.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "The Brawler"
+  },
+  "magus": {
+   "file": "heroes/magus.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "The Magus"
+  },
+  "thief": {
+   "file": "heroes/thief.png",
+   "frameWidth": 32,
+   "frameHeight": 40,
+   "anchorX": 16,
+   "anchorY": 38,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "The Thief"
   }
+ },
+ "bosses": {
+  "blade_tyrant": {
+   "file": "bosses/blade_tyrant.png",
+   "frameWidth": 96,
+   "frameHeight": 96,
+   "anchorX": 48,
+   "anchorY": 94,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "blade_tyrant"
+  },
+  "tide_maw": {
+   "file": "bosses/tide_maw.png",
+   "frameWidth": 96,
+   "frameHeight": 96,
+   "anchorX": 48,
+   "anchorY": 94,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "tide_maw"
+  },
+  "ink_lurker": {
+   "file": "bosses/ink_lurker.png",
+   "frameWidth": 96,
+   "frameHeight": 96,
+   "anchorX": 48,
+   "anchorY": 94,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "ink_lurker"
+  },
+  "crush_wall": {
+   "file": "bosses/crush_wall.png",
+   "frameWidth": 96,
+   "frameHeight": 96,
+   "anchorX": 48,
+   "anchorY": 94,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "crush_wall"
+  },
+  "storm_keeper": {
+   "file": "bosses/storm_keeper.png",
+   "frameWidth": 96,
+   "frameHeight": 96,
+   "anchorX": 48,
+   "anchorY": 94,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "storm_keeper"
+  },
+  "spell_weaver": {
+   "file": "bosses/spell_weaver.png",
+   "frameWidth": 96,
+   "frameHeight": 96,
+   "anchorX": 48,
+   "anchorY": 94,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "spell_weaver"
+  },
+  "mad_harlequin": {
+   "file": "bosses/mad_harlequin.png",
+   "frameWidth": 96,
+   "frameHeight": 96,
+   "anchorX": 48,
+   "anchorY": 94,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "mad_harlequin"
+  },
+  "clockwork_emperor": {
+   "file": "bosses/clockwork_emperor.png",
+   "frameWidth": 96,
+   "frameHeight": 96,
+   "anchorX": 48,
+   "anchorY": 94,
+   "clips": {
+    "idle": {
+     "row": 0,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 320
+    },
+    "attack": {
+     "row": 1,
+     "frames": 4,
+     "loop": false
+    },
+    "cast": {
+     "row": 2,
+     "frames": 3,
+     "loop": false
+    },
+    "hurt": {
+     "row": 3,
+     "frames": 2,
+     "loop": false
+    },
+    "ko": {
+     "row": 4,
+     "frames": 3,
+     "loop": false
+    },
+    "victory": {
+     "row": 5,
+     "frames": 2,
+     "loop": true,
+     "frameMs": 400
+    }
+   },
+   "name": "clockwork_emperor"
+  }
+ }
 }

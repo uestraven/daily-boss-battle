@@ -245,6 +245,32 @@ Set `behind: true` on a sheet to draw it under the actors instead of over them, 
 what a ground crack or an aura wants. Front effects draw over the actors but under the HUD,
 so a flare can never hide a damage number.
 
+### The route that worked
+
+The Oracle sheet was produced by an image generator and packed mechanically, which is now a
+repeatable path. The generator cannot be made to hit an exact canvas, align a grid, or keep
+a limited palette — three attempts confirmed that — so do not ask it to. Ask it for the
+thing it is good at and fix the geometry afterwards:
+
+1. Prompt for a **large** sheet on a flat `#FF00FF` background. Not transparency: the two
+   attempts that asked for it came back with the editor's checkerboard flattened into the
+   pixels, and one was a JPEG renamed to `.png`, which cannot carry alpha at all. A solid
+   key colour is the one thing a generator gets right every time.
+2. Run `node tools/pack-spritesheet.mjs <sheet> --out <dest> --grid 8x7 --cell 48x40
+   --colours 32`. It keys the background out, finds each figure as a connected component —
+   so drifting frames do not matter and no grid is assumed — then scales everything by one
+   shared factor and re-packs onto an exact grid with feet on a common baseline.
+3. Lint it: `npm run art:lint -- <dest> --frame 48x40 --rows idle:8,attack:8,...`.
+
+The packer refuses rather than guesses if the figure count is not rows × columns, because a
+silent miscount would scramble the animations into each other.
+
+Known limits of this route: the generator bakes spell sparkles into the cast frames, which
+the effects layer would otherwise draw itself, and it ignores "no effects in the frames"
+when asked. Minor at 40px. More importantly the output is a *resample* of smooth art rather
+than hand-placed pixels, so it reads well at 4x but will not hold up to close inspection the
+way authored pixel art would.
+
 ### How to actually produce a sheet
 
 Ranked by what gets a finished-looking game soonest.
