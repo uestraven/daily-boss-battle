@@ -43,6 +43,9 @@ export type BattleStageProps = {
   abilityInfo?: AbilityInfo;
   /** Hit effect sheets that have art. Empty means no effect layer. */
   effects?: EffectLibrary;
+  /** Backdrop image filename for this arena, when its art exists. Omitted, the stage
+   * draws its flat backdrop and ground band. */
+  backgroundFile?: string;
 };
 
 /** Images, loaded once and cached by URL. One cache for sprite sheets, effect sheets and
@@ -81,9 +84,11 @@ const sheetImage = (file: string): HTMLImageElement | null =>
   imageAt(`${base()}battle-sprites/${file}`);
 const effectImage = (file: string): HTMLImageElement | null =>
   imageAt(`${base()}battle-effects/${file}`);
+const backdropImage = (file: string): HTMLImageElement | null =>
+  imageAt(`${base()}battle-backgrounds/${file}`);
 
 export function BattleStage({state, script, timeMs, roles, sheets, abilityInfo,
-  effects}: BattleStageProps) {
+  effects, backgroundFile}: BattleStageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
@@ -119,9 +124,10 @@ export function BattleStage({state, script, timeMs, roles, sheets, abilityInfo,
   useEffect(() => {
     const context = canvasRef.current?.getContext('2d');
     if (!context) return;
-    paint(context, composeFrame({state, script, timeMs, sheets, roles, abilityInfo, effects}),
-      state, roles, {sprite: sheetImage, effect: effectImage});
-  }, [state, script, timeMs, roles, sheets, abilityInfo, effects, scale, loadTick]);
+    paint(context, composeFrame({state, script, timeMs, sheets, roles, abilityInfo, effects,
+      backgroundFile}), state, roles,
+      {sprite: sheetImage, effect: effectImage, backdrop: backdropImage});
+  }, [state, script, timeMs, roles, sheets, abilityInfo, effects, backgroundFile, scale, loadTick]);
 
   return (
     <div className="stage-wrap" ref={wrapRef}>
@@ -144,7 +150,8 @@ function paint(
   state: BattleState,
   roles: Record<string, string> | undefined,
   resolve: {sprite: (file: string) => HTMLImageElement | null;
-            effect: (file: string) => HTMLImageElement | null},
+            effect: (file: string) => HTMLImageElement | null;
+            backdrop: (file: string) => HTMLImageElement | null},
 ) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
@@ -154,10 +161,21 @@ function paint(
   for (const command of frame.commands as DrawCommand[]) {
     switch (command.kind) {
       case 'background': {
-        // No artwork ships yet: a flat backdrop plus a ground band reads as a stage
-        // without pretending to be final art.
+        // Fill first regardless. The art is authored at exactly the stage size, so this is
+        // normally covered, but it means a backdrop that is still loading, missing, or
+        // undersized shows the flat stage rather than whatever the canvas held before.
         ctx.fillStyle = PALETTE.backdrop;
         ctx.fillRect(-8, -8, STAGE.width + 16, STAGE.height + 16);
+        const art = command.file ? resolve.backdrop(command.file) : null;
+        if (art) {
+          // Drawn 1:1 at the internal resolution, so there is no resampling here and the
+          // whole canvas is integer-scaled afterwards. That is why the catalog's
+          // per-arena imageRendering hint no longer has anything to do: a painted
+          // backdrop and a pixel-art one are both already at native size.
+          ctx.drawImage(art, 0, 0, STAGE.width, STAGE.height);
+          break;
+        }
+        // No art: a ground band reads as a stage without pretending to be final art.
         ctx.fillStyle = PALETTE.ground;
         ctx.fillRect(-8, 118, STAGE.width + 16, STAGE.height - 110);
         break;

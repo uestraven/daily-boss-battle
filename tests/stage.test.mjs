@@ -6,7 +6,7 @@ import {STAGE, bossSlot, composeFrame, displayedValue, floatProgress, heroSlots,
   integerScale, shakeOffset, tintForRole} from '../dist/src/stage.js';
 import {choreograph} from '../dist/src/presentation.js';
 import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src/engine.js';
-import {buildEncounter} from '../dist/src/generate.js';
+import {bossIds, buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
 import {validateSheet} from '../dist/src/animation.js';
 import {requiredEffects, validateEffectSheet} from '../dist/src/effects.js';
@@ -578,5 +578,49 @@ test('shipped effects must have their art on disk', () => {
     assert.ok(sheet, `"${id}" is shipped but not declared`);
     const file = new URL(`../web/public/battle-effects/${sheet.file}`, import.meta.url);
     assert.ok(existsSync(file), `"${id}" is listed as shipped but ${sheet.file} is missing`);
+  }
+});
+
+// --- Arena backdrops ----------------------------------------------------------------
+
+test('the background command names the arena, and its art only when it exists', () => {
+  const state = freshState();
+  // No file: the renderer draws the flat stage, which is the shipping state.
+  const bare = composeFrame({state, script: null, timeMs: 0})
+    .commands.find(c => c.kind === 'background');
+  assert.ok(bare, 'there is always a background command to clear the frame');
+  assert.equal(bare.file, undefined, 'no art means no file, so nothing is requested');
+
+  const dressed = composeFrame({state, script: null, timeMs: 0,
+    backgroundId: 'tide_maw', backgroundFile: 'tide_maw.png'})
+    .commands.find(c => c.kind === 'background');
+  assert.equal(dressed.id, 'tide_maw');
+  assert.equal(dressed.file, 'tide_maw.png');
+});
+
+test('the background is the first command, so everything draws over it', () => {
+  const state = freshState();
+  const commands = composeFrame({state, script: null, timeMs: 0}).commands;
+  assert.equal(commands[0].kind, 'background');
+});
+
+test('every boss has an arena briefed for it', () => {
+  // backgroundForBoss falls back to another arena for an unknown boss, so a missing brief
+  // shows the wrong scenery rather than failing. This is the assertion that catches it;
+  // two bosses were silently using the Broken Span before it existed.
+  const catalog = readFileSync(new URL('../web/src/background-catalog.ts', import.meta.url), 'utf8');
+  for (const boss of bossIds) {
+    assert.ok(new RegExp(`^ {2}${boss}: \\{`, 'm').test(catalog),
+      `${boss} has no arena in background-catalog.ts`);
+  }
+});
+
+test('shipped arenas must have their art on disk', () => {
+  const catalog = readFileSync(new URL('../web/src/background-catalog.ts', import.meta.url), 'utf8');
+  const block = catalog.match(/shippedBackgrounds: readonly BackgroundId\[\] = \[([^\]]*)\]/);
+  assert.ok(block, 'shippedBackgrounds must stay greppable: the check tool reads it');
+  for (const [, id] of [...block[1].matchAll(/'([^']+)'/g)]) {
+    const file = new URL(`../web/public/battle-backgrounds/${id}.png`, import.meta.url);
+    assert.ok(existsSync(file), `"${id}" is shipped but ${id}.png is missing`);
   }
 });

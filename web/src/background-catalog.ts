@@ -1,4 +1,6 @@
-/** Art-direction brief and expected image filenames for the six encounter arenas.
+/** Art-direction brief and expected image filenames for the encounter arenas, one per
+ * boss. `npm run art:check` fails if a boss has no arena, which is how the Mad Harlequin
+ * and the Clockwork Emperor were found silently falling back to the Broken Span.
  * Every background is original artwork commissioned or produced for Daily Boss Battle.
  * This module carries no third-party provenance and links to no external asset source:
  * drop an original PNG at the listed filename, or import one through Background Studio.
@@ -34,6 +36,16 @@ export const battleBackgrounds = {
     file:'spell_weaver.png', imageRendering:'auto' as const,
     hint:'A long platform with a waiting train and lamp-lit gatehouse beyond. Night palette with warm lamps so elemental spell flashes pop.',
   },
+  mad_harlequin: {
+    scene:'Carnival Row', style:'16-bit pixel art', place:'Shuttered fairground after closing',
+    file:'mad_harlequin.png', imageRendering:'pixelated' as const,
+    hint:'Striped tent canvas and dead bulb strings against a dark sky, streamers caught mid-fall. Garish colour pushed to the edges so the centre stays quiet: this fight is about delayed punishment, and the telegraph text must stay readable over it.',
+  },
+  clockwork_emperor: {
+    scene:'Gear Vault', style:'Painted backdrop', place:'Machine hall of meshing gears and pressure lines',
+    file:'clockwork_emperor.png', imageRendering:'auto' as const,
+    hint:'Vast brass gearwork receding behind a riveted floor plate, steam bleeding from joints. Warm metal against deep shadow, with the largest gear off-centre so the boss silhouette is not lost against it.',
+  },
 } as const;
 export type BackgroundId = keyof typeof battleBackgrounds;
 export const backgroundIds = Object.keys(battleBackgrounds) as BackgroundId[];
@@ -42,3 +54,13 @@ export const backgroundForBoss = (bossId:string):BackgroundId => {
   return 'blade_tyrant'; // all three historical Blade Tyrant rulesets share the same arena
 };
 export const bundledBackgroundUrl = (id:BackgroundId,base:string) => `${base}battle-backgrounds/${battleBackgrounds[id].file}`;
+
+/** Arenas whose PNG is actually in `web/public/battle-backgrounds/`.
+ *
+ * Only these are offered to the stage, so an uncommissioned arena costs no failed request
+ * and leaves the flat backdrop in place rather than flashing an empty frame. Drop the art
+ * in, add the id here, and run `npm run art:check` -- it fails when this list and the
+ * directory disagree, so it cannot drift. Same arrangement as effect art. */
+export const shippedBackgrounds: readonly BackgroundId[] = [];
+
+export const hasBackgroundArt = (id:BackgroundId):boolean => shippedBackgrounds.includes(id);

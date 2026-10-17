@@ -18,7 +18,7 @@
     "check:all": "npm test && npm run web:build",
     "roster:check": "npm run build && node scripts/run-roster.mjs",
     "daily:check": "npm run build && node scripts/run-daily.mjs",
-    "art:check": "node scripts/check-backgrounds.mjs",
+    "art:check": "npm run build && node scripts/check-backgrounds.mjs",
     "icons": "node tools/make-icons.mjs",
     "art:lint": "node tools/lint-sprite.mjs",
     "art:placeholders": "npm run build && node tools/make-placeholder-sheets.mjs",

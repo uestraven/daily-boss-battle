@@ -53,7 +53,9 @@ export const SPRITE = {
 } as const;
 
 export type DrawCommand =
-  | {kind: 'background'; id: string}
+  /** `file` is the backdrop image to blit, present only when that arena's art exists.
+   * Without it the renderer draws the flat stage, which is the shipping state. */
+  | {kind: 'background'; id: string; file?: string}
   /** `sheet` names the image and the source rectangle to blit. Absent means no sheet is
    * available, and the renderer falls back to a flat silhouette in `tint`. */
   | {kind: 'sprite'; actorId: ActorId; x: number; y: number; width: number; height: number;
@@ -85,6 +87,8 @@ export type ComposeInput = {
   timeMs: number;
   /** Background identifier passed through to the renderer. */
   backgroundId?: string;
+  /** Backdrop image filename, when the arena's art exists. */
+  backgroundFile?: string;
   /** Display names, for floating text. */
   names?: Record<ActorId, string>;
   /** Animation sheets per actor. An actor without one is drawn as a silhouette, so the
@@ -188,7 +192,10 @@ export function composeFrame(input: ComposeInput): Frame {
   const active: Beat[] = script ? beatsAt(script, timeMs) : [];
   const commands: DrawCommand[] = [];
 
-  commands.push({kind: 'background', id: input.backgroundId ?? state.bossId});
+  commands.push({
+    kind: 'background', id: input.backgroundId ?? state.bossId,
+    ...(input.backgroundFile ? {file: input.backgroundFile} : {}),
+  });
 
   // --- shake: strongest active beat wins, so simultaneous hits do not cancel out ---
   let shakeX = 0;

@@ -13,6 +13,20 @@ Place one PNG per boss, using these exact filenames:
 | `crush_wall.png` | Sealed Corridor — collapsing passage | 16-bit pixel art |
 | `storm_keeper.png` | Stormworks — lightning-struck pipe gallery | Painted backdrop |
 | `spell_weaver.png` | Gate Platform — rail platform at night | Painted backdrop |
+| `mad_harlequin.png` | Carnival Row — shuttered fairground after closing | 16-bit pixel art |
+| `clockwork_emperor.png` | Gear Vault — machine hall of meshing gears | Painted backdrop |
+
+**Author at exactly 320x180.** The stage blits a backdrop 1:1 at its internal resolution
+and the whole canvas is integer-scaled afterwards, so there is no resampling to hide an
+odd size behind. `npm run art:check` enforces this, and also fails if a boss has no arena
+briefed or if `shippedBackgrounds` disagrees with this directory.
+
+Art alone does not enable an arena: add its boss id to `shippedBackgrounds` in
+`web/src/background-catalog.ts`. Until then the stage keeps its flat backdrop, and nothing
+requests a file that is not here.
+
+`?studio` on the game URL opens the import-and-crop tool, which exports a correctly sized
+PNG from a larger image.
 
 Per-arena art direction lives in `web/src/background-catalog.ts`. The game UI draws the
 boss, party, and menu layers on top, so a background should contain scenery only — no

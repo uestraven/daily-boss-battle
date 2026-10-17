@@ -27,6 +27,8 @@ import {advanceToDecision as freshBattle} from '../../dist/src/engine.js';
 import {heroes} from '../../dist/src/roster.js';
 import {spriteSheet} from './sprite-catalog.js';
 import {effectLibrary} from './effect-catalog.js';
+import {backgroundForBoss, battleBackgrounds, hasBackgroundArt} from './background-catalog.js';
+import {BackgroundStudio} from './BackgroundStudio.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {ActorId, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
 import type {DailyCatalog, DailyLedger} from '../../src/daily.js';
@@ -46,6 +48,10 @@ type Phase = {kind: 'choosing'} | {kind: 'playing'} | {kind: 'over'};
 const PARAMS = typeof window !== 'undefined'
   ? new URLSearchParams(window.location.search) : new URLSearchParams();
 const DEV = PARAMS.has('dev');
+/** Opens the background authoring tool. Off the main path on purpose: it is a tool for
+ * producing art, not part of the game, and its only previous entry point was the deleted
+ * App.tsx harness, which left it unreachable. */
+const STUDIO = PARAMS.has('studio');
 /** `?speed=` scales playback: 1 is normal, 0.5 half speed, 2 double. For dialling in the
  * animation pace against real art without a rebuild. */
 const SPEED = (() => {
@@ -189,6 +195,12 @@ function Battle({def, catalog, tier, day}:
   /** Hit effects that have art. Empty until the sheets are commissioned, in which case
    * composeFrame emits no effect commands at all. */
   const effects = useMemo(() => effectLibrary(), []);
+  /** This arena's backdrop, if its art exists. Undefined leaves the flat stage, which is
+   * what ships until the backgrounds are drawn. */
+  const backgroundFile = useMemo(() => {
+    const arena = backgroundForBoss(def.bossId);
+    return hasBackgroundArt(arena) ? battleBackgrounds[arena].file : undefined;
+  }, [def]);
   /** Validated sheets for whoever has one. A sheet that is missing or malformed is simply
    * omitted, and that actor keeps its silhouette. */
   const sheets = useMemo(() => {
@@ -315,6 +327,18 @@ function Battle({def, catalog, tier, day}:
     });
   }, [record, day, def]);
 
+  if (STUDIO) {
+    return (
+      <main className="dbb-shell">
+        <BackgroundStudio
+          initialId={backgroundForBoss(def.bossId)}
+          onClose={() => { window.location.search = ''; }}
+          onChange={() => { /* imports live in IndexedDB; the stage reads bundled art */ }}
+        />
+      </main>
+    );
+  }
+
   return (
     // Capture phase, so the theme starts on the first touch even if a child stops the
     // event. Firing repeatedly is harmless: startAudio is idempotent.
@@ -370,7 +394,8 @@ function Battle({def, catalog, tier, day}:
       </section>
 
       <BattleStage state={state} script={script} timeMs={timeMs} roles={ROLE_BY_ID}
-        sheets={sheets} abilityInfo={abilityInfo} effects={effects} />
+        sheets={sheets} abilityInfo={abilityInfo} effects={effects}
+        backgroundFile={backgroundFile} />
 
       <section className="dbb-party">
         {state.party.map(id => {
