@@ -2,8 +2,8 @@
  * beats, so it is asserted here rather than eyeballed in a browser. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ANIMATION_NAMES, DEFAULT_LOOP_FRAME_MS, animationFor, animationsFor, frameFor,
-  frameRect, validateSheet} from '../dist/src/animation.js';
+import {ANIMATION_NAMES, CLIP_FALLBACK, CLIP_FOR_KIND, DEFAULT_LOOP_FRAME_MS, animationFor,
+  animationsFor, frameFor, frameRect, validateSheet} from '../dist/src/animation.js';
 import {choreograph} from '../dist/src/presentation.js';
 import {advanceToDecision, createEncounter} from '../dist/src/engine.js';
 import {buildEncounter} from '../dist/src/generate.js';
@@ -190,4 +190,117 @@ test('sheet validation rejects malformed manifests', () => {
   assert.throws(() => validateSheet({...sheet, clips: {...sheet.clips, attack: {row: 1, frames: 0}}}),
     /at least one frame/);
   assert.throws(() => validateSheet({...sheet, anchorY: 999}), /anchorY outside/);
+});
+
+// --- Clip selection by what the actor is actually doing -----------------------------
+
+/** A sheet with every clip, so selection is not masked by a fallback. */
+const fullSheet = {
+  file: 'full.png', frameWidth: 32, frameHeight: 40, anchorX: 16, anchorY: 38,
+  clips: {
+    idle: {row: 0, frames: 2, loop: true}, attack: {row: 1, frames: 4, loop: false},
+    cast: {row: 2, frames: 3, loop: false}, item: {row: 3, frames: 3, loop: false},
+    hurt: {row: 4, frames: 2, loop: false}, ko: {row: 5, frames: 3, loop: false},
+    victory: {row: 6, frames: 2, loop: true},
+  },
+};
+
+const clipFor = (abilityId, abilityInfo, useSheet = fullSheet) => {
+  const script = choreograph([
+    ev('action_committed', {actorId: 'm', abilityId}),
+    ev('damage', {actorId: 'm', targetId: 'b', abilityId, amount: 5, hpAfter: 995}),
+  ], {maxHp: {b: 1000}});
+  const step = script.beats.find(b => b.kind === 'actor_step');
+  assert.ok(step, 'a committed action produces a step beat');
+  return animationFor('m', {script, timeMs: step.at + 10, sheet: useSheet, abilityInfo}).name;
+};
+
+test('a swing, a spell and a potion each play their own clip', () => {
+  // Every action used to resolve to `attack`: the cast row shipped in all twelve hero
+  // sheets and was never once displayed.
+  const info = {swing: {kind: 'physical'}, fire: {kind: 'magical'},
+    cure: {kind: 'heal'}, potion: {kind: 'item'}, lunge: {kind: 'steal'}};
+  assert.equal(clipFor('swing', info), 'attack');
+  assert.equal(clipFor('fire', info), 'cast');
+  assert.equal(clipFor('cure', info), 'cast', 'a heal is channelled, not swung');
+  assert.equal(clipFor('potion', info), 'item');
+  assert.equal(clipFor('lunge', info), 'attack', 'a steal closes the distance');
+});
+
+test('the step beat carries the ability, or selection has nothing to work from', () => {
+  const script = choreograph([ev('action_committed', {actorId: 'm', abilityId: 'fire'})], {});
+  const step = script.beats.find(b => b.kind === 'actor_step');
+  assert.equal(step.abilityId, 'fire');
+});
+
+test('every ability kind maps to a clip that exists', () => {
+  for (const [kind, name] of Object.entries(CLIP_FOR_KIND)) {
+    assert.ok(ANIMATION_NAMES.includes(name), `${kind} maps to unknown clip "${name}"`);
+  }
+});
+
+test('without ability info, actions look physical rather than frozen', () => {
+  // Degrading to the previous behaviour is the point: a caller that passes no table
+  // should see what it saw before, not an actor standing still mid-attack.
+  assert.equal(clipFor('fire', undefined), 'attack');
+  assert.equal(clipFor('fire', {}), 'attack');
+  assert.equal(clipFor('fire', {fire: {}}), 'attack', 'an entry with no kind is no information');
+});
+
+test('a missing clip degrades along a chain, never to a standstill', () => {
+  // The sheets that ship have no item row. Dropping straight to idle would show an actor
+  // doing nothing at all while a potion takes effect, which reads worse than the wrong
+  // animation it replaced.
+  const noItem = {...fullSheet, clips: {...fullSheet.clips}};
+  delete noItem.clips.item;
+  assert.equal(clipFor('potion', {potion: {kind: 'item'}}, noItem), 'cast');
+
+  const noItemNoCast = {...fullSheet, clips: {...noItem.clips}};
+  delete noItemNoCast.clips.cast;
+  assert.equal(clipFor('potion', {potion: {kind: 'item'}}, noItemNoCast), 'attack');
+  assert.equal(clipFor('fire', {fire: {kind: 'magical'}}, noItemNoCast), 'attack');
+
+  // An idle-only sheet is the floor, and validateSheet guarantees idle exists.
+  const idleOnly = {...fullSheet, clips: {idle: fullSheet.clips.idle}};
+  for (const ability of ['swing', 'fire', 'potion']) {
+    assert.equal(clipFor(ability, {swing: {kind: 'physical'}, fire: {kind: 'magical'},
+      potion: {kind: 'item'}}, idleOnly), 'idle');
+  }
+});
+
+test('every fallback chain is well formed and ends at idle', () => {
+  for (const name of ANIMATION_NAMES) {
+    const chain = CLIP_FALLBACK[name];
+    assert.ok(chain, `${name} has no fallback chain`);
+    assert.equal(chain[0], name, `${name} should prefer itself`);
+    assert.equal(chain.at(-1), 'idle', `${name} must end at idle`);
+    assert.equal(new Set(chain).size, chain.length, `${name} repeats a step`);
+    for (const step of chain) {
+      assert.ok(ANIMATION_NAMES.includes(step), `${name} falls back to unknown "${step}"`);
+    }
+  }
+});
+
+test('being hit or going down still outranks whatever the actor was doing', () => {
+  // Kind-based selection must not have jumped the priority queue.
+  const script = choreograph([
+    ev('action_committed', {actorId: 'm', abilityId: 'fire'}),
+    ev('damage', {actorId: 'b', targetId: 'm', abilityId: 'swing', amount: 50, hpAfter: 250}),
+    ev('ko', {actorId: 'm'}),
+  ], {maxHp: {m: 300}});
+  const info = {fire: {kind: 'magical'}, swing: {kind: 'physical'}};
+  const at = kind => script.beats.find(b => b.kind === kind);
+  assert.equal(animationFor('m', {script, timeMs: at('hurt').at + 5, sheet: fullSheet,
+    abilityInfo: info}).name, 'hurt');
+  assert.equal(animationFor('m', {script, timeMs: at('ko').at + 5, sheet: fullSheet,
+    abilityInfo: info}).name, 'ko');
+});
+
+test('a channelled wind-up stays a cast whatever it ends in', () => {
+  // The clip is the wind-up pose; the strike arrives later as its own impact beat.
+  const script = choreograph([ev('channel_started', {actorId: 'b', abilityId: 'slam'})], {});
+  const cast = script.beats.find(b => b.kind === 'cast');
+  assert.equal(cast.abilityId, 'slam');
+  assert.equal(animationFor('b', {script, timeMs: cast.at + 5, sheet: fullSheet,
+    abilityInfo: {slam: {kind: 'physical'}}}).name, 'cast');
 });

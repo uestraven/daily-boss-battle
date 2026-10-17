@@ -13,6 +13,7 @@ import type {ActorId, BattleState} from './types.js';
 import type {Beat, BeatScript} from './presentation.js';
 import {beatsAt, tweenValue} from './presentation.js';
 import {animationFor, frameRect} from './animation.js';
+import type {AbilityInfo} from './animation.js';
 import type {AnimationName, SpriteSheet} from './animation.js';
 
 /** Internal stage resolution. 16:9 so it letterboxes cleanly on any phone. */
@@ -83,6 +84,9 @@ export type ComposeInput = {
   sheets?: Record<ActorId, SpriteSheet>;
   /** Role per hero, for silhouette tinting. */
   roles?: Record<ActorId, string>;
+  /** Ability kinds, so a spell, a potion and a sword swing each pick their own clip.
+   * Omitted, every action falls back to looking physical. */
+  abilityInfo?: AbilityInfo;
 };
 
 /** Deterministic pseudo-random in [-1, 1] from an integer. Shake must be reproducible
@@ -211,7 +215,7 @@ export function composeFrame(input: ComposeInput): Frame {
   ): DrawCommand => {
     const sheet = input.sheets?.[id];
     const animation = sheet
-      ? animationFor(id, {script, timeMs, sheet, down,
+      ? animationFor(id, {script, timeMs, sheet, down, abilityInfo: input.abilityInfo,
           victorious: state.result === 'victory' && id !== state.bossId && !down})
       : undefined;
     const width = sheet?.frameWidth ?? fallback.width;

@@ -10,7 +10,7 @@
  * which means an attack animation can never finish early or overrun the hit it belongs
  * to. Looping animations (idle) use their own frame duration instead.
  */
-import type {ActorId, BattleState} from './types.js';
+import type {AbilityKind, ActorId, BattleState} from './types.js';
 import type {Beat, BeatScript} from './presentation.js';
 import {beatsAt} from './presentation.js';
 
@@ -19,11 +19,36 @@ export type AnimationName =
   | 'idle'      // looping; the default
   | 'attack'    // stepping in and striking
   | 'cast'      // channelled or magical wind-up
+  | 'item'      // reaching for a pouch; optional, falls back to idle
   | 'hurt'      // taking a hit
   | 'ko'        // collapsing, then staying down on its last frame
   | 'victory';  // looping; winners only
 
-export const ANIMATION_NAMES: AnimationName[] = ['idle', 'attack', 'cast', 'hurt', 'ko', 'victory'];
+export const ANIMATION_NAMES: AnimationName[] =
+  ['idle', 'attack', 'cast', 'item', 'hurt', 'ko', 'victory'];
+
+/** Which clip an acting actor plays, by what kind of thing it is doing.
+ *
+ * Without this, every action resolved to `attack`: a fireball, a cure and a potion all
+ * played the sword swing, while the `cast` row sat in the sheet unused. The mapping is
+ * data rather than branching so it can be asserted exhaustively, and so a new
+ * `AbilityKind` fails to compile until someone decides how it should look. */
+export const CLIP_FOR_KIND: Record<AbilityKind, AnimationName> = {
+  // Closing the distance and connecting.
+  physical: 'attack',
+  steal: 'attack',
+  airborne: 'attack',
+  // Anything channelled through will, not steel.
+  magical: 'cast',
+  heal: 'cast',
+  status: 'cast',
+  dispel: 'cast',
+  nullify: 'cast',
+  cover: 'cast',
+  focus: 'cast',
+  // Rummaging in a pouch looks like neither.
+  item: 'item',
+};
 
 export type AnimationClip = {
   /** Row index in the sheet, top to bottom. */
@@ -59,7 +84,38 @@ export type ActorAnimation = {
 };
 
 /** The highest-priority beat currently driving this actor, if any. */
-function drivingBeat(actorId: ActorId, active: Beat[]): {beat: Beat; name: AnimationName} | null {
+/** What to draw when a sheet lacks the clip the action asked for, most specific first.
+ *
+ * Each list ends at `idle`, which `validateSheet` guarantees exists. The chains matter
+ * because dropping straight to idle would make a sheet without an `item` row show an actor
+ * standing perfectly still while a potion takes effect — a worse reading than the wrong
+ * animation it replaced. Falling back to `cast` keeps a gesture on screen, and a swing
+ * stays distinct from it. */
+export const CLIP_FALLBACK: Record<AnimationName, readonly AnimationName[]> = {
+  idle: ['idle'],
+  attack: ['attack', 'idle'],
+  cast: ['cast', 'attack', 'idle'],
+  item: ['item', 'cast', 'attack', 'idle'],
+  hurt: ['hurt', 'idle'],
+  ko: ['ko', 'hurt', 'idle'],
+  victory: ['victory', 'idle'],
+};
+
+/** Ability kinds, keyed by ability id. Only `kind` is read, so a caller can pass the same
+ * ability table the audio layer uses. */
+export type AbilityInfo = Record<string, {kind?: AbilityKind} | undefined>;
+
+/** The clip for an action beat. Falls back to `attack` when the ability is unknown, which
+ * is how it behaved before kinds were threaded through, so a missing table degrades to the
+ * old look rather than to a frozen idle pose. */
+function clipForAction(beat: Beat, abilityInfo?: AbilityInfo): AnimationName {
+  const kind = beat.abilityId ? abilityInfo?.[beat.abilityId]?.kind : undefined;
+  return kind ? CLIP_FOR_KIND[kind] : 'attack';
+}
+
+function drivingBeat(
+  actorId: ActorId, active: Beat[], abilityInfo?: AbilityInfo,
+): {beat: Beat; name: AnimationName} | null {
   // Priority matters: being knocked out outranks being hit, which outranks acting.
   const ko = active.find(b => b.kind === 'ko' && b.actorId === actorId);
   if (ko) return {beat: ko, name: 'ko'};
@@ -69,15 +125,17 @@ function drivingBeat(actorId: ActorId, active: Beat[]): {beat: Beat; name: Anima
   const hurt = active.find(b => b.kind === 'hurt' && b.targetId === actorId);
   if (hurt) return {beat: hurt, name: 'hurt'};
 
+  // A channelled wind-up is a cast whatever it ends in: the clip is the wind-up pose, and
+  // the strike itself arrives later as its own impact beat.
   const cast = active.find(b => b.kind === 'cast' && b.actorId === actorId);
   if (cast) return {beat: cast, name: 'cast'};
 
   const step = active.find(b => b.kind === 'actor_step' && b.actorId === actorId);
-  if (step) return {beat: step, name: 'attack'};
+  if (step) return {beat: step, name: clipForAction(step, abilityInfo)};
 
-  // An actor whose hit is landing is mid-attack even after its step beat ended.
+  // An actor whose hit is landing is still mid-action after its step beat ended.
   const striking = active.find(b => b.kind === 'impact' && b.actorId === actorId);
-  if (striking) return {beat: striking, name: 'attack'};
+  if (striking) return {beat: striking, name: clipForAction(striking, abilityInfo)};
 
   return null;
 }
@@ -107,14 +165,21 @@ export function animationFor(
     sheet?: SpriteSheet;
     down?: boolean;
     victorious?: boolean;
+    /** Lets an action pick its clip by ability kind. Omitted, every action looks physical. */
+    abilityInfo?: AbilityInfo;
   },
 ): ActorAnimation {
   const {script, timeMs, sheet} = options;
   const clips = sheet?.clips;
-  const available = (name: AnimationName): AnimationName => (clips && clips[name] ? name : 'idle');
+  const available = (name: AnimationName): AnimationName => {
+    for (const candidate of CLIP_FALLBACK[name]) {
+      if (clips?.[candidate]) return candidate;
+    }
+    return 'idle';
+  };
 
   const active = script ? beatsAt(script, timeMs) : [];
-  const driver = drivingBeat(actorId, active);
+  const driver = drivingBeat(actorId, active, options.abilityInfo);
 
   let name: AnimationName;
   let elapsed: number;

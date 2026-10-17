@@ -158,12 +158,16 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
 
     switch (event.type) {
       case 'action_committed': {
-        push({duration: TIMING.actorStep, kind: 'actor_step', actorId: actor, source: event.type});
+        // Carries the ability so the renderer can pick a clip by what is being done. A
+        // step beat without it leaves a spell and a potion indistinguishable from a swing.
+        push({duration: TIMING.actorStep, kind: 'actor_step', actorId: actor,
+          abilityId: event.abilityId, source: event.type});
         cursor += TIMING.actorStep;
         break;
       }
       case 'channel_started': {
         push({duration: TIMING.castWindUp, kind: 'cast', actorId: actor,
+          abilityId: event.abilityId,
           text: `${nameOf(actor, opts)} begins ${abilityOf(event.abilityId, opts)}`, source: event.type});
         cursor += TIMING.castWindUp;
         break;

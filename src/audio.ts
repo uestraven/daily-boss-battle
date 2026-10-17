@@ -8,6 +8,8 @@
  * derived from the code that uses them rather than maintained by hand.
  */
 import type {Beat, BeatScript} from './presentation.js';
+import type {AbilityInfo} from './animation.js';
+import type {AbilityKind} from './types.js';
 
 export type SoundId =
   | 'hit_physical'
@@ -67,9 +69,16 @@ export type AudioOptions = {
   /** Milliseconds between blips while a text beat types out. */
   blipIntervalMs?: number;
   /** Ability metadata, so an impact can tell a spell from a sword swing. Without it
-   * every hit sounds physical, which is wrong for a caster. */
-  abilityInfo?: Record<string, {kind?: 'physical' | 'magical'}>;
+   * every hit sounds physical, which is wrong for a caster. Accepts the full
+   * `AbilityKind` so one table can serve both the mixer and clip selection. */
+  abilityInfo?: AbilityInfo;
 };
+
+/** Kinds that sound magical on impact. Narrower than "picks the cast animation": `cover`
+ * and `focus` are self-directed and never land a hit, so listing them would be dead
+ * weight, while a debuff or a dispel that does connect should not sound like steel. */
+const MAGICAL_KINDS: ReadonlySet<AbilityKind> =
+  new Set<AbilityKind>(['magical', 'heal', 'status', 'dispel', 'nullify']);
 
 const gainFor = (intensity: number | undefined, floor = 0.45): number => {
   const i = intensity ?? 0.3;
@@ -85,7 +94,8 @@ function cueFor(beat: Beat, options: AudioOptions): AudioCue | null {
       // carried by the paired shake beat, which the caller merges in first.
       const intensity = beat.intensity ?? 0.3;
       const kind = beat.abilityId ? options.abilityInfo?.[beat.abilityId]?.kind : undefined;
-      const magical = kind === 'magical' || beat.source === 'poison_pulse';
+      const magical = (kind !== undefined && MAGICAL_KINDS.has(kind))
+        || beat.source === 'poison_pulse';
       const sound: SoundId = magical ? 'hit_magical'
         : intensity >= HEAVY_HIT_INTENSITY ? 'hit_heavy' : 'hit_physical';
       return {at: beat.at, sound, gain: gainFor(intensity)};

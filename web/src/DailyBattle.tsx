@@ -177,10 +177,12 @@ function Battle({def, catalog, tier, day}:
     () => Object.fromEntries(Object.values(def.abilities).map(a => [a.id, a.name])),
     [def],
   );
-  /** Lets the audio layer tell a spell from a sword swing. */
+  /** Real ability kinds, shared by the mixer and clip selection: it is what lets a spell
+   * sound and look different from a sword swing, and a potion from both. Previously
+   * flattened to magical-or-physical, which was enough for two sound families but erased
+   * every distinction an animation needs. */
   const abilityInfo = useMemo(
-    () => Object.fromEntries(Object.values(def.abilities)
-      .map(a => [a.id, {kind: a.kind === 'magical' ? 'magical' as const : 'physical' as const}])),
+    () => Object.fromEntries(Object.values(def.abilities).map(a => [a.id, {kind: a.kind}])),
     [def],
   );
   /** Validated sheets for whoever has one. A sheet that is missing or malformed is simply
@@ -363,7 +365,8 @@ function Battle({def, catalog, tier, day}:
         )}
       </section>
 
-      <BattleStage state={state} script={script} timeMs={timeMs} roles={ROLE_BY_ID} sheets={sheets} />
+      <BattleStage state={state} script={script} timeMs={timeMs} roles={ROLE_BY_ID}
+        sheets={sheets} abilityInfo={abilityInfo} />
 
       <section className="dbb-party">
         {state.party.map(id => {

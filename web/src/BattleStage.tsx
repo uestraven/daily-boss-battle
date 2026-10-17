@@ -11,7 +11,7 @@ import {STAGE, composeFrame, integerScale, tintForRole} from '../../dist/src/sta
 import type {DrawCommand, Frame} from '../../src/stage.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {BattleState} from '../../src/types.js';
-import type {SpriteSheet} from '../../src/animation.js';
+import type {AbilityInfo, SpriteSheet} from '../../src/animation.js';
 
 const PALETTE = {
   backdrop: '#0b0d16',
@@ -38,6 +38,8 @@ export type BattleStageProps = {
   timeMs: number;
   /** Role per hero id, used to tint placeholder silhouettes. */
   roles?: Record<string, string>;
+  /** Ability kinds, so an action picks the clip that matches what it is. */
+  abilityInfo?: AbilityInfo;
 };
 
 /** Sprite sheet images, loaded once and cached. A sheet that fails to load simply stays
@@ -65,7 +67,7 @@ function sheetImage(file: string): HTMLImageElement | null {
   return null;
 }
 
-export function BattleStage({state, script, timeMs, roles, sheets}: BattleStageProps) {
+export function BattleStage({state, script, timeMs, roles, sheets, abilityInfo}: BattleStageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
@@ -101,9 +103,9 @@ export function BattleStage({state, script, timeMs, roles, sheets}: BattleStageP
   useEffect(() => {
     const context = canvasRef.current?.getContext('2d');
     if (!context) return;
-    paint(context, composeFrame({state, script, timeMs, sheets, roles}), state, roles,
-      sheetImage);
-  }, [state, script, timeMs, roles, sheets, scale, loadTick]);
+    paint(context, composeFrame({state, script, timeMs, sheets, roles, abilityInfo}), state,
+      roles, sheetImage);
+  }, [state, script, timeMs, roles, sheets, abilityInfo, scale, loadTick]);
 
   return (
     <div className="stage-wrap" ref={wrapRef}>
