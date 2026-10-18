@@ -411,24 +411,33 @@ function Battle({def, catalog, tier, day}:
     setLog(previous => [
       ...batch.flatMap(event => {
         switch (event.type) {
+          // Naming the action is what makes a multi-target ability legible. Flywheel
+          // Sweep hits all three heroes, and without this its three damage lines read as
+          // three separate attacks in a row -- which is exactly how it was reported.
+          case 'action_committed':
+            return [`${who(event.actorId)} uses ` +
+              `${abilityNames[event.abilityId ?? ''] ?? event.abilityId ?? 'something'}`];
+          case 'channel_started':
+            return [`${who(event.actorId)} begins ` +
+              `${abilityNames[event.abilityId ?? ''] ?? event.abilityId ?? 'something'}`];
           case 'damage':
             return [event.amount === 0
-              ? `${who(event.actorId)} → ${who(event.targetId)}: no effect`
-              : `${who(event.actorId)} → ${who(event.targetId)}: −${event.amount}`];
+              ? `· ${who(event.targetId)}: no effect`
+              : `· ${who(event.targetId)}: −${event.amount}`];
           case 'heal':
-            return [`${who(event.actorId)} → ${who(event.targetId)}: +${event.amount}`];
+            return [`· ${who(event.targetId)}: +${event.amount}`];
           case 'ko':
-            return [`${who(event.actorId)} is down`];
+            return [`· ${who(event.actorId)} is down`];
           case 'fizzle':
-            return [`${who(event.actorId)}: no effect`];
+            return ['· no effect'];
           case 'nullify_absorb':
-            return [`${who(event.actorId)} absorbs the spell (+${event.amount} MP)`];
+            return [`· ${who(event.actorId)} absorbs it (+${event.amount} MP)`];
           case 'boss_interrupted':
-            return [`${who(event.actorId)} interrupts ${who(event.targetId)}`];
+            return [`· ${who(event.actorId)} interrupts ${who(event.targetId)}`];
           case 'steal_success':
-            return [`${who(event.actorId)} steals from ${who(event.targetId)}`];
+            return [`· ${who(event.actorId)} steals from ${who(event.targetId)}`];
           case 'revived':
-            return [`${who(event.targetId)} is back up`];
+            return [`· ${who(event.targetId)} is back up`];
           default:
             return [];
         }
