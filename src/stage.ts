@@ -83,8 +83,11 @@ export type Frame = {
 export type ComposeInput = {
   state: BattleState;
   script: BeatScript | null;
-  /** Playback position within the script, in milliseconds. */
+  /** Playback position within the script, in milliseconds. Restarts at zero each batch. */
   timeMs: number;
+  /** Monotonic clock for looping clips, so idle keeps breathing between turns. Defaults
+   * to timeMs, which freezes whenever no batch is playing. */
+  idleMs?: number;
   /** Background identifier passed through to the renderer. */
   backgroundId?: string;
   /** Backdrop image filename, when the arena's art exists. */
@@ -282,6 +285,7 @@ export function composeFrame(input: ComposeInput): Frame {
     const sheet = input.sheets?.[id];
     const animation = sheet
       ? animationFor(id, {script, timeMs, sheet, down, abilityInfo: input.abilityInfo,
+          ...(input.idleMs !== undefined ? {idleMs: input.idleMs} : {}),
           victorious: state.result === 'victory' && id !== state.bossId && !down})
       : undefined;
     const width = sheet?.frameWidth ?? fallback.width;

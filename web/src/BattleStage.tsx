@@ -37,6 +37,8 @@ export type BattleStageProps = {
   /** Playback position, owned by the screen so the canvas and the DOM meters share
    * one clock and cannot disagree about how far a tween has run. */
   timeMs: number;
+  /** Monotonic clock for looping clips, so idle keeps running between turns. */
+  idleMs?: number;
   /** Role per hero id, used to tint placeholder silhouettes. */
   roles?: Record<string, string>;
   /** Ability kinds, so an action picks the clip that matches what it is. */
@@ -87,7 +89,7 @@ const effectImage = (file: string): HTMLImageElement | null =>
 const backdropImage = (file: string): HTMLImageElement | null =>
   imageAt(`${base()}battle-backgrounds/${file}`);
 
-export function BattleStage({state, script, timeMs, roles, sheets, abilityInfo,
+export function BattleStage({state, script, timeMs, idleMs, roles, sheets, abilityInfo,
   effects, backgroundFile}: BattleStageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -124,10 +126,11 @@ export function BattleStage({state, script, timeMs, roles, sheets, abilityInfo,
   useEffect(() => {
     const context = canvasRef.current?.getContext('2d');
     if (!context) return;
-    paint(context, composeFrame({state, script, timeMs, sheets, roles, abilityInfo, effects,
-      backgroundFile}), state, roles,
+    paint(context, composeFrame({state, script, timeMs, idleMs, sheets, roles, abilityInfo,
+      effects, backgroundFile}), state, roles,
       {sprite: sheetImage, effect: effectImage, backdrop: backdropImage});
-  }, [state, script, timeMs, roles, sheets, abilityInfo, effects, backgroundFile, scale, loadTick]);
+  }, [state, script, timeMs, idleMs, roles, sheets, abilityInfo, effects, backgroundFile,
+    scale, loadTick]);
 
   return (
     <div className="stage-wrap" ref={wrapRef}>

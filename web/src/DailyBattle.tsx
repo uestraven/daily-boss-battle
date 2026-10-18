@@ -174,6 +174,13 @@ function Battle({def, catalog, tier, day}:
   /** Playback position for the current batch. Shared by the canvas and the DOM meters,
    * so a health bar can never disagree with the stage about how far a tween has run. */
   const [timeMs, setTimeMs] = useState(0);
+  /** A clock that never stops, for looping clips.
+   *
+   * `timeMs` restarts at zero each batch and stops between turns, so idle animations were
+   * frozen mid-breath for as long as the player took to choose. This runs the whole time
+   * the screen is mounted, including during playback -- which matters, because switching
+   * idle from one clock to the other at the end of a batch would pop the frame. */
+  const [idleMs, setIdleMs] = useState(0);
   /** An unranked replay, kept out of the ledger so it cannot overwrite the day's
    * recorded result. v1 deliberately lets anyone replay as much as they like. */
   const [replay, setReplay] = useState<BattleStep | null>(null);
@@ -212,6 +219,16 @@ function Battle({def, catalog, tier, day}:
     if (audioStarted.current || isMuted()) return;
     audioStarted.current = true;
     void playMusic('battle_main');
+  }, []);
+
+  // Sampled rather than run at 60fps: idle clips hold each frame for 160ms, so a 70ms
+  // tick is already twice the rate needed and costs ~14 renders a second instead of 60.
+  // Nothing else on this screen moves between turns, so the difference is the idle loop's
+  // entire cost. Hidden tabs are throttled by the browser.
+  useEffect(() => {
+    const startedAt = performance.now();
+    const timer = window.setInterval(() => setIdleMs(performance.now() - startedAt), 70);
+    return () => window.clearInterval(timer);
   }, []);
 
   // Drive the clock while a batch is playing, then hand control back to the player.
@@ -582,8 +599,8 @@ function Battle({def, catalog, tier, day}:
         )}
       </section>
 
-      <BattleStage state={state} script={script} timeMs={timeMs} roles={ROLE_BY_ID}
-        sheets={sheets} abilityInfo={abilityInfo} effects={effects}
+      <BattleStage state={state} script={script} timeMs={timeMs} idleMs={idleMs}
+        roles={ROLE_BY_ID} sheets={sheets} abilityInfo={abilityInfo} effects={effects}
         backgroundFile={backgroundFile} />
 
       <section className="dbb-party">

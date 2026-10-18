@@ -167,6 +167,15 @@ export function animationFor(
     victorious?: boolean;
     /** Lets an action pick its clip by ability kind. Omitted, every action looks physical. */
     abilityInfo?: AbilityInfo;
+    /** A clock for *looping* clips, which must keep running when nothing is happening.
+     *
+     * `timeMs` is the position inside the current batch: it restarts at zero every batch
+     * and stops advancing between turns, which is right for a clip fitted to a beat and
+     * wrong for a loop. Driving idle from it left every character frozen mid-breath while
+     * the player chose an action. Pass a monotonic clock here and the loops keep going.
+     *
+     * Defaults to `timeMs`, so a caller that does not care gets the old behaviour. */
+    idleMs?: number;
   },
 ): ActorAnimation {
   const {script, timeMs, sheet} = options;
@@ -195,12 +204,13 @@ export function animationFor(
     elapsed = Number.MAX_SAFE_INTEGER / 2;
     beatDuration = 1;
   } else if (options.victorious) {
+    // Looping, so it runs off the monotonic clock rather than the batch position.
     name = available('victory');
-    elapsed = timeMs;
+    elapsed = options.idleMs ?? timeMs;
     beatDuration = null;
   } else {
     name = 'idle';
-    elapsed = timeMs;
+    elapsed = options.idleMs ?? timeMs;
     beatDuration = null;
   }
 
@@ -218,7 +228,7 @@ export function animationFor(
 export function animationsFor(
   state: BattleState,
   options: {script: BeatScript | null; timeMs: number; sheets?: Record<ActorId, SpriteSheet>;
-    downIds?: readonly ActorId[]},
+    downIds?: readonly ActorId[]; idleMs?: number; abilityInfo?: AbilityInfo},
 ): Record<ActorId, ActorAnimation> {
   const down = new Set(options.downIds ?? []);
   const result: Record<ActorId, ActorAnimation> = {};
@@ -229,6 +239,8 @@ export function animationsFor(
       sheet: options.sheets?.[id],
       down: down.has(id),
       victorious: state.result === 'victory' && id !== state.bossId && !down.has(id),
+      ...(options.idleMs !== undefined ? {idleMs: options.idleMs} : {}),
+      ...(options.abilityInfo ? {abilityInfo: options.abilityInfo} : {}),
     });
   }
   return result;

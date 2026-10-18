@@ -328,3 +328,75 @@ test('the pace dial moves every watched duration together', () => {
   assert.equal(TIMING.textCharsPerSecond, 42 / PACE);
   assert.ok(TIMING.textCharsPerSecond < 42, 'slower game, slower typing');
 });
+
+// --- Looping clips run off their own clock ------------------------------------------
+
+test('idle keeps animating while the batch clock is frozen', () => {
+  // Between turns the playback clock stops: there is no script, so nothing advances
+  // timeMs. Driving idle from it left every character frozen mid-breath for as long as
+  // the player took to choose an action.
+  const frames = new Set();
+  for (const idleMs of [0, 200, 400, 600, 800, 1000]) {
+    frames.add(animationFor('m', {script: null, timeMs: 0, sheet: fullSheet, idleMs}).frame);
+  }
+  assert.ok(frames.size > 1, `idle never advanced: only frame ${[...frames]} appeared`);
+
+  // And without the clock it is still frozen, which is what the old behaviour was.
+  const frozen = new Set();
+  for (const t of [0, 0, 0]) {
+    frozen.add(animationFor('m', {script: null, timeMs: t, sheet: fullSheet}).frame);
+  }
+  assert.equal(frozen.size, 1, 'a frozen timeMs with no idle clock holds one frame');
+});
+
+test('the idle clock is continuous across the end of a batch', () => {
+  // The two clocks must not be swapped at the batch boundary: timeMs restarts at zero
+  // every batch, so handing idle over to it would pop the frame mid-loop.
+  const script = choreograph([ev('action_committed', {actorId: 'other', abilityId: 'swing'})], {});
+  const at = (s, timeMs, idleMs) =>
+    animationFor('m', {script: s, timeMs, sheet: fullSheet, idleMs}).frame;
+  // 'm' is not the actor, so it idles throughout, driven only by idleMs.
+  assert.equal(at(script, 100, 5000), at(null, 0, 5000),
+    'the same idle clock gives the same frame whether a batch is playing or not');
+  assert.equal(at(script, 0, 5000), at(script, 300, 5000),
+    'and the batch position does not affect an idling actor');
+});
+
+test('a beat-driven clip still uses the batch clock, not the idle clock', () => {
+  // Only loops move to the monotonic clock. An attack is fitted to its beat and must
+  // stay pinned to it, or it would drift out of sync with the hit it belongs to.
+  const script = choreograph([
+    ev('action_committed', {actorId: 'm', abilityId: 'swing'}),
+    ev('damage', {actorId: 'm', targetId: 'b', abilityId: 'swing', amount: 5, hpAfter: 95}),
+  ], {maxHp: {b: 100}});
+  const step = script.beats.find(b => b.kind === 'actor_step');
+  const info = {swing: {kind: 'physical'}};
+  const early = animationFor('m', {script, timeMs: step.at + 10, sheet: fullSheet,
+    abilityInfo: info, idleMs: 999_999});
+  const late = animationFor('m', {script, timeMs: step.at + step.duration - 10,
+    sheet: fullSheet, abilityInfo: info, idleMs: 999_999});
+  assert.equal(early.name, 'attack');
+  assert.equal(late.name, 'attack');
+  assert.ok(late.frame > early.frame, 'the attack advances with timeMs despite a fixed idleMs');
+});
+
+test('victory loops off the idle clock too', () => {
+  const frames = new Set();
+  for (const idleMs of [0, 200, 400, 600]) {
+    frames.add(animationFor('m', {script: null, timeMs: 0, sheet: fullSheet,
+      victorious: true, idleMs}).name === 'victory'
+      ? animationFor('m', {script: null, timeMs: 0, sheet: fullSheet,
+        victorious: true, idleMs}).frame
+      : -1);
+  }
+  assert.ok(!frames.has(-1), 'the victory clip is selected');
+  assert.ok(frames.size > 1, 'and it keeps looping between turns');
+});
+
+test('a downed actor stays down whatever the clocks say', () => {
+  // ko holds its final frame; a running idle clock must not restart it.
+  const a = animationFor('m', {script: null, timeMs: 0, sheet: fullSheet, down: true, idleMs: 0});
+  const b = animationFor('m', {script: null, timeMs: 0, sheet: fullSheet, down: true, idleMs: 99_999});
+  assert.equal(a.name, 'ko');
+  assert.deepEqual(a, b, 'the collapse does not animate once it has landed');
+});
