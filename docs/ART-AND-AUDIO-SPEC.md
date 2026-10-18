@@ -258,6 +258,22 @@ Set `behind: true` on a sheet to draw it under the actors instead of over them, 
 what a ground crack or an aura wants. Front effects draw over the actors but under the HUD,
 so a flare can never hide a damage number.
 
+### Value, not just hue
+
+The stage backdrop is `#0b0d16` and its ground band `#1b2033` — luminance 13 and 32 on a
+0-255 scale. A character has to sit clearly above that or it sinks into the floor, and at
+roughly 30px tall the silhouette is most of what survives.
+
+Measured median luminance of the sheets so far: Oracle 86, Brawler 88, Blademage 66,
+Warden 38. The Warden is a black panther, and 33% of its pixels are darker than the ground
+band it stands on, against 0-18% for the others. It reads, but only by its gold belt and
+bracers.
+
+So when briefing a dark character, ask for the value range explicitly: a lighter midtone
+for the body, or a rim light along the back and shoulders to separate it from the
+background. "Black panther" is a colour note; "a black panther lit from behind so its
+outline stays visible on a near-black floor" is a drawing instruction.
+
 ### The route that worked
 
 The Oracle sheet was produced by an image generator and packed mechanically, which is now a
