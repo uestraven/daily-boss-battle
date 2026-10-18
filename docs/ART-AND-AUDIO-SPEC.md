@@ -337,6 +337,14 @@ own first:
   often enough to be worth a flag rather than another round of art; the Blademage arrived
   facing left while the Oracle and Brawler did not.
 
+**Check the cell width against the character's widest pose.** One shared scale means the
+widest frame sizes every other frame, so a long weapon shrinks the whole character. The
+Lancer's Jump thrust is 220px against a 172px standing height; at the standard 48x40 its
+idle came out 26px tall where every other hero is 29-36, and it would have looked like a
+child beside the Magus. At 56x40 the scale becomes height-bound instead and the idle is
+29px, in line. 64 wide adds nothing, because 56 already reaches the height limit — so
+widen until the reported scale stops changing, then stop.
+
 **Boss sheets take six rows, not seven, and a cell wider than it is tall.** Bosses never
 reach `item` — they do not drink potions. And one shared scale means the *widest* pose sets
 the size of every frame: Storm Keeper's trident thrust is 245px against a 162px idle, so a
