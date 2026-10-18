@@ -2,7 +2,7 @@
  * can be asserted without a browser. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {STAGE, bossSlot, composeFrame, displayedValue, downAt, floatProgress, heroSlots,
+import {GROUND_OFFSET, STAGE, bossSlot, composeFrame, displayedValue, downAt, floatProgress, heroSlots,
   integerScale, shakeOffset, statusesAt, tintForRole} from '../dist/src/stage.js';
 import {choreograph} from '../dist/src/presentation.js';
 import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src/engine.js';
@@ -11,6 +11,7 @@ import {balancedParties} from '../dist/src/draft.js';
 import {validateSheet} from '../dist/src/animation.js';
 import {requiredEffects, validateEffectSheet} from '../dist/src/effects.js';
 import {existsSync, readFileSync} from 'node:fs';
+import {decodePng} from '../tools/png.mjs';
 
 /** The real shipped manifest, so these assertions fail on the actual art, not a fixture. */
 const manifest = JSON.parse(readFileSync(new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
@@ -790,4 +791,55 @@ test('badge order is stable, so it cannot flicker between frames', () => {
 test('with no script, the state is the only truth', () => {
   assert.deepEqual(statusesAt(null, 'x', 0, {poison: {expiresAt: 9}}), ['poison']);
   assert.deepEqual(statusesAt(null, 'x', 0, {}), []);
+});
+
+test('the whole cast stands on stage, in depth order, clear of the HUD', () => {
+  // GROUND_OFFSET moves everyone down to meet real arena floors, which is exactly the
+  // kind of change that can push the nearest hero off the bottom or the boss behind the
+  // health bar. These are the bounds it must not cross.
+  const manifest = JSON.parse(readFileSync(
+    new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
+  const slots = heroSlots(3);
+
+  // Feet strictly increase, so the stagger still reads front-to-back.
+  for (let i = 1; i < slots.length; i++) {
+    assert.ok(slots[i].y > slots[i - 1].y, 'each hero stands nearer than the last');
+  }
+
+  const heroHeight = Math.max(...Object.values(manifest.heroes).map(s => s.frameHeight));
+  const nearest = slots[slots.length - 1];
+  assert.ok(nearest.y <= STAGE.height, `nearest hero's feet at ${nearest.y} are off-stage`);
+  assert.ok(nearest.y - heroHeight >= 0, 'the tallest hero cell fits above its feet');
+
+  // The boss health bar occupies y 12..18, and the boss lifts up to 6px during its own
+  // attack step. Measured against where the art actually starts, not the cell: a boss cell
+  // is 96 tall but the figure sits on the baseline, so its first opaque row is far down
+  // the cell. Testing the cell rect reports an overlap that does not exist.
+  const bossHeight = Math.max(...Object.values(manifest.bosses).map(s => s.frameHeight));
+  for (const [id, sheet] of Object.entries(manifest.bosses)) {
+    if (sheet.frameHeight !== bossHeight) continue;
+    const img = decodePng(readFileSync(
+      new URL(`../web/public/battle-sprites/${sheet.file}`, import.meta.url)));
+    let firstInk = sheet.frameHeight;
+    for (let y = 0; y < sheet.frameHeight && firstInk === sheet.frameHeight; y++) {
+      for (let x = 0; x < sheet.frameWidth; x++) {
+        if (img.rgba[((y * img.width) + x) * 4 + 3] > 8) { firstInk = y; break; }
+      }
+    }
+    const topWhenStepping = bossSlot.y - sheet.frameHeight + firstInk - 6;
+    assert.ok(topWhenStepping > 18,
+      `${id} reaches y ${topWhenStepping} mid-step, overlapping the health bar`);
+  }
+
+  // A damage number spawns above the actor and rises 18px; off the top is never useful.
+  assert.ok(bossSlot.y - bossHeight - 4 - 18 >= 0,
+    'the boss damage number rises off the top of the stage');
+});
+
+test('the ground offset is a deliberate value, not drift', () => {
+  // Locked because it was chosen by compositing against real arena art. If a future
+  // layout change moves it, that should be a decision someone makes on purpose.
+  assert.equal(GROUND_OFFSET, 14);
+  assert.equal(bossSlot.y, 104 + GROUND_OFFSET);
+  assert.equal(heroSlots(1)[0].y, 96 + GROUND_OFFSET);
 });

@@ -29,12 +29,26 @@ export function integerScale(viewportWidth: number, viewportHeight: number): num
 
 export type Point = {x: number; y: number};
 
+/** How far down the whole cast sits, against the layout that was tuned on a flat stage.
+ *
+ * With a flat backdrop any foot line looked plausible, because there was no floor to
+ * disagree with. Real arena art has an actual ground plane, and against it the cast stood
+ * about this far above it — floating, with a band of empty floor beneath them.
+ *
+ * Chosen by compositing candidates against the Stormworks catwalk rather than by eye: +8
+ * was still visibly short, and +20 pushed the nearest hero into the foreground pipework.
+ *
+ * It also recovered the boss's damage numbers. Those spawn at `foot - spriteHeight - 4`
+ * and rise 18px, which previously put them at y=-14 — off the top of the stage and never
+ * seen. At this offset they peak at y=0 and stay on screen. */
+export const GROUND_OFFSET = 14;
+
 /** Hero formation: right-hand side, staggered so all three read as distinct.
  * Classic side-view arrangement — party right, enemy left. */
 export function heroSlots(count: number): Point[] {
   const slots: Point[] = [];
   const baseX = 232;
-  const baseY = 96;
+  const baseY = 96 + GROUND_OFFSET;
   for (let i = 0; i < count; i++) {
     slots.push({x: baseX + (i % 2 === 1 ? 20 : 0), y: baseY + i * 26});
   }
@@ -42,7 +56,7 @@ export function heroSlots(count: number): Point[] {
 }
 
 /** The boss anchors left of centre, high enough to loom over the party. */
-export const bossSlot: Point = {x: 92, y: 104};
+export const bossSlot: Point = {x: 92, y: 104 + GROUND_OFFSET};
 
 /** Matches the sheet frame sizes in docs/ART-AND-AUDIO-SPEC.md, so placeholder
  * silhouettes occupy exactly the space real sprites will and layout cannot shift when
