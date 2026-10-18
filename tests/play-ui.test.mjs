@@ -3,8 +3,9 @@ import {test} from 'node:test';
 import {readFileSync} from 'node:fs';
 import {advanceToDecision,createEncounter,previewAction,replay,starsForResult} from '../dist/src/engine.js';
 import {reference001} from '../dist/src/reference.js';
+import {buildEncounter} from '../dist/src/generate.js';
 import {tyrantVariant007} from '../dist/src/variant.js';
-import {abilityGroup,actionInput,availableActions,eligibleTargets,previewDisplay} from '../dist/src/play-ui.js';
+import {ABILITY_GROUPS,SUBMENU_GROUPS,abilityGroup,actionInput,availableActions,eligibleTargets,previewDisplay} from '../dist/src/play-ui.js';
 
 const start = def=>advanceToDecision(createEncounter(def),def);
 
@@ -63,8 +64,8 @@ test('approved no-items mastery gives three stars for both reference and candida
 test('command classification groups personal actions and universal commands consistently',()=>{
  assert.equal(abilityGroup(reference001.abilities.attack),'Attack');
  assert.equal(abilityGroup(reference001.abilities.defend),'Defend');
- assert.equal(abilityGroup(reference001.abilities.cover),'Special');
- assert.equal(abilityGroup(reference001.abilities.focus),'Special');
+ assert.equal(abilityGroup(reference001.abilities.cover),'Ability');
+ assert.equal(abilityGroup(reference001.abilities.focus),'Ability');
  assert.equal(abilityGroup(reference001.abilities.cure),'Magic');
  assert.equal(abilityGroup(reference001.abilities.potion),'Item');
 });
@@ -86,4 +87,57 @@ test('a Protect preview announces its conditional boss AI reaction before commit
   const display=previewDisplay(s,tyrantAI008,input,preview);
   assert.ok(display.lines.some(line=>line.includes('Boss reacts: Shatter Guard')));
   assert.equal(s.bossIntent.abilityId,'heavy_slash','forecast must be pure');
+});
+
+test('every ability lands in exactly one menu group, and the order is shared',()=>{
+ // The menu renders from ABILITY_GROUPS and availableActions sorts by it. Two copies of
+ // that order would eventually disagree, so this asserts there is one.
+ const def=buildEncounter('storm_keeper',['blademage','oracle','warden']);
+ for(const ability of Object.values(def.abilities)){
+  const g=abilityGroup(ability);
+  assert.ok(ABILITY_GROUPS.includes(g),`${ability.id} -> unknown group ${g}`);
+ }
+ const state=advanceToDecision(createEncounter(def),def).state;
+ for(const id of def.party){
+  const groups=availableActions(state,def,id).map(o=>ABILITY_GROUPS.indexOf(o.group));
+  for(let i=1;i<groups.length;i++)
+   assert.ok(groups[i]>=groups[i-1],`${id}: actions are not sorted by menu group`);
+ }
+});
+
+test('Attack and Defend stay single verbs; the rest open submenus',()=>{
+ // The two that resolve straight to targeting must never hold more than one action, or
+ // the menu would silently pick for the player.
+ const def=buildEncounter('storm_keeper',['blademage','oracle','warden']);
+ const state=advanceToDecision(createEncounter(def),def).state;
+ for(const id of def.party){
+  const by={};
+  for(const o of availableActions(state,def,id)) (by[o.group]??=[]).push(o.ability.id);
+  for(const direct of ['Attack','Defend'])
+   if(by[direct]) assert.equal(by[direct].length,1,`${direct} holds ${by[direct].join()}`);
+  for(const g of SUBMENU_GROUPS) assert.ok(!by[g]||by[g].length>=1);
+ }
+});
+
+test('items are Items, spells are Magic, and free actions are Abilities',()=>{
+ // The actual rule, which is not "every heal is Magic": a heal or buff is Magic only if
+ // it costs MP. Pray heals for free and belongs with the character's own tricks.
+ const def=buildEncounter('storm_keeper',['oracle','channeler','warden']);
+ for(const ability of Object.values(def.abilities)){
+  const g=abilityGroup(ability);
+  if(ability.kind==='item'){assert.equal(g,'Item',ability.id);continue;}
+  if(ability.id==='attack'||ability.id==='defend')continue; // their own verbs
+  if(['pray','elemental_edge'].includes(ability.id)){assert.equal(g,'Ability',ability.id);continue;}
+  if(ability.kind==='magical'){assert.equal(g,'Magic',ability.id);continue;}
+  if(['heal','status'].includes(ability.kind))
+   assert.equal(g,ability.mpCost?'Magic':'Ability',`${ability.id} costs ${ability.mpCost??0} MP`);
+ }
+ // Defend is its own verb rather than an Ability, alongside Attack. The engine models it
+ // as a status, so without the override it would have been filed under Magic.
+ assert.equal(abilityGroup(def.abilities.defend),'Defend');
+ assert.equal(abilityGroup(def.abilities.attack),'Attack');
+ // Free heals and buffs really do land under Ability, which is the surprising half.
+ assert.equal(abilityGroup(def.abilities.pray),'Ability');
+ assert.equal(abilityGroup(def.abilities.surge),'Ability');
+ assert.equal(abilityGroup(def.abilities.oracle_cure),'Magic');
 });

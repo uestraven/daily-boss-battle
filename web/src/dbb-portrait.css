@@ -126,6 +126,19 @@
 .dbb-targets .rpg-menu-item,
 .dbb-targets .rpg-menu-back { width: auto; min-width: 88px; justify-content: center; }
 .rpg-menu-back { background: linear-gradient(#444, #222); }
+/* Back out of a submenu. Styled like the back button rather than a command, so it does
+   not read as another thing the character can do. */
+.rpg-menu-item.is-back { background: linear-gradient(#444, #222); justify-content: flex-start; }
+/* A command the character cannot use this turn. Kept visible rather than hidden: the menu
+   shape stays the same turn to turn, which is what lets the player build muscle memory
+   for it, and a group vanishing mid-battle is more confusing than one greyed out. */
+.rpg-menu-item.is-unavailable {
+  opacity: 0.4;
+  cursor: default;
+  background: linear-gradient(#2a3a5c, #16233f);
+}
+/* The submenu count sits where a cost would, so the two columns stay aligned. */
+.rpg-menu-cost { font-variant-numeric: tabular-nums; }
 .rpg-menu-item:focus-visible,
 .rpg-menu-back:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 .rpg-menu-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }

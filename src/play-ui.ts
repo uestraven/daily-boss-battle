@@ -1,7 +1,15 @@
 import {calculateDamage, previewAction} from './engine.js';
 import type {Ability, ActorId, BattleInput, BattleState, EncounterDefinition, ActionPreview, BattleEvent} from './types.js';
 
-export type AbilityGroup = 'Attack' | 'Special' | 'Magic' | 'Item' | 'Defend';
+/** The battle menu's top level. Attack and Defend are single verbs and resolve straight
+ * to targeting; Ability, Magic and Item each open a submenu, always, so the menu keeps the
+ * same shape from turn to turn even when a group holds one entry. */
+export type AbilityGroup = 'Attack' | 'Ability' | 'Magic' | 'Item' | 'Defend';
+
+/** Root order, and the groups that open a submenu. */
+export const ABILITY_GROUPS: readonly AbilityGroup[] =
+  ['Attack', 'Ability', 'Magic', 'Item', 'Defend'];
+export const SUBMENU_GROUPS: readonly AbilityGroup[] = ['Ability', 'Magic', 'Item'];
 export type OfferedAction = {
   ability: Ability;
   group: AbilityGroup;
@@ -11,13 +19,26 @@ export type OfferedAction = {
   unavailableReason: string | null;
 };
 
+/** Ids that are magical by kind but belong under Ability anyway.
+ *
+ * `pray` is a free heal, and the rule below already sends free actions to Ability -- it is
+ * listed for clarity rather than effect. `elemental_edge` is the real exception: it costs
+ * MP but is a weapon enchant, which reads as the Blademage's trick rather than a spell. */
+const ABILITY_OVERRIDES = ['pray', 'elemental_edge'];
+
+/** Which top-level command an ability sits under.
+ *
+ * The rule, stated once: items are Items, anything `magical` is Magic, and a heal or
+ * status is Magic only if it costs MP. A free heal or buff is a character's own trick, not
+ * a spell, which is why Pray and Surge sit under Ability next to Volley. Attack and Defend
+ * are their own verbs. */
 export function abilityGroup(ability: Ability): AbilityGroup {
   if (ability.id === 'attack') return 'Attack';
   if (ability.id === 'defend') return 'Defend';
-  if (['pray','elemental_edge'].includes(ability.id)) return 'Special';
+  if (ABILITY_OVERRIDES.includes(ability.id)) return 'Ability';
   if (ability.kind === 'item') return 'Item';
   if (['magical', 'heal'].includes(ability.kind) || (ability.kind === 'status' && ability.mpCost)) return 'Magic';
-  return 'Special';
+  return 'Ability';
 }
 export function eligibleTargets(state: BattleState, actorId: ActorId, ability: Ability): ActorId[] {
   const actor = state.actors[actorId];
@@ -54,8 +75,9 @@ export function availableActions(state: BattleState, def: EncounterDefinition, h
     }
     result.push({ability, group: abilityGroup(ability), choices, targetIds: input.targetIds, enabled: reason === null, unavailableReason: reason});
   }
-  const order: AbilityGroup[] = ['Attack', 'Special', 'Magic', 'Item', 'Defend'];
-  return result.sort((a,b) => order.indexOf(a.group) - order.indexOf(b.group));
+  // Sorted by the same constant the menu renders from, so the two cannot disagree.
+  return result.sort((a, b) =>
+    ABILITY_GROUPS.indexOf(a.group) - ABILITY_GROUPS.indexOf(b.group));
 }
 export type PreviewDisplay = {lines: string[]; targetNames: string[]; approximate: boolean};
 export function previewDisplay(state: BattleState, def: EncounterDefinition, input: BattleInput, preview: ActionPreview): PreviewDisplay {

@@ -12,7 +12,7 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {BattleStage} from './BattleStage.js';
 import {advanceToDecision, applyPlayerAction, calculateDamage, createEncounter,
   nextBossCountdown, previewAction, starsForResult} from '../../dist/src/engine.js';
-import {availableActions, eligibleTargets, previewDisplay, actionInput} from '../../dist/src/play-ui.js';
+import {ABILITY_GROUPS, SUBMENU_GROUPS, availableActions, eligibleTargets, previewDisplay, actionInput} from '../../dist/src/play-ui.js';
 import {choreograph} from '../../dist/src/presentation.js';
 import {displayedValue, downAt, statusesAt} from '../../dist/src/stage.js';
 import {poolCatalog, selectDaily, targetTierFor, validatePool} from '../../dist/src/pool.js';
@@ -33,7 +33,10 @@ import {STATUS_DISPLAY, visibleStatuses} from './status-display.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {ActorId, BattleMode, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
 import type {DailyCatalog, DailyLedger} from '../../src/daily.js';
-import type {OfferedAction} from '../../src/play-ui.js';
+import type {AbilityGroup, OfferedAction} from '../../src/play-ui.js';
+
+/** An offered action plus the NO EFFECT flag the screen computes for it. */
+type MenuOption = OfferedAction & {noEffect: boolean};
 import type {VerifiedPool} from '../../src/pool.js';
 import poolData from '../../dist-content/verified-pool.json';
 
@@ -170,6 +173,9 @@ function Battle({def, catalog, tier, day}:
   const [script, setScript] = useState<BeatScript | null>(null);
   const [phase, setPhase] = useState<Phase>({kind: 'choosing'});
   const [selected, setSelected] = useState<OfferedAction | null>(null);
+  /** Which submenu is open, or null at the root. Reset whenever the turn passes, so a new
+   * character always starts at the top of its own menu. */
+  const [openGroup, setOpenGroup] = useState<AbilityGroup | null>(null);
   const [log, setLog] = useState<string[]>([]);
   /** Playback position for the current batch. Shared by the canvas and the DOM meters,
    * so a health bar can never disagree with the stage about how far a tween has run. */
@@ -436,6 +442,23 @@ function Battle({def, catalog, tier, day}:
       return {...option, noEffect};
     });
   }, [state, def, actorId, reveals]);
+  /** Offered actions bucketed by menu group, preserving the order availableActions gave
+   * them. A group with nothing in it is simply absent, so the Brawler never sees a Magic
+   * command it cannot use. */
+  const grouped = useMemo(() => {
+    const by = new Map<AbilityGroup, MenuOption[]>();
+    for (const option of offered) {
+      const list = by.get(option.group);
+      if (list) list.push(option);
+      else by.set(option.group, [option]);
+    }
+    return by;
+  }, [offered]);
+
+  // A new character gets its own menu from the top; leaving a stale submenu open would
+  // show one hero's spells under another's name.
+  useEffect(() => { setOpenGroup(null); }, [actorId]);
+
   const targets = useMemo(
     () => (selected && actorId ? eligibleTargets(state, actorId, selected.ability) : []),
     [selected, actorId, state],
@@ -659,14 +682,47 @@ function Battle({def, catalog, tier, day}:
           </div>
         )}
 
-        {!showResult && phase.kind === 'choosing' && actorId && !selected && (
+        {!showResult && phase.kind === 'choosing' && actorId && !selected && !openGroup && (
           <>
             <div className="dbb-prompt">{names[actorId]}</div>
             <ul className="rpg-menu-list">
-              {offered.map(option => (
+              {ABILITY_GROUPS.filter(group => grouped.has(group)).map(group => {
+                const options = grouped.get(group)!;
+                const opensSubmenu = SUBMENU_GROUPS.includes(group);
+                // Attack and Defend are single verbs: no submenu, straight to targeting.
+                const only = opensSubmenu ? null : options[0]!;
+                const usable = options.some(option => option.enabled);
+                return (
+                  <li key={group}>
+                    <button
+                      className={`rpg-menu-item${usable ? '' : ' is-unavailable'}`}
+                      disabled={!usable}
+                      onClick={() => (only ? setSelected(only) : setOpenGroup(group))}
+                    >
+                      <span>{group}</span>
+                      <span className="rpg-menu-cost">
+                        {opensSubmenu
+                          ? `${options.filter(o => o.enabled).length} ▸`
+                          : only && only.ability.mpCost ? `${only.ability.mpCost} MP` : ''}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
+
+        {!showResult && phase.kind === 'choosing' && actorId && !selected && openGroup && (
+          <>
+            <div className="dbb-prompt">{names[actorId]} · {openGroup}</div>
+            <ul className="rpg-menu-list">
+              {(grouped.get(openGroup) ?? []).map(option => (
                 <li key={option.ability.id}>
                   <button
-                    className={`rpg-menu-item${option.noEffect ? ' is-no-effect' : ''}`}
+                    className={`rpg-menu-item${option.noEffect ? ' is-no-effect' : ''}` +
+                      `${option.enabled ? '' : ' is-unavailable'}`}
+                    disabled={!option.enabled}
                     onClick={() => setSelected(option)}
                   >
                     <span>{option.ability.name}</span>
@@ -678,6 +734,11 @@ function Battle({def, catalog, tier, day}:
                   </button>
                 </li>
               ))}
+              <li>
+                <button className="rpg-menu-item is-back" onClick={() => setOpenGroup(null)}>
+                  <span>◂ Back</span>
+                </button>
+              </li>
             </ul>
           </>
         )}

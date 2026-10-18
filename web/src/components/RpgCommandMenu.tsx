@@ -3,7 +3,7 @@ import type { KeyboardEvent } from 'react';
 import type { AbilityGroup, OfferedAction } from '../../../src/play-ui.js';
 import type { ActorId, BattleState } from '../../../src/types.js';
 
-const groups: AbilityGroup[] = ['Attack', 'Special', 'Magic', 'Item', 'Defend'];
+const groups: AbilityGroup[] = ['Attack', 'Ability', 'Magic', 'Item', 'Defend'];
 
 type Props = {
   actorId: ActorId;
