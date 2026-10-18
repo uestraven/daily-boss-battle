@@ -274,12 +274,48 @@ export function composeFrame(input: ComposeInput): Frame {
     if (!hit) return 0;
     return 1 - Math.min(1, Math.max(0, (timeMs - hit.at) / Math.max(1, hit.duration)));
   };
-  /** A stepping actor leans toward its target. */
+  /** How far an acting actor leans toward its target, in stage pixels. */
+  const STEP_DISTANCE = 6;
+  /** How long it takes to settle back after the last hit lands. */
+  const STEP_RETURN_MS = 260;
+
+  /** A stepping actor leans toward its target, strikes while extended, then settles back.
+   *
+   * Driven from the whole script rather than the currently active beats, which is the
+   * correction. The `actor_step` beat ends *before* the impact it leads into, so reading
+   * only active beats made the lean a self-contained out-and-back that was over by the
+   * time the blow landed -- the character lunged at nothing and then hit from standing.
+   *
+   * Now the extension reaches full by the first strike, holds through every hit of a
+   * multi-hit ability, and eases home afterwards. An action with no impact at all -- a
+   * heal, a buff -- keeps the old out-and-back over its step beat, since there is no
+   * moment of contact to hold for. */
   const stepFor = (actorId: ActorId): number => {
-    const step = active.find(b => b.kind === 'actor_step' && b.actorId === actorId);
+    if (!script) return 0;
+    const step = script.beats.find(b => b.kind === 'actor_step' && b.actorId === actorId);
     if (!step) return 0;
-    const progress = Math.min(1, Math.max(0, (timeMs - step.at) / Math.max(1, step.duration)));
-    return Math.round(6 * Math.sin(progress * Math.PI));
+    const strikes = script.beats.filter(b => b.kind === 'impact' && b.actorId === actorId);
+
+    const start = step.at;
+    // The *first* strike, not the last: a four-hit volley should be fully extended when
+    // the first blow lands and stay there, rather than still leaning in on the fourth.
+    const extended = strikes.length
+      ? Math.min(...strikes.map(b => b.at))
+      : start + step.duration / 2;
+    const holdUntil = strikes.length
+      ? Math.max(...strikes.map(b => b.at + b.duration))
+      : extended;
+    const home = holdUntil + STEP_RETURN_MS;
+
+    if (timeMs <= start || timeMs >= home) return 0;
+    // Eased at both ends so the lean accelerates out and decelerates back, rather than
+    // sliding at a constant rate.
+    const lean = timeMs < extended
+      ? Math.sin((Math.min(1, (timeMs - start) / Math.max(1, extended - start)) * Math.PI) / 2)
+      : timeMs <= holdUntil
+        ? 1
+        : Math.cos((Math.min(1, (timeMs - holdUntil) / STEP_RETURN_MS) * Math.PI) / 2);
+    return Math.round(STEP_DISTANCE * lean);
   };
 
   /** Down according to playback, not according to the final state. */

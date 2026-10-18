@@ -2,8 +2,9 @@
  * can be asserted without a browser. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {GROUND_OFFSET, STAGE, bossSlot, composeFrame, displayedValue, downAt, floatProgress, heroSlots,
-  integerScale, shakeOffset, statusesAt, tintForRole} from '../dist/src/stage.js';
+import {GROUND_OFFSET, SPRITE, STAGE, bossSlot, composeFrame, displayedValue, downAt,
+  floatProgress, heroSlots, integerScale, shakeOffset, statusesAt,
+  tintForRole} from '../dist/src/stage.js';
 import {choreograph} from '../dist/src/presentation.js';
 import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src/engine.js';
 import {bossIds, buildEncounter} from '../dist/src/generate.js';
@@ -908,4 +909,86 @@ test('a hit that lands for nothing says so instead of showing a zero', () => {
   const realText = composeFrame({state, script: real, timeMs: realNumber.at + 5}).commands
     .filter(c => c.kind === 'text').map(c => c.text);
   assert.ok(realText.includes('42'), `expected 42, got ${JSON.stringify(realText)}`);
+});
+
+// --- Stepping in to strike -----------------------------------------------------------
+
+/** How far an actor leans from its slot, in pixels toward the enemy. */
+const leanOf = (state, script, actorId, timeMs) => {
+  const slot = heroSlots(3)[state.party.indexOf(actorId)];
+  const sprite = composeFrame({state, script, timeMs}).commands
+    .find(c => c.kind === 'sprite' && c.actorId === actorId);
+  return (slot.x - Math.floor(SPRITE.hero.width / 2)) - sprite.x;
+};
+
+test('an attacker is still extended when its blow lands', () => {
+  // The defect: stepFor read only the currently active beats, and the actor_step beat
+  // ends before the impact it leads into. So the lean was a self-contained out-and-back
+  // that finished first, and the character struck from a standing position having lunged
+  // at nothing a moment earlier.
+  const state = freshState();
+  const hero = state.party[0];
+  const script = choreograph([
+    ev('action_committed', {actorId: hero, abilityId: 'attack'}),
+    ev('damage', {actorId: hero, targetId: state.bossId, abilityId: 'attack',
+      amount: 50, hpAfter: 950}),
+  ], {maxHp: {[state.bossId]: 1000}});
+  const step = script.beats.find(b => b.kind === 'actor_step');
+  const impact = script.beats.find(b => b.kind === 'impact');
+  assert.ok(impact.at >= step.at + step.duration,
+    'this test only means something while the impact follows the step beat');
+
+  assert.equal(leanOf(state, script, hero, step.at), 0, 'starts at home');
+  const atStrike = leanOf(state, script, hero, impact.at);
+  assert.ok(atStrike > 0, 'the attacker must not strike from a standing position');
+  assert.equal(atStrike, leanOf(state, script, hero, step.at + step.duration / 2 + 160),
+    'and is at full extension, not partway through returning');
+  // Settles back afterwards rather than staying out.
+  assert.equal(leanOf(state, script, hero, script.totalMs), 0, 'returns home');
+});
+
+test('a multi-hit ability is extended by its first hit, not its last', () => {
+  const state = freshState();
+  const hero = state.party[0];
+  const events = [ev('action_committed', {actorId: hero, abilityId: 'volley'})];
+  for (let i = 0; i < 4; i++) {
+    events.push(ev('damage', {actorId: hero, targetId: state.bossId, abilityId: 'volley',
+      amount: 40, hpAfter: 1000 - 40 * (i + 1)}));
+  }
+  const script = choreograph(events, {maxHp: {[state.bossId]: 1000}});
+  const impacts = script.beats.filter(b => b.kind === 'impact').sort((a, b) => a.at - b.at);
+  assert.equal(impacts.length, 4);
+  const leans = impacts.map(b => leanOf(state, script, hero, b.at));
+  assert.ok(leans.every(l => l === leans[0]),
+    `lean should hold across all four hits, got ${JSON.stringify(leans)}`);
+  assert.ok(leans[0] > 0, 'and be extended throughout');
+  assert.equal(leanOf(state, script, hero, script.totalMs), 0, 'then settle back');
+});
+
+test('an action with nothing to strike still leans out and back', () => {
+  // A heal or a buff has no impact beat, so there is no contact to hold for. It keeps the
+  // original out-and-back over its own step beat rather than hanging extended.
+  const state = freshState();
+  const hero = state.party[0];
+  const script = choreograph([
+    ev('action_committed', {actorId: hero, abilityId: 'cure'}),
+    ev('heal', {actorId: hero, targetId: hero, amount: 50, hpAfter: 300}),
+  ], {});
+  const step = script.beats.find(b => b.kind === 'actor_step');
+  assert.equal(leanOf(state, script, hero, step.at), 0);
+  assert.ok(leanOf(state, script, hero, step.at + step.duration / 2) > 0, 'leans out');
+  assert.equal(leanOf(state, script, hero, step.at + step.duration), 0, 'and back');
+});
+
+test('only the acting character moves', () => {
+  const state = freshState();
+  const [actor, bystander] = state.party;
+  const script = choreograph([
+    ev('action_committed', {actorId: actor, abilityId: 'attack'}),
+    ev('damage', {actorId: actor, targetId: state.bossId, abilityId: 'attack',
+      amount: 50, hpAfter: 950}),
+  ], {maxHp: {[state.bossId]: 1000}});
+  const impact = script.beats.find(b => b.kind === 'impact');
+  assert.ok(leanOf(state, script, actor, impact.at) > 0);
+  assert.equal(leanOf(state, script, bystander, impact.at), 0, 'bystanders hold position');
 });
