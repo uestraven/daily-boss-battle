@@ -61,6 +61,6 @@ export const bundledBackgroundUrl = (id:BackgroundId,base:string) => `${base}bat
  * and leaves the flat backdrop in place rather than flashing an empty frame. Drop the art
  * in, add the id here, and run `npm run art:check` -- it fails when this list and the
  * directory disagree, so it cannot drift. Same arrangement as effect art. */
-export const shippedBackgrounds: readonly BackgroundId[] = ['clockwork_emperor'];
+export const shippedBackgrounds: readonly BackgroundId[] = ['clockwork_emperor','storm_keeper'];
 
 export const hasBackgroundArt = (id:BackgroundId):boolean => shippedBackgrounds.includes(id);
