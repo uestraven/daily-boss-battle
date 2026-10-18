@@ -384,6 +384,22 @@ export function composeFrame(input: ComposeInput): Frame {
     });
   }
 
+  // --- battle messages ---
+  // Every outcome that is not damage announces itself through a message beat: a fizzle
+  // says "No effect", a Nullifier says it swallowed the spell, an interrupt says it broke
+  // the cast. None of it was drawn, so an action that did nothing looked identical to one
+  // that was never taken -- which is the whole feedback for a wasted turn.
+  //
+  // Centred under the health bar rather than floating on the actor: the text is a
+  // sentence, and at 320px wide there is nowhere near an actor to put one.
+  for (const beat of active) {
+    if (beat.kind !== 'message' || !beat.text) continue;
+    commands.push({
+      kind: 'text', x: Math.round(STAGE.width / 2), y: 32, align: 'center',
+      text: beat.text, palette: 'warning',
+    });
+  }
+
   // --- floating numbers ---
   for (const beat of active) {
     if (beat.kind !== 'damage_number' && beat.kind !== 'heal_number') continue;
@@ -392,8 +408,15 @@ export function composeFrame(input: ComposeInput): Frame {
     const height = beat.targetId === state.bossId ? SPRITE.boss.height : SPRITE.hero.height;
     commands.push({
       kind: 'text', x: anchor.x, y: anchor.y - height - 4 - rise, align: 'center',
-      text: beat.kind === 'heal_number' ? `+${beat.amount ?? 0}` : `${beat.amount ?? 0}`,
-      palette: beat.kind === 'heal_number' ? 'heal' : 'damage',
+      // Zero damage is an outcome, not a number: an immune element or a hit absorbed
+      // entirely. "0" floating off a boss reads as a glitch, where "NO EFFECT" reads as
+      // information -- and in Normal mode, where affinities are hidden, it is the only
+      // way the player ever learns an element does nothing here.
+      text: beat.kind === 'heal_number'
+        ? `+${beat.amount ?? 0}`
+        : (beat.amount ?? 0) === 0 ? 'NO EFFECT' : `${beat.amount}`,
+      palette: beat.kind === 'heal_number' ? 'heal'
+        : (beat.amount ?? 0) === 0 ? 'warning' : 'damage',
     });
   }
 

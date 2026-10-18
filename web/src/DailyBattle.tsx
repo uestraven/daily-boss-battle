@@ -404,11 +404,35 @@ function Battle({def, catalog, tier, day}:
     }
     setSelected(null);
     setPhase({kind: 'playing'});
+    // Outcomes that are not damage were absent from the log entirely, so a turn that
+    // achieved nothing left no record of having happened. A fizzle, an absorbed spell and
+    // a blocked hit are exactly the results a player needs to read back.
+    const who = (id: string | undefined) => names[id ?? ''] ?? 'Someone';
     setLog(previous => [
-      ...batch.filter(e => e.type === 'damage' || e.type === 'heal' || e.type === 'ko')
-        .map(e => e.type === 'ko'
-          ? `${names[e.actorId ?? ''] ?? 'Someone'} is down`
-          : `${names[e.actorId ?? ''] ?? ''} → ${names[e.targetId ?? ''] ?? ''}: ${e.type === 'heal' ? '+' : '−'}${e.amount}`),
+      ...batch.flatMap(event => {
+        switch (event.type) {
+          case 'damage':
+            return [event.amount === 0
+              ? `${who(event.actorId)} → ${who(event.targetId)}: no effect`
+              : `${who(event.actorId)} → ${who(event.targetId)}: −${event.amount}`];
+          case 'heal':
+            return [`${who(event.actorId)} → ${who(event.targetId)}: +${event.amount}`];
+          case 'ko':
+            return [`${who(event.actorId)} is down`];
+          case 'fizzle':
+            return [`${who(event.actorId)}: no effect`];
+          case 'nullify_absorb':
+            return [`${who(event.actorId)} absorbs the spell (+${event.amount} MP)`];
+          case 'boss_interrupted':
+            return [`${who(event.actorId)} interrupts ${who(event.targetId)}`];
+          case 'steal_success':
+            return [`${who(event.actorId)} steals from ${who(event.targetId)}`];
+          case 'revived':
+            return [`${who(event.targetId)} is back up`];
+          default:
+            return [];
+        }
+      }),
       ...previous,
     ].slice(0, 24));
   }, [state, ledger, day, catalog, def, replay, names, maxHp, abilityNames]);

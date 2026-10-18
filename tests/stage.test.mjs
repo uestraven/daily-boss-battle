@@ -843,3 +843,69 @@ test('the ground offset is a deliberate value, not drift', () => {
   assert.equal(bossSlot.y, 104 + GROUND_OFFSET);
   assert.equal(heroSlots(1)[0].y, 96 + GROUND_OFFSET);
 });
+
+// --- Announcing outcomes that are not damage ----------------------------------------
+
+test('a fizzle is announced on screen', () => {
+  // The engine has no miss mechanic at all -- it is fully deterministic -- but it does
+  // have fizzles: an action that resolved and achieved nothing. choreograph has always
+  // produced a "No effect" message beat for one, and nothing drew it, so a wasted turn
+  // looked exactly like a turn that was never taken.
+  const state = freshState();
+  const script = choreograph([
+    ev('action_committed', {actorId: state.party[0], abilityId: 'dispel'}),
+    ev('fizzle', {actorId: state.party[0], abilityId: 'dispel'}),
+  ], {});
+  const message = script.beats.find(b => b.kind === 'message');
+  assert.ok(message, 'a fizzle produces a message beat');
+  assert.equal(message.text, 'No effect');
+
+  const texts = composeFrame({state, script, timeMs: message.at + 10}).commands
+    .filter(c => c.kind === 'text').map(c => c.text);
+  assert.ok(texts.includes('No effect'), `message not drawn; got ${JSON.stringify(texts)}`);
+
+  // And it is gone once the beat ends, rather than sticking on screen.
+  const after = composeFrame({state, script, timeMs: message.at + message.duration + 1})
+    .commands.filter(c => c.kind === 'text').map(c => c.text);
+  assert.ok(!after.includes('No effect'), 'the message outlives its beat');
+});
+
+test('every message beat reaches the screen, not just fizzles', () => {
+  // Nullify, interrupt and the phase announcement all ride the same beat kind.
+  const state = freshState();
+  for (const event of [
+    ev('nullify_absorb', {actorId: state.party[0], amount: 8}),
+    ev('boss_interrupted', {actorId: state.party[0], targetId: state.bossId}),
+  ]) {
+    const script = choreograph([event], {names: {[state.party[0]]: 'Ally'}});
+    const message = script.beats.find(b => b.kind === 'message');
+    if (!message) continue;
+    const texts = composeFrame({state, script, timeMs: message.at + 5}).commands
+      .filter(c => c.kind === 'text').map(c => c.text);
+    assert.ok(texts.includes(message.text), `${event.type} message not drawn`);
+  }
+});
+
+test('a hit that lands for nothing says so instead of showing a zero', () => {
+  // An immune element or a fully absorbed hit still emits a damage event, with amount 0.
+  // "0" floating off a boss reads as a glitch; in Normal mode, where affinities are
+  // hidden, this label is the only way a player learns an element does nothing here.
+  const state = freshState();
+  const blocked = choreograph([
+    ev('damage', {actorId: state.party[0], targetId: state.bossId, amount: 0, hpAfter: 1000}),
+  ], {maxHp: {[state.bossId]: 1000}});
+  const number = blocked.beats.find(b => b.kind === 'damage_number');
+  const drawn = composeFrame({state, script: blocked, timeMs: number.at + 5}).commands
+    .find(c => c.kind === 'text' && c.text === 'NO EFFECT');
+  assert.ok(drawn, 'a zero-damage hit should be labelled');
+  assert.equal(drawn.palette, 'warning', 'and not coloured as damage');
+
+  // A real hit is unaffected.
+  const real = choreograph([
+    ev('damage', {actorId: state.party[0], targetId: state.bossId, amount: 42, hpAfter: 958}),
+  ], {maxHp: {[state.bossId]: 1000}});
+  const realNumber = real.beats.find(b => b.kind === 'damage_number');
+  const realText = composeFrame({state, script: real, timeMs: realNumber.at + 5}).commands
+    .filter(c => c.kind === 'text').map(c => c.text);
+  assert.ok(realText.includes('42'), `expected 42, got ${JSON.stringify(realText)}`);
+});
