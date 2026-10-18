@@ -276,7 +276,16 @@ thing it is good at and fix the geometry afterwards:
 3. Lint it: `npm run art:lint -- <dest> --frame 48x40 --rows idle:8,attack:8,...`.
 
 The packer refuses rather than guesses if the figure count is not rows × columns, because a
-silent miscount would scramble the animations into each other.
+silent miscount would scramble the animations into each other. Two things it will fix on its
+own first:
+
+- **A thrust whose weapon tip touches the next frame** merges two figures into one
+  component. It cuts at the narrowest column inside the component, which is the bridge, and
+  only when a component is far wider than the median and the seam carries little ink — so a
+  legitimately wide pose is never halved. Reported when it happens.
+- **`--flip-x`** mirrors a sheet authored facing left. Generators get the facing wrong
+  often enough to be worth a flag rather than another round of art; the Blademage arrived
+  facing left while the Oracle and Brawler did not.
 
 **Boss sheets take six rows, not seven, and a cell wider than it is tall.** Bosses never
 reach `item` — they do not drink potions. And one shared scale means the *widest* pose sets

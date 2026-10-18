@@ -55,7 +55,28 @@ const minPixels = Number(flag('min-pixels', '400'));
 const tolerance = Number(flag('tolerance', '180'));
 
 const img = decodePng(readFileSync(input));
-const {width: W, height: H, rgba} = img;
+const {width: W, height: H} = img;
+
+/** `--flip-x` mirrors the source before anything else looks at it.
+ *
+ * Sheets must be authored facing right; the renderer mirrors heroes, who face the boss on
+ * their left. A generator told to face right will sometimes face left anyway -- it did on
+ * the Blademage -- and the result renders facing away from its opponent. Flipping here
+ * keeps the fix in one deterministic place instead of asking for the art again, and doing
+ * it up front means the component finder, the bounding boxes and the resampler all see
+ * the corrected image. */
+const flipX = args.includes('--flip-x');
+const rgba = flipX ? (() => {
+  const out = Buffer.alloc(img.rgba.length);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const from = (y * W + (W - 1 - x)) * 4;
+      const to = (y * W + x) * 4;
+      img.rgba.copy(out, to, from, from + 4);
+    }
+  }
+  return out;
+})() : img.rgba;
 
 const isKey = i => {
   const d = Math.abs(rgba[i * 4] - keyRgb[0]) + Math.abs(rgba[i * 4 + 1] - keyRgb[1])
@@ -97,9 +118,98 @@ for (let seed = 0; seed < W * H; seed++) {
   comps.push({id, n, minx, maxx, miny, maxy, w: maxx - minx + 1, h: maxy - miny + 1});
 }
 
-const figures = comps.filter(c => c.n >= minPixels);
+let figures = comps.filter(c => c.n >= minPixels);
+
+/** Splits a component that is really two frames touching.
+ *
+ * The most likely merge by far is a thrust whose weapon tip reaches into the next cell: a
+ * long sword or trident bridges two figures through a few pixels. Refusing is correct when
+ * the sheet is genuinely ambiguous, but here the fix is unambiguous -- cut at the narrowest
+ * column inside the component, which is the bridge itself.
+ *
+ * Only attempted on components far wider than the median, and only at a column carrying a
+ * small fraction of the typical ink, so a legitimately wide pose is never cut in half.
+ * Each half keeps whatever pixels fall in its own box, so a sword tip may stay at the edge
+ * of a neighbour's cell; that is invisible at final size and better than losing the frame. */
+const splitMerged = (list, expected) => {
+  const widths = [...list.map(c => c.w)].sort((a, b) => a - b);
+  const medianW = widths[Math.floor(widths.length / 2)] ?? 0;
+  const out = [];
+  let splits = 0;
+  // Only split while components are actually missing, so a wide-but-whole pose is safe.
+  let need = expected - list.length;
+  for (const c of list) {
+    if (need > 0 && c.w > medianW * 1.5) {
+      // Per-column ink for this component only, so a neighbour cannot hide the seam.
+      const cols = new Array(c.w).fill(0);
+      for (let y = c.miny; y <= c.maxy; y++) {
+        for (let x = c.minx; x <= c.maxx; x++) {
+          if (label[y * W + x] === c.id) cols[x - c.minx]++;
+        }
+      }
+      const lo = Math.floor(c.w * 0.25), hi = Math.ceil(c.w * 0.75);
+      let seam = -1, seamInk = Infinity;
+      for (let i = lo; i < hi; i++) if (cols[i] < seamInk) { seamInk = cols[i]; seam = i; }
+      const typical = cols.reduce((a, b) => a + b, 0) / c.w;
+      if (seam >= 0 && seamInk <= typical * 0.2) {
+        const halves = [[c.minx, c.minx + seam], [c.minx + seam + 1, c.maxx]].map(([x0, x1]) => {
+          // Cutting the bridge orphans whatever crossed it -- typically the tip of the
+          // neighbour's weapon, which would otherwise float at the edge of this cell as a
+          // stray nub. Re-label within the half and keep only the largest piece, which is
+          // the figure; the orphan is dropped the same way debris is.
+          const seen = new Set();
+          let best = null;
+          for (let sy = c.miny; sy <= c.maxy; sy++) {
+            for (let sx = x0; sx <= x1; sx++) {
+              const start = sy * W + sx;
+              if (label[start] !== c.id || seen.has(start)) continue;
+              let sp = 0;
+              stack[sp++] = start;
+              seen.add(start);
+              let mnx = W, mxx = -1, mny = H, mxy = -1, n = 0;
+              while (sp > 0) {
+                const q = stack[--sp];
+                const qx = q % W, qy = (q - qx) / W;
+                n++;
+                if (qx < mnx) mnx = qx;
+                if (qx > mxx) mxx = qx;
+                if (qy < mny) mny = qy;
+                if (qy > mxy) mxy = qy;
+                for (let dy = -1; dy <= 1; dy++) {
+                  for (let dx = -1; dx <= 1; dx++) {
+                    if (!dx && !dy) continue;
+                    const nx = qx + dx, ny = qy + dy;
+                    if (nx < x0 || nx > x1 || ny < c.miny || ny > c.maxy) continue;
+                    const r = ny * W + nx;
+                    if (label[r] === c.id && !seen.has(r)) { seen.add(r); stack[sp++] = r; }
+                  }
+                }
+              }
+              if (!best || n > best.n) {
+                best = {id: c.id, n, minx: mnx, maxx: mxx, miny: mny, maxy: mxy,
+                  w: mxx - mnx + 1, h: mxy - mny + 1};
+              }
+            }
+          }
+          return best;
+        }).filter(h => h && h.n >= minPixels);
+        if (halves.length === 2) {
+          out.push(...halves);
+          splits++;
+          need--;
+          console.log(`  split         a ${c.w}px component into ${halves[0].w}px and ` +
+            `${halves[1].w}px at a ${seamInk}px seam (two frames were touching)`);
+          continue;
+        }
+      }
+    }
+    out.push(c);
+  }
+  return splits ? out : list;
+};
+if (figures.length < cols * rows) figures = splitMerged(figures, cols * rows);
 console.log(`\n${input}`);
-console.log(`  source        ${W}x${H}`);
+console.log(`  source        ${W}x${H}${flipX ? '  (mirrored by --flip-x)' : ''}`);
 console.log(`  figures found ${figures.length} (expected ${cols * rows})`);
 if (figures.length !== cols * rows) {
   console.error(`\n  PROBLEM  found ${figures.length} figures, not ${cols * rows}.`);
@@ -143,17 +253,21 @@ console.log(`  largest figure ${maxW}x${maxH} -> scale ${scale.toFixed(4)} ` +
 const outW = cols * cellW, outH = rows * cellH;
 const dest = Buffer.alloc(outW * outH * 4);
 
-/** Area-average a source rectangle down to one destination pixel, ignoring keyed pixels
- * so the figure's colour is never averaged with the background it sat on. Premultiplying
- * by coverage is what keeps edges from darkening toward the key colour. */
-const sampleBox = (x0, y0, x1, y1) => {
+/** Area-average a source rectangle down to one destination pixel.
+ *
+ * Restricted to the figure's own connected component, not merely to non-key pixels. A wide
+ * pose has a wide bounding box, and a neighbour's weapon tip can fall inside it -- sampling
+ * the whole mask drew those strays as detached fragments at the edge of the cell. Keying on
+ * the label means a frame can only ever draw its own figure, which also discards whatever
+ * was orphaned by a split. */
+const sampleBox = (x0, y0, x1, y1, id) => {
   let r = 0, g = 0, b = 0, hits = 0, total = 0;
   for (let y = Math.floor(y0); y < Math.ceil(y1); y++) {
     for (let x = Math.floor(x0); x < Math.ceil(x1); x++) {
       if (x < 0 || y < 0 || x >= W || y >= H) continue;
       total++;
       const i = y * W + x;
-      if (!mask[i]) continue;
+      if (label[i] !== id) continue;
       r += rgba[i * 4]; g += rgba[i * 4 + 1]; b += rgba[i * 4 + 2];
       hits++;
     }
@@ -178,7 +292,7 @@ for (let r = 0; r < rows; r++) {
       for (let dx = 0; dx < dw; dx++) {
         const sx0 = f.minx + (dx / dw) * f.w, sx1 = f.minx + ((dx + 1) / dw) * f.w;
         const sy0 = f.miny + (dy / dh) * f.h, sy1 = f.miny + ((dy + 1) / dh) * f.h;
-        const px = sampleBox(sx0, sy0, sx1, sy1);
+        const px = sampleBox(sx0, sy0, sx1, sy1, f.id);
         if (!px) continue;
         const di = ((oy + dy) * outW + (ox + dx)) * 4;
         dest[di] = px[0]; dest[di + 1] = px[1]; dest[di + 2] = px[2]; dest[di + 3] = px[3];
