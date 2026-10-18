@@ -278,6 +278,13 @@ thing it is good at and fix the geometry afterwards:
 The packer refuses rather than guesses if the figure count is not rows × columns, because a
 silent miscount would scramble the animations into each other.
 
+**Boss sheets take six rows, not seven, and a cell wider than it is tall.** Bosses never
+reach `item` — they do not drink potions. And one shared scale means the *widest* pose sets
+the size of every frame: Storm Keeper's trident thrust is 245px against a 162px idle, so a
+square 96×96 cell rendered him at 62×62 and wasted a third of the space. At 112×96 the same
+art lands at 73×78. Measure before choosing: 128×96 would have been better still, except
+the boss lifts 6px during its own attack step, which put the trident behind the HP bar.
+
 Known limits of this route: the generator bakes spell sparkles into the cast frames, which
 the effects layer would otherwise draw itself, and it ignores "no effects in the frames"
 when asked. Minor at 40px. More importantly the output is a *resample* of smooth art rather

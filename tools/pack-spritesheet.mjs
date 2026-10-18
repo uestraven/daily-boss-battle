@@ -200,9 +200,16 @@ if (colourLimit > 0) {
     boxes.sort((a, b) => b.length - a.length);
     const box = boxes.shift();
     if (!box || box.length < 2) { if (box) boxes.push(box); break; }
+    // Looped rather than Math.max(...vals): a 96x96 boss sheet has ~119k opaque pixels,
+    // and spreading that many arguments overflows the call stack. A hero sheet has ~27k
+    // and squeaked under the limit, so this only showed up on the first boss.
     const ranges = [0, 1, 2].map(ch => {
-      const vals = box.map(p => p[ch]);
-      return Math.max(...vals) - Math.min(...vals);
+      let lo = Infinity, hi = -Infinity;
+      for (const p of box) {
+        if (p[ch] < lo) lo = p[ch];
+        if (p[ch] > hi) hi = p[ch];
+      }
+      return hi - lo;
     });
     const ch = ranges.indexOf(Math.max(...ranges));
     box.sort((a, b) => a[ch] - b[ch]);
