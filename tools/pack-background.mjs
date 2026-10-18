@@ -138,6 +138,29 @@ if (colourLimit > 0) {
   console.log(`  palette       reduced to ${palette.length} colours`);
 }
 
+/** `--recede <0..1>` pushes the backdrop back behind the characters.
+ *
+ * Blends it toward the stage's own backdrop colour and drains saturation. A background
+ * competing with the sprites for attention is the usual reason pixel characters look
+ * pasted on: in the SNES games this imitates, the scenery is consistently lower contrast
+ * and lower saturation than anything standing in front of it. */
+const recede = Math.min(1, Math.max(0, Number(flag('recede', '0')) || 0));
+if (recede > 0) {
+  const [br, bg_, bb] = [0x0b, 0x0d, 0x16];
+  for (let i = 0; i < outW * outH; i++) {
+    const r = dest[i * 4], g = dest[i * 4 + 1], b = dest[i * 4 + 2];
+    // Desaturate toward the pixel's own luminance first, then fade toward the backdrop.
+    const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    const dr = r + (l - r) * recede * 0.6;
+    const dg = g + (l - g) * recede * 0.6;
+    const db = b + (l - b) * recede * 0.6;
+    dest[i * 4] = Math.round(dr + (br - dr) * recede);
+    dest[i * 4 + 1] = Math.round(dg + (bg_ - dg) * recede);
+    dest[i * 4 + 2] = Math.round(db + (bb - db) * recede);
+  }
+  console.log(`  recede        ${(recede * 100).toFixed(0)}% toward the stage backdrop`);
+}
+
 /** Where the characters stand. A backdrop brighter than the sprites in these rectangles
  * swallows them, and the darkest sheet so far has a median luminance of 38. */
 const ZONES = [

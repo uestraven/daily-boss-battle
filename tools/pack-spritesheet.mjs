@@ -53,6 +53,9 @@ const minPixels = Number(flag('min-pixels', '400'));
  * closest real colour is white, at a distance of 255. Choose a key colour that far from
  * the art and this stays true. */
 const tolerance = Number(flag('tolerance', '180'));
+/** Hex colour for the silhouette outline, or empty for none. Parsed up here because the
+ * scale calculation has to reserve room for it. */
+const outline = flag('outline', '');
 
 const img = decodePng(readFileSync(input));
 const {width: W, height: H} = img;
@@ -243,8 +246,12 @@ const maxW = Math.max(...figures.map(f => f.w));
 const maxH = Math.max(...figures.map(f => f.h));
 /** Keeps a margin on the sides and top so no frame's content sits on a cell boundary.
  * The bottom is deliberately exempt: feet belong on the baseline, which is the bottom row,
- * and that is what makes anchorY equal to the cell height. */
-const pad = Number(flag('pad', '1'));
+ * and that is what makes anchorY equal to the cell height.
+ *
+ * An outline is traced *outward* after scaling, so it consumes a pixel of this margin on
+ * every side. Without accounting for it the outline lands exactly on the cell boundary,
+ * which is what the linter then reports for almost every frame. */
+const pad = Number(flag('pad', outline ? '2' : '1'));
 const scale = Math.min((cellW - 2 * pad) / maxW, (cellH - pad) / maxH);
 console.log(`  largest figure ${maxW}x${maxH} -> scale ${scale.toFixed(4)} ` +
   `(${Math.round(maxW * scale)}x${Math.round(maxH * scale)} in a ${cellW}x${cellH} cell)`);
@@ -299,6 +306,49 @@ for (let r = 0; r < rows; r++) {
       }
     }
   }
+}
+
+// --- optional silhouette outline ------------------------------------------------------
+/** `--outline` traces a hard dark edge around every figure.
+ *
+ * This is what SNES sprites had and these do not. On a flat near-black stage a sprite's
+ * own edge is enough, because there is nothing to confuse it with. On a detailed backdrop
+ * both the sprite edge and the scenery behind it are a pixel of noise each, and the
+ * silhouette stops existing. One dark pixel all the way round restores it regardless of
+ * what is behind.
+ *
+ * Drawn outward into transparent pixels, so it never eats the art -- the figure gets 1px
+ * bigger rather than 1px of detail poorer. The outline colour is deliberately not pure
+ * black: a near-black tinted toward the character keeps it from looking like a sticker. */
+if (outline) {
+  const [or_, og, ob] = [0, 2, 4].map(i => parseInt(outline.slice(i, i + 2), 16));
+  let traced = 0;
+  // Per cell, with everything outside the cell treated as empty. Scanning the whole sheet
+  // let a figure near its right margin write an outline pixel into the next cell, which
+  // both dirties that frame and makes the linter report almost every frame as touching an
+  // edge. A frame's outline belongs to that frame.
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x0 = c * cellW, y0 = r * cellH;
+      const inside = (x, y) => x >= x0 && y >= y0 && x < x0 + cellW && y < y0 + cellH;
+      const solid = (x, y) => inside(x, y) && dest[((y * outW) + x) * 4 + 3] > 0;
+      const edge = [];
+      for (let y = y0; y < y0 + cellH; y++) {
+        for (let x = x0; x < x0 + cellW; x++) {
+          if (solid(x, y)) continue;
+          // 4-connected: an 8-connected outline reads as a fat halo at this size.
+          if (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1)) {
+            edge.push(y * outW + x);
+          }
+        }
+      }
+      for (const i of edge) {
+        dest[i * 4] = or_; dest[i * 4 + 1] = og; dest[i * 4 + 2] = ob; dest[i * 4 + 3] = 255;
+      }
+      traced += edge.length;
+    }
+  }
+  console.log(`  outline       ${traced} px traced in #${outline}, clipped to each cell`);
 }
 
 // --- optional palette reduction -------------------------------------------------------

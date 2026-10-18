@@ -258,6 +258,31 @@ Set `behind: true` on a sheet to draw it under the actors instead of over them, 
 what a ground crack or an aura wants. Front effects draw over the actors but under the HUD,
 so a flare can never hide a damage number.
 
+### Sprites on a detailed backdrop
+
+Characters that read perfectly well against the flat stage colour went soft once real
+arena art arrived. The obvious explanation -- that the backdrops carry more detail than the
+sprites -- turns out to be wrong, and measuring it is what pointed at the real cause:
+
+| | single-pixel runs | flat 2x2 blocks |
+| --- | --- | --- |
+| backdrops | 74-77% | 5-6% |
+| sprite sheets | 78-89% | 1-4% |
+
+The *sprites* are the noisier of the two. Neither is hand-placed pixel art; both are
+reductions of smooth renders, which is why almost nothing in either has a flat area. So
+the problem was never fidelity mismatch. It was **silhouette separation**: a sprite whose
+edge is a pixel of noise, sitting on a backdrop whose every pixel is also noise, has no
+edge at all. Against flat near-black it did not matter, because there was nothing to
+confuse the edge with.
+
+Hence `--outline` on the packer, which traces one hard dark pixel around every figure.
+This is what SNES sprites had and these did not. It is worth more than any amount of
+background adjustment, and it works regardless of what is behind the character.
+`--recede` on the backdrop packer is the smaller companion knob: it fades the scenery
+toward the stage colour and drains some saturation, so it stops competing. 15% helps;
+35% starts costing the art its depth.
+
 ### Value, not just hue
 
 The stage backdrop is `#0b0d16` and its ground band `#1b2033` — luminance 13 and 32 on a
