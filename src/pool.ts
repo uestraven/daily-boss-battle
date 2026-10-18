@@ -4,7 +4,7 @@
  * `tools/generate-pool.mjs`, so a random boss and party are still guaranteed
  * winnable, non-trivial, and solvable more than one way.
  *
- * Every player sees the same encounter for a UTC date: selection is a pure
+ * Every player sees the same encounter for a given date string: selection is a pure
  * function of the date and the pool.
  *
  * This is the product path. `daily.ts` still carries the six curated templates,
@@ -99,7 +99,7 @@ function cycleOrder(bossIds: readonly string[], cycle: number): string[] {
   return order;
 }
 
-/** The boss for a UTC date. Each boss appears once per cycle, never on back-to-back days. */
+/** The boss for a date. Each boss appears once per cycle, never on back-to-back days. */
 export function dailyBossFor(day: string, bossIds: readonly string[]): string {
   if (!bossIds.length) throw new Error('No bosses available');
   const sorted = [...bossIds].sort();
@@ -125,7 +125,7 @@ export function targetTierFor(day: string): Tier {
   return TIER_CURVE[weekday]!;
 }
 
-/** The verified encounter for a UTC date, or null if the pool cannot supply one. */
+/** The verified encounter for a date, or null if the pool cannot supply one. */
 export function selectDaily(day: string, pool: VerifiedPool): PoolEntry | null {
   const playable = pool.entries.filter(e => e.passed);
   if (!playable.length) return null;

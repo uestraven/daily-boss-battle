@@ -262,7 +262,18 @@ deleting those four files.
 
 v1 is a website, desktop and mobile web, no accounts and no server:
 
-- **One battle a day**, the same for everyone, drawn from the verified pool.
+- **One battle a day**, drawn from the verified pool. The day rolls over at **local
+  midnight**, in whatever timezone the browser reports, so the reset lands overnight rather
+  than mid-evening for anyone west of Greenwich.
+  What stays global is the mapping: a date string selects exactly one encounter everywhere,
+  so Auckland and Los Angeles fight the same boss on `2026-10-19` and simply reach it at
+  different moments. Selection remains pure, the ledger key remains a plain calendar date,
+  and a shared card still names a date the reader can go and play.
+  The cost, stated plainly: a player can reach tomorrow's battle early by moving their
+  system clock or timezone. That is already true of any client-side date, there is no
+  server to adjudicate, and the UI says results are unverified — so this widens an existing
+  hole rather than opening a new one. A backend would close it by stamping the day
+  server-side.
 - **A landing screen** chooses the mode before the fight starts, so it is a decision rather
   than a default nobody saw. **Normal is the default** — it is the game as intended, and
   Easy is opt-in. Only an explicit past choice brings Easy back on a later visit. It is skipped for a day already under way or finished, since

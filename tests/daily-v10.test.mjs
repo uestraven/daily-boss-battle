@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {DAILY_CATALOG_VERSION,DAILY_KEYS,dayNumber,dailyKeyFor,utcDateKey,dailyDefinition,
+import {execFileSync} from 'node:child_process';
+import {DAILY_CATALOG_VERSION,DAILY_KEYS,dayNumber,dailyKeyFor,utcDateKey,localDateKey,dailyDefinition,
   emptyLedger,normalizeLedger,ensureDay,stepForDay,playDailyAction,setDayMode,
   curatedCatalog,dailyStatistics} from '../dist/src/daily.js';
 import {replay,starsForResult,advanceToDecision,createEncounter} from '../dist/src/engine.js';
@@ -179,4 +180,76 @@ test('a record written before modes existed stays valid and unlabelled', () => {
   const normalized = normalizeLedger(legacy, curatedCatalog);
   assert.ok(normalized.records[day], 'still a usable record');
   assert.equal('mode' in normalized.records[day], false, 'and carries no mode at all');
+});
+
+test('the local date key is the viewer\'s calendar date, not UTC', () => {
+  // Built from local components on purpose. toISOString() is always UTC, which is the
+  // bug this function exists to avoid: west of Greenwich, UTC is already tomorrow for
+  // part of the evening, so a player would be handed the next day's battle early.
+  const pad = n => String(n).padStart(2, '0');
+  for (const iso of ['2026-10-18T03:57:00Z', '2026-01-01T00:30:00Z',
+    '2026-12-31T23:30:00Z', '2026-03-09T07:00:00Z', '2026-06-30T12:00:00Z']) {
+    const d = new Date(iso);
+    const expected = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    assert.equal(localDateKey(d), expected, `wrong key for ${iso}`);
+    assert.match(localDateKey(d), /^\d{4}-\d{2}-\d{2}$/, 'single digits must be padded');
+  }
+  assert.throws(() => localDateKey(new Date('nonsense')), /Invalid date/);
+});
+
+test('a local date key is still a key the ledger and pool accept', () => {
+  // Whatever timezone produced it, it has to be a plain calendar date the rest of the
+  // system can key on -- dayNumber parses it, and selection is driven by the string.
+  const key = localDateKey(new Date());
+  assert.doesNotThrow(() => dayNumber(key));
+  const ledger = ensureDay(emptyLedger(), key, curatedCatalog);
+  assert.ok(ledger.records[key], 'a day can be started from a local key');
+  assert.equal(ledger.records[key].day, key);
+});
+
+test('the same date string yields the same encounter regardless of timezone', () => {
+  // The property that survives the move to local time, and the reason sharing still
+  // works: local time decides *when* a browser rolls over, never *what* it gets.
+  for (const day of ['2026-10-18', '2026-10-19', '2027-02-28']) {
+    const a = curatedCatalog.definitionFor(day);
+    const b = curatedCatalog.definitionFor(day);
+    assert.equal(a.id, b.id);
+    assert.equal(curatedCatalog.keyFor(day), curatedCatalog.keyFor(day));
+  }
+});
+
+test('under a real timezone, the local key diverges from the UTC key', () => {
+  // The decisive test, and it needs a child process: Node reads TZ once at startup, and
+  // CI runs on UTC where local and UTC are identical -- so an in-process test would pass
+  // on a `toISOString()` implementation and prove nothing at all.
+  const probe = (tz, iso) => {
+    const script =
+      `import {localDateKey, utcDateKey} from './dist/src/daily.js';` +
+      `const d = new Date(${JSON.stringify(iso)});` +
+      `process.stdout.write(localDateKey(d) + ' ' + utcDateKey(d));`;
+    const out = execFileSync(process.execPath, ['--input-type=module', '-e', script],
+      {env: {...process.env, TZ: tz}, encoding: 'utf8'});
+    const [local, utc] = out.trim().split(' ');
+    return {local, utc};
+  };
+
+  // 00:30 UTC on the 1st is still the previous evening in New York. A UTC key would hand
+  // that player New Year's Day's battle while their own calendar still says December.
+  const ny = probe('America/New_York', '2026-01-01T00:30:00Z');
+  assert.equal(ny.utc, '2026-01-01');
+  assert.equal(ny.local, '2025-12-31', 'New York is still on the previous date');
+
+  // And east of Greenwich it runs the other way.
+  const akl = probe('Pacific/Auckland', '2026-01-01T00:30:00Z');
+  assert.equal(akl.utc, '2026-01-01');
+  assert.equal(akl.local, '2026-01-01');
+  const akl2 = probe('Pacific/Auckland', '2025-12-31T13:30:00Z');
+  assert.equal(akl2.utc, '2025-12-31');
+  assert.equal(akl2.local, '2026-01-01', 'Auckland has already crossed into the new year');
+
+  // Mid-afternoon UTC is the same date almost everywhere, so the two must agree there.
+  for (const tz of ['America/Los_Angeles', 'Europe/Berlin', 'Asia/Tokyo', 'UTC']) {
+    const noon = probe(tz, '2026-06-15T12:00:00Z');
+    assert.equal(noon.local, '2026-06-15', `${tz} should agree at midday UTC`);
+  }
 });

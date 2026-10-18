@@ -16,7 +16,7 @@ import {availableActions, eligibleTargets, previewDisplay, actionInput} from '..
 import {choreograph} from '../../dist/src/presentation.js';
 import {displayedValue, downAt, statusesAt} from '../../dist/src/stage.js';
 import {poolCatalog, selectDaily, targetTierFor, validatePool} from '../../dist/src/pool.js';
-import {dailyStatistics, ensureDay, playDailyAction, setDayMode, stepForDay} from '../../dist/src/daily.js';
+import {dailyStatistics, ensureDay, localDateKey, playDailyAction, setDayMode, stepForDay} from '../../dist/src/daily.js';
 import {loadLedger, saveLedger, clearLedger} from './storage.js';
 import {ShareCard} from './ShareCard.js';
 import {EmailSignup} from './EmailSignup.js';
@@ -37,7 +37,9 @@ import type {OfferedAction} from '../../src/play-ui.js';
 import type {VerifiedPool} from '../../src/pool.js';
 import poolData from '../../dist-content/verified-pool.json';
 
-const todayUtc = () => new Date().toISOString().slice(0, 10);
+/** The player's own calendar date. See localDateKey: the date-to-encounter mapping is
+ * still global, so this only decides when this browser rolls over, not what it gets. */
+const today = () => localDateKey(new Date());
 const ROLE_BY_ID: Record<string, string> = Object.fromEntries(heroes.map(h => [h.id, h.role]));
 
 type Phase = {kind: 'choosing'} | {kind: 'playing'} | {kind: 'over'};
@@ -92,13 +94,13 @@ const SPEED = (() => {
 })();
 
 export default function DailyBattle() {
-  // A tab left open past UTC midnight was stuck on yesterday's battle, because the date
+  // A tab left open past local midnight was stuck on yesterday's battle, because the date
   // was read once on mount. Poll for the change, and check on focus, which is when it is
   // most likely to have happened.
-  const [day, setDay] = useState(todayUtc);
+  const [day, setDay] = useState(today);
   useEffect(() => {
     const check = () => setDay(previous => {
-      const now = todayUtc();
+      const now = today();
       return now === previous ? previous : now;
     });
     const timer = window.setInterval(check, 30_000);

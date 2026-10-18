@@ -22,6 +22,23 @@ export function utcDateKey(input:Date):string {
   if(!Number.isFinite(input.valueOf()))throw new Error('Invalid date');
   return input.toISOString().slice(0,10);
 }
+/** The calendar date in the viewer's own timezone, which is the date the player thinks
+ * it is. This is what the client uses to decide which day's battle to serve.
+ *
+ * Built from the local date components rather than `toISOString`, which is always UTC and
+ * is the mistake this function exists to avoid: for anyone west of Greenwich, UTC is
+ * already tomorrow for part of their evening.
+ *
+ * Note what does *not* become local. A date string still maps to exactly one encounter
+ * everywhere, so Auckland and Los Angeles both fight the same boss on 2026-10-19; the
+ * timezone only decides when each of them rolls over to it. Selection stays pure, the
+ * ledger key stays a plain calendar date, and a shared card still names a date the reader
+ * can go and play. */
+export function localDateKey(input:Date):string {
+  if(!Number.isFinite(input.valueOf()))throw new Error('Invalid date');
+  const pad=(n:number):string=>String(n).padStart(2,'0');
+  return `${input.getFullYear()}-${pad(input.getMonth()+1)}-${pad(input.getDate())}`;
+}
 export function dayNumber(day:string):number {
   if(!dateRe.test(day))throw new Error('Expected YYYY-MM-DD');
   const timestamp=Date.parse(day+'T00:00:00.000Z');
@@ -38,7 +55,7 @@ function stableHash(s:string):number {
   for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619)>>>0;
   return h;
 }
-/** One full six-boss cycle per six UTC days, in stable seeded order. */
+/** One full six-boss cycle per six days, in stable seeded order. */
 export function dailyKeyFor(day:string):DailyKey {
   const serial=dayNumber(day),cycle=Math.floor(serial/DAILY_KEYS.length),offset=((serial%DAILY_KEYS.length)+DAILY_KEYS.length)%DAILY_KEYS.length;
   const list=[...DAILY_KEYS];

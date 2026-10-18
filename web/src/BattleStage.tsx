@@ -58,7 +58,7 @@ const imageCache = new Map<string, HTMLImageElement>();
 /** Repaint callbacks for whichever stages are mounted.
  *
  * Module-level, because the image cache is too. A sheet whose request was started by one
- * mount can land after that mount is gone — the screen remounts on UTC rollover — and the
+ * mount can land after that mount is gone — the screen remounts at local midnight — and the
  * stage that is mounted *then* is the one that needs telling. Keying the notification to
  * the requesting component would silently lose that repaint. */
 const repaintListeners = new Set<() => void>();
