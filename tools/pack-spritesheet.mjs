@@ -53,9 +53,21 @@ const minPixels = Number(flag('min-pixels', '400'));
  * closest real colour is white, at a distance of 255. Choose a key colour that far from
  * the art and this stays true. */
 const tolerance = Number(flag('tolerance', '180'));
-/** Hex colour for the silhouette outline, or empty for none. Parsed up here because the
- * scale calculation has to reserve room for it. */
-const outline = flag('outline', '');
+/** Hex colour for the silhouette outline, `auto`, or empty for none. Parsed up here
+ * because the scale calculation has to reserve room for it. */
+const outlineFlag = flag('outline', '');
+
+/** A dark outline separates a light character from a dark stage. It does nothing at all
+ * for a dark character, because the outline, the character and the floor are then all the
+ * same value -- the Magus is a navy robe at median luminance 39 on floors at 21-29, and a
+ * near-black rim left it invisible. Those need a *light* rim instead.
+ *
+ * `--outline auto` picks by the sheet's own median luminance. The light value is measured,
+ * not chosen by taste: against a floor at ~25, luminance 70 barely separates and 166 reads
+ * as a selection highlight stuck on the sprite. 97 is the one that looks like art. */
+const OUTLINE_DARK = '140f1c';
+const OUTLINE_LIGHT = '55608a';
+const OUTLINE_LIGHT_BELOW = 45;
 
 const img = decodePng(readFileSync(input));
 const {width: W, height: H} = img;
@@ -251,7 +263,7 @@ const maxH = Math.max(...figures.map(f => f.h));
  * An outline is traced *outward* after scaling, so it consumes a pixel of this margin on
  * every side. Without accounting for it the outline lands exactly on the cell boundary,
  * which is what the linter then reports for almost every frame. */
-const pad = Number(flag('pad', outline ? '2' : '1'));
+const pad = Number(flag('pad', outlineFlag ? '2' : '1'));
 const scale = Math.min((cellW - 2 * pad) / maxW, (cellH - pad) / maxH);
 console.log(`  largest figure ${maxW}x${maxH} -> scale ${scale.toFixed(4)} ` +
   `(${Math.round(maxW * scale)}x${Math.round(maxH * scale)} in a ${cellW}x${cellH} cell)`);
@@ -320,6 +332,19 @@ for (let r = 0; r < rows; r++) {
  * Drawn outward into transparent pixels, so it never eats the art -- the figure gets 1px
  * bigger rather than 1px of detail poorer. The outline colour is deliberately not pure
  * black: a near-black tinted toward the character keeps it from looking like a sticker. */
+let outline = outlineFlag;
+if (outline === 'auto') {
+  const vals = [];
+  for (let i = 0; i < outW * outH; i++) {
+    if (!dest[i * 4 + 3]) continue;
+    vals.push(0.2126 * dest[i * 4] + 0.7152 * dest[i * 4 + 1] + 0.0722 * dest[i * 4 + 2]);
+  }
+  vals.sort((a, b) => a - b);
+  const median = vals[Math.floor(vals.length / 2)] ?? 255;
+  outline = median < OUTLINE_LIGHT_BELOW ? OUTLINE_LIGHT : OUTLINE_DARK;
+  console.log(`  outline       median luminance ${median.toFixed(0)} -> ` +
+    `${median < OUTLINE_LIGHT_BELOW ? 'light' : 'dark'} rim #${outline}`);
+}
 if (outline) {
   const [or_, og, ob] = [0, 2, 4].map(i => parseInt(outline.slice(i, i + 2), 16));
   let traced = 0;

@@ -276,6 +276,15 @@ edge is a pixel of noise, sitting on a backdrop whose every pixel is also noise,
 edge at all. Against flat near-black it did not matter, because there was nothing to
 confuse the edge with.
 
+**Use `--outline auto`, not a fixed colour.** A dark rim separates a light character from
+a dark stage and does nothing whatever for a dark one, because the rim, the character and
+the floor are then all the same value. The Magus is a navy robe at median luminance 39 on
+floors at 21-29; a near-black outline left it invisible. Those sheets need a *light* rim
+instead, and `auto` picks by the sheet's own median luminance: below 45 it uses `#55608a`,
+otherwise `#140f1c`. The light value is measured rather than chosen — against a floor at
+~25, luminance 70 barely separates and 166 reads as a selection highlight stuck onto the
+sprite; 97 is the one that looks like art.
+
 Hence `--outline` on the packer, which traces one hard dark pixel around every figure.
 This is what SNES sprites had and these did not. It is worth more than any amount of
 background adjustment, and it works regardless of what is behind the character.
