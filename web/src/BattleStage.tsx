@@ -171,11 +171,18 @@ function paint(
         ctx.fillRect(-8, -8, STAGE.width + 16, STAGE.height + 16);
         const art = command.file ? resolve.backdrop(command.file) : null;
         if (art) {
+          // Undo the shake for the backdrop only. The whole stage is translated by up to
+          // 6px during a heavy hit, and a 320x180 image drawn inside that translation
+          // leaves a strip of bare fill along one edge. Holding the scenery still also
+          // reads better: the characters jolt against it instead of the world sliding.
+          ctx.save();
+          ctx.translate(-frame.shakeX, -frame.shakeY);
           // Drawn 1:1 at the internal resolution, so there is no resampling here and the
           // whole canvas is integer-scaled afterwards. That is why the catalog's
           // per-arena imageRendering hint no longer has anything to do: a painted
           // backdrop and a pixel-art one are both already at native size.
           ctx.drawImage(art, 0, 0, STAGE.width, STAGE.height);
+          ctx.restore();
           break;
         }
         // No art: a ground band reads as a stage without pretending to be final art.
