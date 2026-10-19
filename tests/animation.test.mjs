@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {ANIMATION_NAMES, CLIP_FALLBACK, CLIP_FOR_KIND, DEFAULT_LOOP_FRAME_MS, animationFor,
   animationsFor, frameFor, frameRect, validateSheet} from '../dist/src/animation.js';
 import {ACTION_MS, PACE, TIMING, choreograph} from '../dist/src/presentation.js';
+import {readFileSync} from 'node:fs';
 import {advanceToDecision, createEncounter} from '../dist/src/engine.js';
 import {buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
@@ -405,4 +406,31 @@ test('a downed actor stays down whatever the clocks say', () => {
   const b = animationFor('m', {script: null, timeMs: 0, sheet: fullSheet, down: true, idleMs: 99_999});
   assert.equal(a.name, 'ko');
   assert.deepEqual(a, b, 'the collapse does not animate once it has landed');
+});
+
+test('bosses must not declare a walk clip', () => {
+  // Bosses hold their ground while they act, but they still get approach and retreat
+  // beats like anyone else -- so a walk row would have them walking on the spot. Having
+  // no such row is what makes them fall back to idle, which is the correct look. This is
+  // the kind of thing that would be added "for completeness" and look wrong.
+  const manifest = JSON.parse(readFileSync(
+    new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
+  for (const [id, sheet] of Object.entries(manifest.bosses)) {
+    assert.ok(!sheet.clips.walk, `${id} declares a walk clip; it does not move`);
+    assert.ok(!sheet.clips.item, `${id} declares an item clip; bosses use no items`);
+  }
+});
+
+test('walk is the only clip the hero sheets are short of', () => {
+  // Stated as a fact so it stops being true the moment it stops being true: if a
+  // regenerated sheet drops a row, this says which.
+  const manifest = JSON.parse(readFileSync(
+    new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
+  const realArt = Object.entries(manifest.heroes).filter(([, s]) => s.frameWidth >= 48);
+  assert.ok(realArt.length > 0, 'there is real hero art to check');
+  for (const [id, sheet] of realArt) {
+    const missing = ANIMATION_NAMES.filter(name => !sheet.clips[name]);
+    assert.deepEqual(missing.filter(n => n !== 'walk'), [],
+      `${id} is missing ${missing.join(', ')}, not just walk`);
+  }
 });
