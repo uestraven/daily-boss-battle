@@ -53,13 +53,22 @@ by whole numbers. So sprites are small and must read as silhouettes.
 asked for.** No eight-row sheet has yet matched the brief exactly:
 
 The brief's order, 1-indexed, is: idle, attack, cast, item, hurt, defeat, walk, victory.
-All three eight-row sheets follow it, with one deviation:
+All four eight-row sheets follow it, with one recurring deviation:
 
 | sheet | row 8 | note |
 |---|---|---|
 | Machinist | victory, a front-facing flex | as briefed; row 7 is a side-on walk carrying the wrench |
 | Warden | victory, a four-legged prowl | as briefed; row 7 is an upright stride |
 | Nullifier | victory, a four-legged crawl | row 3 is a **guard** pose, where the brief has cast |
+| Vanguard | victory, fists raised | row 3 is a **block** pose; row 2 transforms into a beast |
+
+**Row 3 keeps arriving as a defensive pose** — "guard" on the Nullifier, "block" on the
+Vanguard — where the brief asks for cast. The engine has no such clip, so it is wired to
+`cast`, which is the least-wrong home: `nullify`, `cover` and `heal` all resolve to the cast
+clip, so a brace plays for exactly the abilities that read as defensive. Worth knowing that
+for the Vanguard it can never play at all — 0 MP and both abilities `kind: physical`, so
+every action it takes resolves to `attack` or `item`. The row is declared anyway, so the
+coverage test stays strict and a future non-physical ability has somewhere to go.
 
 **Ask rather than infer.** Every row order I inferred from measurement was wrong, and the
 errors were not random — each came from a plausible-looking statistic:
