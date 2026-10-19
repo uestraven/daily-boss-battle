@@ -274,8 +274,14 @@ export function composeFrame(input: ComposeInput): Frame {
     if (!hit) return 0;
     return 1 - Math.min(1, Math.max(0, (timeMs - hit.at) / Math.max(1, hit.duration)));
   };
-  /** How far an acting actor leans toward its target, in stage pixels. */
-  const STEP_DISTANCE = 6;
+  /** How far an acting actor walks toward its target, in stage pixels.
+   *
+   * 6 was barely perceptible against a ~30px character -- the approach phase looked like
+   * a twitch rather than a walk. At 18 the step is over half a body width and reads as
+   * crossing ground, which is what the phase is for. Applies to heroes only; the boss
+   * holds its ground, so a hero's furthest reach of x=186 stays clear of the widest
+   * boss's x=148. */
+  const STEP_DISTANCE = 18;
 
   /** Where an acting actor is between its slot and striking distance, 0 to 1.
    *
@@ -379,8 +385,13 @@ export function composeFrame(input: ComposeInput): Frame {
   commands.push(...effectCommands(true));
 
   if (boss) {
+    // The boss does not walk. It is several times the size of a hero and stays planted
+    // while the party comes to it, which is both how large enemies read in the games this
+    // imitates and the only sensible answer here: its step used to be a *vertical* offset,
+    // so scaling the walk up would have had it levitating rather than advancing.
+    // Its attack is carried by the clip, the hit flash and the shake instead.
     commands.push(spriteFor(state.bossId, bossSlot, SPRITE.boss, 'right', TINTS.boss!,
-      downNow(state.bossId, boss.hp), -stepFor(state.bossId)));
+      downNow(state.bossId, boss.hp), 0));
   }
 
   state.party.forEach((id, index) => {

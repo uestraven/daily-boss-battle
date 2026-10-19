@@ -1007,3 +1007,74 @@ test('only the acting character moves', () => {
   assert.ok(leanOf(state, script, actor, impact.at) > 0);
   assert.equal(leanOf(state, script, bystander, impact.at), 0, 'bystanders hold position');
 });
+
+test('the walk is long enough to read and short enough not to collide', () => {
+  // The step was tripled from 6px because 6 was imperceptible against a ~30px character.
+  // The thing that could break is the two sides meeting in the middle, so this bounds it
+  // from both directions using the widest sheets that actually ship.
+  const manifest = JSON.parse(readFileSync(
+    new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
+  const state = freshState();
+  const hero = state.party[0];
+  const script = choreograph([
+    ev('action_committed', {actorId: hero, abilityId: 'attack'}),
+    ev('damage', {actorId: hero, targetId: state.bossId, abilityId: 'attack',
+      amount: 50, hpAfter: 950}),
+  ], {maxHp: {[state.bossId]: 1000}});
+  const strike = script.beats.find(b => b.kind === 'strike');
+  const walked = leanOf(state, script, hero, strike.at + 10);
+
+  // Long enough to read: over half a body width at the standard 48px cell.
+  assert.ok(walked >= 12, `a ${walked}px walk is too small to register`);
+  // Short enough that it is still a step, not a teleport across the stage.
+  assert.ok(walked <= 32, `a ${walked}px walk overshoots the formation`);
+
+  // Widest boss at rest, nearest hero fully advanced, must not overlap.
+  const bossWidth = Math.max(...Object.values(manifest.bosses).map(s => s.frameWidth));
+  const bossAnchor = bossWidth / 2;
+  const bossRight = bossSlot.x + bossAnchor;
+  const heroWidth = Math.max(...Object.values(manifest.heroes).map(s => s.frameWidth));
+  const nearest = Math.min(...heroSlots(3).map(s => s.x)) - heroWidth / 2 - walked;
+  assert.ok(bossRight < nearest,
+    `boss reaches x ${bossRight} while the nearest hero reaches x ${nearest}`);
+
+  // And nobody walks off the stage.
+  assert.ok(bossSlot.x - bossAnchor >= 0, 'boss stays on stage at rest');
+  assert.ok(Math.max(...heroSlots(3).map(s => s.x)) + heroWidth / 2 <= STAGE.width,
+    'party stays on stage');
+});
+
+test('the boss holds its ground while it acts', () => {
+  // Only the heroes walk. The boss is several times their size and stays planted, which
+  // is how large enemies read -- and its step used to be a vertical offset, so scaling
+  // the walk up would have had it levitating rather than advancing.
+  const state = freshState();
+  const script = choreograph([
+    ev('action_committed', {actorId: state.bossId, abilityId: 'attack'}),
+    ev('damage', {actorId: state.bossId, targetId: state.party[0], abilityId: 'attack',
+      amount: 50, hpAfter: 300}),
+  ], {maxHp: {[state.party[0]]: 350}});
+  // A sheet is needed for the clip half of this: without one the stage draws silhouettes
+  // and reports no animation at all.
+  const sheet = {
+    file: 'boss.png', frameWidth: 112, frameHeight: 96, anchorX: 56, anchorY: 96,
+    clips: {idle: {row: 0, frames: 8, loop: true}, attack: {row: 1, frames: 8, loop: false}},
+  };
+  const sheets = {[state.bossId]: sheet};
+  const abilityInfo = {attack: {kind: 'physical'}};
+  const at = t => composeFrame({state, script, timeMs: t, sheets, abilityInfo}).commands
+    .find(c => c.kind === 'sprite' && c.actorId === state.bossId);
+  const rest = at(0);
+  for (const kind of ['approach', 'strike', 'retreat']) {
+    const beat = script.beats.find(b => b.kind === kind);
+    const now = at(beat.at + beat.duration / 2);
+    assert.equal(now.x, rest.x, `the boss moved horizontally during ${kind}`);
+    assert.equal(now.y + now.offsetY, rest.y + rest.offsetY,
+      `the boss changed height during ${kind}`);
+  }
+  // Its attack still reads: the clip changes even though its position does not.
+  const strike = script.beats.find(b => b.kind === 'strike');
+  assert.equal(at(0).animation, 'idle');
+  assert.equal(at(strike.at + 10).animation, 'attack',
+    'the boss should still play its attack clip while planted');
+});
