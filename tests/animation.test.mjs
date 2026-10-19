@@ -421,16 +421,23 @@ test('bosses must not declare a walk clip', () => {
   }
 });
 
-test('walk is the only clip the hero sheets are short of', () => {
+test('walk and victory are the only clips the hero sheets are short of', () => {
   // Stated as a fact so it stops being true the moment it stops being true: if a
   // regenerated sheet drops a row, this says which.
+  //
+  // Only these two are allowed to be absent, because only these two are absent for a
+  // reason rather than by oversight. Both fall back to idle, which reads as "standing
+  // there" -- acceptable for a walk-in and for a won battle, and wrong for anything else.
+  // The Nullifier is why victory is on the list: its eighth row came back as a crawling
+  // animal rather than a triumph, so it is better left unwired than drawn.
+  const OPTIONAL = ['walk', 'victory'];
   const manifest = JSON.parse(readFileSync(
     new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
   const realArt = Object.entries(manifest.heroes).filter(([, s]) => s.frameWidth >= 48);
   assert.ok(realArt.length > 0, 'there is real hero art to check');
   for (const [id, sheet] of realArt) {
     const missing = ANIMATION_NAMES.filter(name => !sheet.clips[name]);
-    assert.deepEqual(missing.filter(n => n !== 'walk'), [],
-      `${id} is missing ${missing.join(', ')}, not just walk`);
+    assert.deepEqual(missing.filter(n => !OPTIONAL.includes(n)), [],
+      `${id} is missing ${missing.join(', ')}, which is more than ${OPTIONAL.join(' and ')}`);
   }
 });

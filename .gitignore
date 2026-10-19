@@ -36,5 +36,7 @@ art-reference/
 
 # Reference images parked next to the real sheets. Anything under web/public/ is copied
 # into the build and served, so a multi-megabyte illustration left here would ship to
-# every visitor. Suffix a working file `_test` to keep it local.
+# every visitor. Suffix a working file `_test` or `-test` to keep it local: both spellings
+# are matched because the hyphen is the one that gets typed.
 web/public/**/*_test.png
+web/public/**/*-test.png

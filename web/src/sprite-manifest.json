@@ -239,42 +239,47 @@
   },
   "nullifier": {
    "file": "heroes/nullifier.png",
-   "frameWidth": 32,
+   "frameWidth": 48,
    "frameHeight": 40,
-   "anchorX": 16,
-   "anchorY": 38,
+   "anchorX": 24,
+   "anchorY": 40,
    "clips": {
     "idle": {
      "row": 0,
-     "frames": 2,
+     "frames": 8,
      "loop": true,
-     "frameMs": 320
-    },
-    "attack": {
-     "row": 1,
-     "frames": 4,
-     "loop": false
+     "frameMs": 160
     },
     "cast": {
+     "row": 1,
+     "frames": 8,
+     "loop": false
+    },
+    "attack": {
      "row": 2,
-     "frames": 3,
+     "frames": 8,
+     "loop": false
+    },
+    "item": {
+     "row": 3,
+     "frames": 8,
      "loop": false
     },
     "hurt": {
-     "row": 3,
-     "frames": 2,
+     "row": 4,
+     "frames": 8,
      "loop": false
     },
     "ko": {
-     "row": 4,
-     "frames": 3,
+     "row": 5,
+     "frames": 8,
      "loop": false
     },
-    "victory": {
-     "row": 5,
-     "frames": 2,
+    "walk": {
+     "row": 6,
+     "frames": 8,
      "loop": true,
-     "frameMs": 400
+     "frameMs": 110
     }
    },
    "name": "The Nullifier"

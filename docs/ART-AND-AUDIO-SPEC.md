@@ -50,22 +50,40 @@ by whole numbers. So sprites are small and must read as silhouettes.
 | 7 | `walk` | yes | 2–4 | its own cadence, during approach and retreat | 160 ms |
 
 **Row order is whatever the manifest says, so check what arrived rather than what was
-asked for.** The Machinist's regenerated sheet put `walk` at row 7 and `victory` at row 8,
-the reverse of the brief. That is harmless — the manifest declares a row per clip — but it
-has to be *noticed*, or the character does a victory flex while walking in. The decisive
-test is the feet: across a walk cycle the ground contact patch swings as the legs
-alternate (the Machinist's goes 30, 26, 17, 25, 26, 27, 29, 31), where a standing loop
-holds steady within two or three pixels.
+asked for.** No eight-row sheet has yet matched the brief exactly:
 
-**`walk` is the clip to add**, and the Machinist now has it. An action
-now plays as four 500 ms phases — walk out, strike, walk back, then the damage lands — and
-during the two walking phases the character slides while playing `idle`. That reads
-acceptably, and the renderer will use real walk frames the instant a sheet provides them,
-with no code change. A short two-to-four frame side-view walk cycle is all it needs.
+| sheet | what arrived |
+|---|---|
+| Machinist | `walk` at 7, `victory` at 8 — the last two reversed |
+| Warden | as briefed |
+| Nullifier | `cast` at 2, `attack` at 3 — the two action rows reversed; row 8 unusable |
 
-Row order is whatever the manifest says; the numbers above match the twelve hero and eight
-boss sheets that ship. `item` is the one row none of them has yet — it is new, and until it
-is drawn an item use borrows the `cast` pose.
+This is harmless, since the manifest declares a row per clip, but it has to be *noticed*
+or the character flexes in triumph while walking into range, or mimes a spell to swing a
+sword. Two measurements settle it without guesswork:
+
+- **Walk versus a standing loop — the feet.** Across a walk cycle the ground contact patch
+  swings as the legs alternate (the Machinist's goes 30, 26, 17, 25, 26, 27, 29, 31), where
+  a standing loop holds steady within two or three pixels.
+- **Cast versus attack — the brightness.** A spellcast lights the whole figure up and
+  usually projects something; a physical attack is a lunge with no change in value. Compare
+  each row's median luminance across its frames: on the Nullifier the cast row swings 26
+  (62 → 88 → 62, peaking where the beam appears) while idle, attack and item all hold to a
+  range of 7. Use the swing, not the peak — a pale projected effect is a small share of the
+  silhouette, so it moves the median far less than it appears to move the eye.
+
+Where neither applies, render the rows at 6–8× and look. That is how the Nullifier's eighth
+row was caught: it came back as a crawling quadruped rather than a triumph, so `victory` is
+simply left undeclared and falls back to `idle`. **`walk` and `victory` are the only two
+clips a sheet may omit** — both degrade to standing still, which is tolerable for a walk-in
+and for a won battle and wrong for anything else. `tests/animation.test.mjs` enforces that.
+
+Current coverage across the nine real hero sheets: `item` on all nine, `victory` on eight,
+`walk` on three (Machinist, Warden, Nullifier). An action plays as four 500 ms phases —
+walk out, strike, walk back, then the damage lands — and a sheet without `walk` slides while
+playing `idle` through the two walking phases. That reads acceptably, and the renderer picks
+up real walk frames the instant a sheet provides them, with no code change. A short
+two-to-four frame side-view cycle is all it needs.
 
 Non-looping clips are **stretched to span their beat**, so pick a frame count that reads
 well and ignore timing entirely.
