@@ -14,7 +14,9 @@
 import type {ActorId, BattleEvent, StatusId} from './types.js';
 
 export type BeatKind =
-  | 'actor_step'     // actor moves forward to act
+  | 'approach'       // actor slides out to striking distance
+  | 'strike'         // the action itself, held at full extension
+  | 'retreat'        // actor slides back to its slot
   | 'cast'           // spell/channel wind-up
   | 'impact'         // the moment of contact; renderers flash and play the hit sound
   | 'hurt'           // the target's reaction, which outlasts the flash
@@ -61,61 +63,64 @@ export type Beat = {
 
 export type BeatScript = {beats: Beat[]; totalMs: number};
 
-/** How much slower than the originally tuned pace everything plays.
+/** Global pace dial. 1 means the table below is in real milliseconds.
  *
- * 2 is half speed. The values below keep the relationships that were tuned by eye -- the
- * flash stays short against a long recoil, the health drain still carries the weight --
- * and this one number moves all of them together.
- *
- * It exists because the per-frame rate falls out of the beat length: a clip is stretched
- * to fit its beat, so an 8-frame animation across the old 320ms step was 40ms a frame and
- * finished inside a third of a second. That was too fast to read, which also made the
- * attack, cast and item clips indistinguishable from each other even though the renderer
- * was correctly choosing between them.
- *
- * `?speed=2` restores the previous pace for comparison without a rebuild.
- *
- * Exported so other presentation durations scale with it. Anything timed in milliseconds
- * that the player watches belongs on this dial; leaving one off means it plays at a
- * different speed from everything around it. */
-export const PACE = 2;
+ * It was 2 for a while, doubling a table tuned at half these numbers. The four action
+ * phases are now specified directly as the sequence a player should be able to count, so
+ * the indirection stopped paying for itself and every value here is literal. `?speed=`
+ * still scales playback at runtime for comparison. */
+export const PACE = 1;
 
-/** Scales a duration. Rates are divided instead -- see textCharsPerSecond. */
-const slow = (ms: number): number => Math.round(ms * PACE);
-
-/** Single place to tune the feel of the whole game. Milliseconds. */
+/** Single place to tune the feel of the whole game. Milliseconds, literal. */
 export const TIMING = {
-  /** An attack clip is fitted to this, so it also sets the animation's frame rate:
-   * four frames across the base 320ms is 80ms each, which reads. At 180ms it did not.
-   * The Oracle's eight-frame clips need the slower pace to read at all. */
-  actorStep: slow(320),
-  castWindUp: slow(560),
-  /** The hit flash only. Deliberately short and sharp. */
-  impact: slow(110),
+  // --- the action sequence ---------------------------------------------------------
+  // One action reads as four equal phases, in this order, so it is followable rather
+  // than simultaneous. Previously the walk and the swing were the *same* beat and the
+  // damage arrived during the swing, which is why nothing had an apparent order.
+  /** Acting character slides from its slot to striking distance. */
+  approach: 500,
+  /** The attack, cast or item clip plays, held at full extension. Contact lands inside. */
+  strike: 500,
+  /** Slides back to its slot. */
+  retreat: 500,
+  /** Only now do the damage numbers rise and the health bars drain. */
+  indicator: 500,
+
+  // --- within those phases ---------------------------------------------------------
+  /** The hit flash. Deliberately short and sharp, inside the strike. */
+  impact: 180,
   /** The target's reaction. Separate from the flash: a recoil needs time to register,
    * where a flash should not linger. */
-  hurtReact: slow(240),
-  damageNumberHold: slow(750),
-  /** Health bars drain rather than snap; this is most of the perceived weight. */
-  hpTween: slow(480),
-  mpTween: slow(260),
-  /** Consecutive hits of a multi-hit ability. */
-  multiHitStagger: slow(150),
-  koCollapse: slow(720),
-  statusPopup: slow(300),
+  hurtReact: 400,
+  /** Successive hits of a multi-hit ability, and successive targets of a sweep. Small
+   * enough that four of them still fit inside one strike phase. */
+  multiHitStagger: 80,
+  /** How long a damage number stays up. Matches the indicator phase it belongs to. */
+  damageNumberHold: 500,
+  /** Health bars drain rather than snap, within the indicator phase. */
+  hpTween: 450,
+  mpTween: 520,
+
+  // --- everything else -------------------------------------------------------------
+  castWindUp: 1120,
+  koCollapse: 1440,
+  statusPopup: 600,
   /** A boss phase change stops everything. */
-  phaseHold: slow(900),
-  telegraph: slow(420),
-  victoryHold: slow(1200),
-  defeatHold: slow(1400),
+  phaseHold: 1800,
+  telegraph: 840,
+  victoryHold: 2400,
+  defeatHold: 2800,
   /** Gap between two separate actors acting in the same batch. */
-  betweenActors: slow(200),
-  /** Characters per second for typed message text. A rate, so slowing the game down
-   * divides it: multiplying would have made text type twice as fast as everything else. */
-  textCharsPerSecond: 42 / PACE,
+  betweenActors: 400,
+  /** Characters per second for typed message text. */
+  textCharsPerSecond: 21,
   /** Floor so one-character messages are still readable. */
-  minMessage: slow(220),
+  minMessage: 440,
 } as const;
+
+/** The full span of one action, approach through indicator. */
+export const ACTION_MS =
+  TIMING.approach + TIMING.strike + TIMING.retreat + TIMING.indicator;
 
 export type ChoreographOptions = {
   /** Playback multiplier. 2 means twice as fast; used for hold-to-skip. */
@@ -162,7 +167,10 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
   /** A run of consecutive damage events is staggered from a shared base time, so the
    * hits of a multi-hit ability land in quick succession with overlapping tweens. */
   let consecutiveHits = 0;
-  let hitRunBase = 0;
+  /** Where the current action's strike phase begins, and where its indicator phase does.
+   * Damage lands inside the former; its numbers and bar drain belong to the latter. */
+  let strikeAt = 0;
+  let indicatorAt = 0;
 
   const push = (beat: Omit<Beat, 'at'>, at = cursor): Beat => {
     const entry: Beat = {...beat, at};
@@ -184,11 +192,18 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
 
     switch (event.type) {
       case 'action_committed': {
-        // Carries the ability so the renderer can pick a clip by what is being done. A
-        // step beat without it leaves a spell and a potion indistinguishable from a swing.
-        push({duration: TIMING.actorStep, kind: 'actor_step', actorId: actor,
+        // Three beats, not one. Each carries the ability so the renderer can pick a clip
+        // by what is being done: without it a spell and a potion are indistinguishable
+        // from a swing.
+        push({duration: TIMING.approach, kind: 'approach', actorId: actor,
           abilityId: event.abilityId, source: event.type});
-        cursor += TIMING.actorStep;
+        strikeAt = cursor + TIMING.approach;
+        push({duration: TIMING.strike, kind: 'strike', actorId: actor,
+          abilityId: event.abilityId, source: event.type}, strikeAt);
+        push({duration: TIMING.retreat, kind: 'retreat', actorId: actor,
+          abilityId: event.abilityId, source: event.type}, strikeAt + TIMING.strike);
+        indicatorAt = strikeAt + TIMING.strike + TIMING.retreat;
+        cursor = indicatorAt;
         break;
       }
       case 'channel_started': {
@@ -199,8 +214,14 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
         break;
       }
       case 'damage': {
-        if (consecutiveHits === 0) hitRunBase = cursor;
-        const at = hitRunBase + consecutiveHits * TIMING.multiHitStagger;
+        // Contact sits a little past the middle of the strike, so the clip has visibly
+        // committed before anything is taken off. Successive hits -- a multi-hit ability,
+        // or the several targets of a sweep -- stagger from there and still fit inside it.
+        const stagger = consecutiveHits * TIMING.multiHitStagger;
+        const at = strikeAt + Math.round(TIMING.strike * 0.5) + stagger;
+        // Numbers and the bar drain wait for the indicator phase, after the retreat, so
+        // the four phases stay separable instead of overlapping into one blur.
+        const shownAt = indicatorAt + stagger;
         const amount = event.amount ?? 0;
         const before = hp.get(target ?? '') ?? (event.hpAfter ?? 0) + amount;
         push({duration: TIMING.impact, kind: 'impact', actorId: actor, targetId: target,
@@ -208,10 +229,10 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
         push({duration: TIMING.hurtReact, kind: 'hurt', targetId: target,
           abilityId: event.abilityId, source: event.type}, at);
         push({duration: TIMING.damageNumberHold, kind: 'damage_number', targetId: target,
-          amount, abilityId: event.abilityId, source: event.type}, at + TIMING.impact);
+          amount, abilityId: event.abilityId, source: event.type}, shownAt);
         push({duration: TIMING.hpTween, kind: 'hp_change', targetId: target,
           from: before, to: event.hpAfter ?? Math.max(0, before - amount), amount,
-          source: event.type}, at + TIMING.impact);
+          source: event.type}, shownAt);
         const intensity = shakeIntensity(amount, opts.maxHp?.[target ?? '']);
         if (intensity > 0) {
           push({duration: Math.round(120 + 180 * intensity), kind: 'shake', intensity,
@@ -219,7 +240,10 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
         }
         if (event.hpAfter !== undefined) hp.set(target ?? '', event.hpAfter);
         consecutiveHits++;
-        cursor = Math.max(cursor, at + TIMING.impact + TIMING.hpTween, at + TIMING.hurtReact);
+        // The action ends when its indicator phase does, so the next actor does not begin
+        // while this one's numbers are still on screen.
+        cursor = Math.max(cursor, shownAt + TIMING.damageNumberHold,
+          shownAt + TIMING.hpTween, at + TIMING.hurtReact);
         break;
       }
       case 'heal': {
@@ -320,9 +344,9 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
       }
       case 'cover_redirect': {
         consecutiveHits = 0;
-        push({duration: TIMING.actorStep, kind: 'message',
+        push({duration: TIMING.statusPopup, kind: 'message',
           text: `${nameOf(actor, opts)} covers ${nameOf(target, opts)}`, source: event.type});
-        cursor += TIMING.actorStep;
+        cursor += TIMING.statusPopup;
         break;
       }
       case 'nullify_absorb': {
@@ -366,7 +390,7 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
 /** Stable ordering for beats that share a timestamp, so playback is deterministic
  * and a flash never lands after the shake it belongs to. */
 const KIND_ORDER: BeatKind[] = [
-  'actor_step', 'cast', 'telegraph', 'impact', 'hurt', 'flash', 'shake',
+  'approach', 'strike', 'retreat', 'cast', 'telegraph', 'impact', 'hurt', 'flash', 'shake',
   'damage_number', 'heal_number', 'hp_change', 'mp_change',
   'status_on', 'status_off', 'ko', 'revive', 'message', 'phase', 'hold', 'victory', 'defeat',
 ];

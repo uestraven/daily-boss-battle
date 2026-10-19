@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ANIMATION_NAMES, CLIP_FALLBACK, CLIP_FOR_KIND, DEFAULT_LOOP_FRAME_MS, animationFor,
   animationsFor, frameFor, frameRect, validateSheet} from '../dist/src/animation.js';
-import {PACE, TIMING, choreograph} from '../dist/src/presentation.js';
+import {ACTION_MS, PACE, TIMING, choreograph} from '../dist/src/presentation.js';
 import {advanceToDecision, createEncounter} from '../dist/src/engine.js';
 import {buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
@@ -40,7 +40,7 @@ test('an attack animation is stretched to span exactly its beat', () => {
   const script = choreograph([
     ev('action_committed', {actorId: 'warden', abilityId: 'attack'}),
   ], {});
-  const step = script.beats.find(b => b.kind === 'actor_step');
+  const step = script.beats.find(b => b.kind === 'strike');
   const at = t => animationFor('warden', {script, timeMs: t, sheet});
 
   assert.equal(at(step.at).name, 'attack');
@@ -58,7 +58,7 @@ test('an attack animation is stretched to span exactly its beat', () => {
 
 test('every frame of a stretched clip is actually shown', () => {
   const script = choreograph([ev('action_committed', {actorId: 'warden', abilityId: 'attack'})], {});
-  const step = script.beats.find(b => b.kind === 'actor_step');
+  const step = script.beats.find(b => b.kind === 'strike');
   const seen = new Set();
   for (let t = step.at; t < step.at + step.duration; t += 1) {
     seen.add(animationFor('warden', {script, timeMs: t, sheet}).frame);
@@ -108,7 +108,7 @@ test('a victorious survivor loops its victory clip', () => {
 test('a missing clip degrades to idle instead of drawing nothing', () => {
   const minimal = {...sheet, clips: {idle: {row: 0, frames: 1, loop: true}}};
   const script = choreograph([ev('action_committed', {actorId: 'warden', abilityId: 'attack'})], {});
-  const step = script.beats.find(b => b.kind === 'actor_step');
+  const step = script.beats.find(b => b.kind === 'strike');
   const a = animationFor('warden', {script, timeMs: step.at, sheet: minimal});
   assert.equal(a.name, 'idle', 'falls back rather than failing');
   assert.equal(a.frame, 0);
@@ -210,7 +210,7 @@ const clipFor = (abilityId, abilityInfo, useSheet = fullSheet) => {
     ev('action_committed', {actorId: 'm', abilityId}),
     ev('damage', {actorId: 'm', targetId: 'b', abilityId, amount: 5, hpAfter: 995}),
   ], {maxHp: {b: 1000}});
-  const step = script.beats.find(b => b.kind === 'actor_step');
+  const step = script.beats.find(b => b.kind === 'strike');
   assert.ok(step, 'a committed action produces a step beat');
   return animationFor('m', {script, timeMs: step.at + 10, sheet: useSheet, abilityInfo}).name;
 };
@@ -229,7 +229,7 @@ test('a swing, a spell and a potion each play their own clip', () => {
 
 test('the step beat carries the ability, or selection has nothing to work from', () => {
   const script = choreograph([ev('action_committed', {actorId: 'm', abilityId: 'fire'})], {});
-  const step = script.beats.find(b => b.kind === 'actor_step');
+  const step = script.beats.find(b => b.kind === 'strike');
   assert.equal(step.abilityId, 'fire');
 });
 
@@ -305,28 +305,34 @@ test('a channelled wind-up stays a cast whatever it ends in', () => {
     abilityInfo: {slam: {kind: 'physical'}}}).name, 'cast');
 });
 
-test('an eight-frame clip is readable at the shipped pace', () => {
-  // The Oracle's clips have eight frames where the placeholders have two to four, and a
-  // clip is stretched to fit its beat -- so frame rate falls out of beat length. At the
-  // original pace an eight-frame attack was 40ms a frame and over inside a third of a
-  // second, which is what made the attack, cast and item clips indistinguishable even
-  // though the renderer was picking between them correctly.
-  const perFrame = TIMING.actorStep / 8;
-  assert.ok(perFrame >= 70, `${perFrame.toFixed(0)}ms per frame is too fast to read`);
-  // And the distinct pose is on screen long enough to register, not just the clip.
-  assert.ok(TIMING.actorStep >= 500, 'the whole action should outlast a glance');
+test('an eight-frame clip is readable in its strike phase', () => {
+  // A clip is stretched to fit its beat, so frame rate falls out of beat length. The
+  // strike phase is fixed at 500ms by the four-phase sequence, which puts an eight-frame
+  // attack at ~62ms a frame -- about 16fps, which reads fine for pixel art. The earlier
+  // 70ms floor was set when one beat covered the whole action; separating the phases is
+  // worth the few milliseconds.
+  const perFrame = TIMING.strike / 8;
+  assert.ok(perFrame >= 55, `${perFrame.toFixed(0)}ms per frame is too fast to read`);
+  assert.ok(perFrame <= 180, `${perFrame.toFixed(0)}ms per frame drags`);
+  assert.ok(TIMING.strike >= 400, 'the strike should outlast a glance');
 });
 
-test('the pace dial moves every watched duration together', () => {
-  // A duration left off the dial plays at a different speed from everything around it.
-  // DEFAULT_EFFECT_MS was exactly that: fixed at 260ms while the game halved its speed,
-  // which stopped multi-hit effects overlapping.
-  assert.ok(PACE >= 1, 'PACE is a slowdown factor');
-  assert.equal(TIMING.actorStep, 320 * PACE, 'durations scale with the dial');
-  assert.equal(TIMING.impact, 110 * PACE);
-  // Rates divide rather than multiply, or text would type faster as the game slows.
-  assert.equal(TIMING.textCharsPerSecond, 42 / PACE);
-  assert.ok(TIMING.textCharsPerSecond < 42, 'slower game, slower typing');
+test('the action is four equal phases that sum to its span', () => {
+  // The sequence a player should be able to count: walk out, strike, walk back, then the
+  // damage lands. Equal lengths are the point -- it is what makes the order followable
+  // rather than a blur, and it was specified as four 500ms steps.
+  assert.equal(TIMING.approach, 500);
+  assert.equal(TIMING.strike, 500);
+  assert.equal(TIMING.retreat, 500);
+  assert.equal(TIMING.indicator, 500);
+  assert.equal(ACTION_MS, 2000, 'one action spans two seconds');
+  assert.equal(ACTION_MS,
+    TIMING.approach + TIMING.strike + TIMING.retreat + TIMING.indicator);
+  // PACE is now 1, so this table is in real milliseconds rather than half of them.
+  assert.equal(PACE, 1, 'TIMING is literal; ?speed= scales playback instead');
+  // Contact has to happen inside the strike, not after the character has walked home.
+  assert.ok(TIMING.impact < TIMING.strike, 'the flash fits inside the strike');
+  assert.ok(TIMING.hpTween <= TIMING.indicator, 'the bar finishes draining in its phase');
 });
 
 // --- Looping clips run off their own clock ------------------------------------------
@@ -369,7 +375,7 @@ test('a beat-driven clip still uses the batch clock, not the idle clock', () => 
     ev('action_committed', {actorId: 'm', abilityId: 'swing'}),
     ev('damage', {actorId: 'm', targetId: 'b', abilityId: 'swing', amount: 5, hpAfter: 95}),
   ], {maxHp: {b: 100}});
-  const step = script.beats.find(b => b.kind === 'actor_step');
+  const step = script.beats.find(b => b.kind === 'strike');
   const info = {swing: {kind: 'physical'}};
   const early = animationFor('m', {script, timeMs: step.at + 10, sheet: fullSheet,
     abilityInfo: info, idleMs: 999_999});

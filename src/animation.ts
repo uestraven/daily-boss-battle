@@ -20,12 +20,13 @@ export type AnimationName =
   | 'attack'    // stepping in and striking
   | 'cast'      // channelled or magical wind-up
   | 'item'      // reaching for a pouch; optional, falls back to idle
+  | 'walk'      // moving to and from striking distance; optional, falls back to idle
   | 'hurt'      // taking a hit
   | 'ko'        // collapsing, then staying down on its last frame
   | 'victory';  // looping; winners only
 
 export const ANIMATION_NAMES: AnimationName[] =
-  ['idle', 'attack', 'cast', 'item', 'hurt', 'ko', 'victory'];
+  ['idle', 'walk', 'attack', 'cast', 'item', 'hurt', 'ko', 'victory'];
 
 /** Which clip an acting actor plays, by what kind of thing it is doing.
  *
@@ -93,6 +94,10 @@ export type ActorAnimation = {
  * stays distinct from it. */
 export const CLIP_FALLBACK: Record<AnimationName, readonly AnimationName[]> = {
   idle: ['idle'],
+  // No sheet has a walk row yet, so the character slides while breathing. That reads
+  // acceptably and costs nothing; real walk frames would simply be used the moment a
+  // sheet has them.
+  walk: ['walk', 'idle'],
   attack: ['attack', 'idle'],
   cast: ['cast', 'attack', 'idle'],
   item: ['item', 'cast', 'attack', 'idle'],
@@ -130,12 +135,14 @@ function drivingBeat(
   const cast = active.find(b => b.kind === 'cast' && b.actorId === actorId);
   if (cast) return {beat: cast, name: 'cast'};
 
-  const step = active.find(b => b.kind === 'actor_step' && b.actorId === actorId);
-  if (step) return {beat: step, name: clipForAction(step, abilityInfo)};
+  // The strike phase is the action itself: attack, cast or item by ability kind.
+  const strike = active.find(b => b.kind === 'strike' && b.actorId === actorId);
+  if (strike) return {beat: strike, name: clipForAction(strike, abilityInfo)};
 
-  // An actor whose hit is landing is still mid-action after its step beat ended.
-  const striking = active.find(b => b.kind === 'impact' && b.actorId === actorId);
-  if (striking) return {beat: striking, name: clipForAction(striking, abilityInfo)};
+  // Walking out and back. The slide is the motion; the clip is just the gait.
+  const moving = active.find(b => (b.kind === 'approach' || b.kind === 'retreat')
+    && b.actorId === actorId);
+  if (moving) return {beat: moving, name: 'walk'};
 
   return null;
 }

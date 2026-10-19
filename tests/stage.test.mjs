@@ -921,11 +921,10 @@ const leanOf = (state, script, actorId, timeMs) => {
   return (slot.x - Math.floor(SPRITE.hero.width / 2)) - sprite.x;
 };
 
-test('an attacker is still extended when its blow lands', () => {
-  // The defect: stepFor read only the currently active beats, and the actor_step beat
-  // ends before the impact it leads into. So the lean was a self-contained out-and-back
-  // that finished first, and the character struck from a standing position having lunged
-  // at nothing a moment earlier.
+test('the action walks out, strikes, walks back, then lands its damage', () => {
+  // The sequence as specified: four equal phases in a fixed order. It used to be one
+  // beat covering the walk and the swing at once, with the damage arriving during the
+  // swing, which is why nothing had a followable order.
   const state = freshState();
   const hero = state.party[0];
   const script = choreograph([
@@ -933,18 +932,31 @@ test('an attacker is still extended when its blow lands', () => {
     ev('damage', {actorId: hero, targetId: state.bossId, abilityId: 'attack',
       amount: 50, hpAfter: 950}),
   ], {maxHp: {[state.bossId]: 1000}});
-  const step = script.beats.find(b => b.kind === 'actor_step');
-  const impact = script.beats.find(b => b.kind === 'impact');
-  assert.ok(impact.at >= step.at + step.duration,
-    'this test only means something while the impact follows the step beat');
+  const beat = kind => script.beats.find(b => b.kind === kind);
+  const [approach, strike, retreat] = ['approach', 'strike', 'retreat'].map(beat);
+  const impact = beat('impact');
+  const number = beat('damage_number');
+  const drain = beat('hp_change');
 
-  assert.equal(leanOf(state, script, hero, step.at), 0, 'starts at home');
-  const atStrike = leanOf(state, script, hero, impact.at);
-  assert.ok(atStrike > 0, 'the attacker must not strike from a standing position');
-  assert.equal(atStrike, leanOf(state, script, hero, step.at + step.duration / 2 + 160),
-    'and is at full extension, not partway through returning');
-  // Settles back afterwards rather than staying out.
-  assert.equal(leanOf(state, script, hero, script.totalMs), 0, 'returns home');
+  // Phases are contiguous and in order.
+  assert.equal(approach.at, 0);
+  assert.equal(strike.at, approach.at + approach.duration);
+  assert.equal(retreat.at, strike.at + strike.duration);
+  const indicatorAt = retreat.at + retreat.duration;
+
+  // Contact inside the strike; numbers and drain only after walking home.
+  assert.ok(impact.at > strike.at && impact.at + impact.duration <= strike.at + strike.duration,
+    `impact at ${impact.at} should sit inside the strike (${strike.at}..${strike.at + strike.duration})`);
+  assert.equal(number.at, indicatorAt, 'the number waits for the indicator phase');
+  assert.equal(drain.at, indicatorAt, 'and so does the bar');
+
+  // And the lean follows the phases: home, out, planted, home again.
+  assert.equal(leanOf(state, script, hero, approach.at), 0, 'starts at its slot');
+  assert.ok(leanOf(state, script, hero, approach.at + approach.duration / 2) > 0, 'walks out');
+  const planted = leanOf(state, script, hero, strike.at + 10);
+  assert.ok(planted > 0, 'strikes from striking distance, not from its slot');
+  assert.equal(leanOf(state, script, hero, impact.at), planted, 'still planted on contact');
+  assert.equal(leanOf(state, script, hero, indicatorAt), 0, 'home before the damage shows');
 });
 
 test('a multi-hit ability is extended by its first hit, not its last', () => {
@@ -965,19 +977,22 @@ test('a multi-hit ability is extended by its first hit, not its last', () => {
   assert.equal(leanOf(state, script, hero, script.totalMs), 0, 'then settle back');
 });
 
-test('an action with nothing to strike still leans out and back', () => {
-  // A heal or a buff has no impact beat, so there is no contact to hold for. It keeps the
-  // original out-and-back over its own step beat rather than hanging extended.
+test('an action with nothing to strike takes the same four phases', () => {
+  // A heal has no impact beat, but it still walks out, acts and walks back. Giving every
+  // action the same shape is the point: a turn should look like a turn whatever it does.
   const state = freshState();
   const hero = state.party[0];
   const script = choreograph([
     ev('action_committed', {actorId: hero, abilityId: 'cure'}),
     ev('heal', {actorId: hero, targetId: hero, amount: 50, hpAfter: 300}),
   ], {});
-  const step = script.beats.find(b => b.kind === 'actor_step');
-  assert.equal(leanOf(state, script, hero, step.at), 0);
-  assert.ok(leanOf(state, script, hero, step.at + step.duration / 2) > 0, 'leans out');
-  assert.equal(leanOf(state, script, hero, step.at + step.duration), 0, 'and back');
+  for (const kind of ['approach', 'strike', 'retreat']) {
+    assert.ok(script.beats.some(b => b.kind === kind), `a heal still has its ${kind}`);
+  }
+  const strike = script.beats.find(b => b.kind === 'strike');
+  assert.equal(leanOf(state, script, hero, 0), 0, 'starts home');
+  assert.ok(leanOf(state, script, hero, strike.at + 10) > 0, 'out at striking distance');
+  assert.equal(leanOf(state, script, hero, script.totalMs), 0, 'and back by the end');
 });
 
 test('only the acting character moves', () => {

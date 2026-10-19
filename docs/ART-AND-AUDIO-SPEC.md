@@ -38,15 +38,22 @@ by whole numbers. So sprites are small and must read as silhouettes.
 
 **Animations**, one row each. Only `idle` is required; the rest can be added later.
 
-| Row | Clip | Loops | Frames | Fitted to | Per frame at 4 |
+| Row | Clip | Loops | Frames | Fitted to | Per frame at 8 |
 | --- | --- | --- | --- | --- | --- |
-| 0 | `idle` | yes | 2–4 | its own cadence | 320 ms |
-| 1 | `attack` | no | 3–5 | a 320 ms beat | 80 ms |
-| 2 | `cast` | no | 3–4 | a 560 ms beat | 187 ms |
-| 3 | `hurt` | no | 2 | a 240 ms beat | 120 ms |
-| 4 | `ko` | no | 3–4 | a 720 ms beat, holds last frame | 240 ms |
-| 5 | `victory` | yes | 2–3 | its own cadence | 400 ms |
-| 6 | `item` | no | 2–3 | a 320 ms beat | 107 ms |
+| 0 | `idle` | yes | 2–8 | its own cadence | 160 ms |
+| 1 | `attack` | no | 3–8 | the 500 ms strike | 62 ms |
+| 2 | `cast` | no | 3–8 | the 500 ms strike, or a 1120 ms channel | 62 ms |
+| 3 | `item` | no | 2–8 | the 500 ms strike | 62 ms |
+| 4 | `hurt` | no | 2–8 | a 400 ms beat | 50 ms |
+| 5 | `ko` | no | 3–8 | a 1440 ms beat, holds last frame | 180 ms |
+| 6 | `victory` | yes | 2–8 | its own cadence | 150 ms |
+| 7 | `walk` | yes | 2–4 | its own cadence, during approach and retreat | 160 ms |
+
+**`walk` is the one clip no sheet has yet**, and it is the one most worth adding. An action
+now plays as four 500 ms phases — walk out, strike, walk back, then the damage lands — and
+during the two walking phases the character slides while playing `idle`. That reads
+acceptably, and the renderer will use real walk frames the instant a sheet provides them,
+with no code change. A short two-to-four frame side-view walk cycle is all it needs.
 
 Row order is whatever the manifest says; the numbers above match the twelve hero and eight
 boss sheets that ship. `item` is the one row none of them has yet — it is new, and until it

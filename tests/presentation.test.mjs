@@ -23,12 +23,12 @@ test('a single hit expands into step, impact, number, bar drain and shake', () =
     ev('damage', {actorId: 'monk', targetId: 'tide_maw', amount: 120, hpAfter: 880}),
   ], {maxHp: {tide_maw: 1000}});
 
-  for (const kind of ['actor_step', 'impact', 'damage_number', 'hp_change', 'shake']) {
+  for (const kind of ['strike', 'impact', 'damage_number', 'hp_change', 'shake']) {
     assert.ok(kinds(script).includes(kind), `missing ${kind}`);
   }
   // The step must precede the impact, and the impact must precede the number.
   const at = kind => script.beats.find(b => b.kind === kind).at;
-  assert.ok(at('actor_step') < at('impact'), 'actor steps before it connects');
+  assert.ok(at('strike') < at('impact'), 'actor steps before it connects');
   assert.ok(at('impact') <= at('damage_number'), 'number appears on or after impact');
   assert.ok(at('impact') <= at('hp_change'), 'bar drains on or after impact');
 });
@@ -106,9 +106,9 @@ test('separate actors in one batch are given breathing room', () => {
     ev('action_committed', {actorId: 'boss', abilityId: 'tentacle'}),
     ev('damage', {actorId: 'boss', targetId: 'monk', amount: 70, hpAfter: 290}),
   ], {maxHp: {boss: 1000, monk: 360}});
-  const steps = script.beats.filter(b => b.kind === 'actor_step');
+  const steps = script.beats.filter(b => b.kind === 'strike');
   assert.equal(steps.length, 2);
-  assert.ok(steps[1].at > steps[0].at + TIMING.actorStep, 'the second actor waits its turn');
+  assert.ok(steps[1].at > steps[0].at + TIMING.strike, 'the second actor waits its turn');
 });
 
 test('beats are ordered by time, with a stable tiebreak', () => {
@@ -183,7 +183,7 @@ test('beatsAt returns exactly the beats live at a moment', () => {
   ], {maxHp: {boss: 1000}});
   assert.deepEqual(beatsAt(script, -1), []);
   assert.deepEqual(beatsAt(script, script.totalMs + 1), []);
-  const step = script.beats.find(b => b.kind === 'actor_step');
+  const step = script.beats.find(b => b.kind === 'strike');
   assert.ok(beatsAt(script, step.at).includes(step), 'inclusive at the start');
   assert.ok(!beatsAt(script, step.at + step.duration).includes(step), 'exclusive at the end');
 });
@@ -222,10 +222,10 @@ test('clip frame rates are slow enough to read', () => {
   // Measured against the placeholder animations: at 45ms per frame the attack read as a
   // flicker rather than a swing. These bounds keep a retune from going back there.
   const perFrame = (beatMs, frames) => beatMs / frames;
-  assert.ok(perFrame(TIMING.actorStep, 5) >= 55,
-    `a 5-frame attack is ${perFrame(TIMING.actorStep, 5).toFixed(0)}ms per frame; too fast to read`);
-  assert.ok(perFrame(TIMING.actorStep, 4) >= 70,
-    `a 4-frame attack is ${perFrame(TIMING.actorStep, 4).toFixed(0)}ms per frame`);
+  assert.ok(perFrame(TIMING.strike, 5) >= 55,
+    `a 5-frame attack is ${perFrame(TIMING.strike, 5).toFixed(0)}ms per frame; too fast to read`);
+  assert.ok(perFrame(TIMING.strike, 4) >= 70,
+    `a 4-frame attack is ${perFrame(TIMING.strike, 4).toFixed(0)}ms per frame`);
   assert.ok(perFrame(TIMING.hurtReact, 2) >= 90,
     `a 2-frame reaction is ${perFrame(TIMING.hurtReact, 2).toFixed(0)}ms per frame`);
   assert.ok(perFrame(TIMING.koCollapse, 4) >= 140,
@@ -233,7 +233,7 @@ test('clip frame rates are slow enough to read', () => {
   // ...but not so slow that a turn drags.
   // Bounded against the pace dial rather than an absolute: the point is that the tuning
   // has not drifted, and the global pace is a deliberate, separate decision.
-  assert.ok(TIMING.actorStep <= 500 * PACE,
+  assert.ok(TIMING.strike <= 500 * PACE,
     `an attack beat should not exceed ${500 * PACE}ms at PACE ${PACE}`);
   assert.ok(TIMING.hurtReact <= TIMING.damageNumberHold, 'the recoil should not outlast its number');
   assert.ok(TIMING.impact < TIMING.hurtReact, 'the flash is sharp; the reaction is not');
