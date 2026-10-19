@@ -44,6 +44,12 @@
      "frames": 8,
      "loop": true,
      "frameMs": 150
+    },
+    "walk": {
+     "row": 7,
+     "frames": 8,
+     "loop": true,
+     "frameMs": 110
     }
    },
    "name": "The Warden"
