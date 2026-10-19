@@ -49,7 +49,15 @@ by whole numbers. So sprites are small and must read as silhouettes.
 | 6 | `victory` | yes | 2–8 | its own cadence | 150 ms |
 | 7 | `walk` | yes | 2–4 | its own cadence, during approach and retreat | 160 ms |
 
-**`walk` is the one clip no sheet has yet**, and it is the one most worth adding. An action
+**Row order is whatever the manifest says, so check what arrived rather than what was
+asked for.** The Machinist's regenerated sheet put `walk` at row 7 and `victory` at row 8,
+the reverse of the brief. That is harmless — the manifest declares a row per clip — but it
+has to be *noticed*, or the character does a victory flex while walking in. The decisive
+test is the feet: across a walk cycle the ground contact patch swings as the legs
+alternate (the Machinist's goes 30, 26, 17, 25, 26, 27, 29, 31), where a standing loop
+holds steady within two or three pixels.
+
+**`walk` is the clip to add**, and the Machinist now has it. An action
 now plays as four 500 ms phases — walk out, strike, walk back, then the damage lands — and
 during the two walking phases the character slides while playing `idle`. That reads
 acceptably, and the renderer will use real walk frames the instant a sheet provides them,
