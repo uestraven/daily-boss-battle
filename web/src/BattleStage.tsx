@@ -82,12 +82,34 @@ function imageAt(url: string): HTMLImageElement | null {
   return null;
 }
 
+/** Media lives under stable names and is cached stale-while-revalidate, so without this a
+ * returning player gets the previous build's art for one more visit. Harmless for a
+ * recolour, silently broken for a resize: a sheet that grew from 7 rows to 8 had the new
+ * manifest indexing row 7 of a cached 7-row image, which drew the wrong clip and then
+ * nothing at all. The revision makes new art a different URL. */
+const rev = (url: string): string => `${url}?v=${__ASSET_REV__}`;
+
+/** Whether a source rectangle lies inside the decoded image, warned about once per sheet
+ * and row so a mismatch is reported rather than silently drawn as a blank. */
+const warnedRows = new Set<string>();
+function inSheet(image: HTMLImageElement, sheet: {file: string; sy: number; sh: number}): boolean {
+  if (sheet.sy + sheet.sh <= image.naturalHeight) return true;
+  const key = `${sheet.file}@${sheet.sy}`;
+  if (!warnedRows.has(key)) {
+    warnedRows.add(key);
+    console.warn(`${sheet.file}: row at y=${sheet.sy} is outside the image `
+      + `(${image.naturalWidth}x${image.naturalHeight}); drawing the first row instead. `
+      + 'The manifest and the art disagree, or a stale copy is cached.');
+  }
+  return false;
+}
+
 const sheetImage = (file: string): HTMLImageElement | null =>
-  imageAt(`${base()}battle-sprites/${file}`);
+  imageAt(rev(`${base()}battle-sprites/${file}`));
 const effectImage = (file: string): HTMLImageElement | null =>
-  imageAt(`${base()}battle-effects/${file}`);
+  imageAt(rev(`${base()}battle-effects/${file}`));
 const backdropImage = (file: string): HTMLImageElement | null =>
-  imageAt(`${base()}battle-backgrounds/${file}`);
+  imageAt(rev(`${base()}battle-backgrounds/${file}`));
 
 export function BattleStage({state, script, timeMs, idleMs, roles, sheets, abilityInfo,
   effects, backgroundFile}: BattleStageProps) {
@@ -207,7 +229,15 @@ function paint(
         ctx.globalAlpha = command.dim ? 0.35 : 1;
 
         if (image && command.sheet) {
-          const {sx, sy, sw, sh} = command.sheet;
+          const {sx, sw, sh} = command.sheet;
+          // Clamp the row to what the loaded image actually holds.
+          //
+          // `drawImage` with a source rect past the bottom edge draws *nothing* and raises
+          // nothing, so a manifest indexing a row the image lacks makes a character vanish
+          // with no clue why. That is exactly what a stale cached sheet caused once the
+          // sheets grew an eighth row. Falling back to the first row shows the idle pose
+          // instead -- wrong, but visible, and visibly wrong is what gets reported.
+          const sy = inSheet(image, command.sheet) ? command.sheet.sy : 0;
           // Sheets are authored facing RIGHT, which is the usual convention and what the
           // art actually arrives as. The boss stands on the left and faces right, so it
           // draws unflipped; heroes stand on the right and face the boss, so they mirror.

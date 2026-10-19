@@ -9,3 +9,7 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** Build-time asset revision, injected by `define` in web/vite.config.ts. Appended to
+ * media URLs so new art is never served from a cache entry keyed to the old art. */
+declare const __ASSET_REV__: string;

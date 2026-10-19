@@ -52,11 +52,20 @@ by whole numbers. So sprites are small and must read as silhouettes.
 **Row order is whatever the manifest says, so check what arrived rather than what was
 asked for.** No eight-row sheet has yet matched the brief exactly:
 
+The brief's order, 1-indexed, is: idle, attack, cast, item, hurt, defeat, walk, victory.
+
 | sheet | what arrived |
 |---|---|
-| Machinist | `walk` at 7, `victory` at 8 — the last two reversed |
-| Warden | as briefed |
-| Nullifier | `cast` at 2, `attack` at 3 — the two action rows reversed; row 8 unusable |
+| Machinist | believed `walk` at 7, `victory` at 8 — reversed; **unconfirmed** |
+| Warden | as briefed. Row 7 is an upright stride, row 8 a four-legged prowl |
+| Nullifier | believed `cast` at 2, `attack` at 3 — reversed; row 8 a four-legged crawl; **unconfirmed** |
+
+**Ask rather than infer.** Both "reversed" readings above are mine from measurement, and the
+one I was most confident about — the Warden's — was wrong: I read its row 7 stride as a
+victory and its row 8 prowl as a walk, which had the character prowling on all fours to
+close distance and striding on the spot after winning. A four-legged pose is a *victory*
+display for a feline character, not a gait, and no measurement told me that. The person who
+wrote the brief knows the row list; the cost of asking is one message.
 
 This is harmless, since the manifest declares a row per clip, but it has to be *noticed*
 or the character flexes in triumph while walking into range, or mimes a spell to swing a

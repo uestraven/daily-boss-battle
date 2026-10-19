@@ -421,6 +421,42 @@ test('bosses must not declare a walk clip', () => {
   }
 });
 
+test('every declared clip row exists in the sheet it names', () => {
+  // The failure this prevents is invisible rather than loud. `drawImage` given a source
+  // rect past the bottom of an image draws nothing and throws nothing, so a manifest row
+  // the art does not have makes a character silently vanish for that one clip. It happened
+  // for real when the sheets grew an eighth row: a 7-row copy was still cached, so row 7
+  // drew a blank and row 6 drew the clip that used to live there.
+  //
+  // Reads the PNG header directly -- width and height are at a fixed offset in the IHDR
+  // chunk -- so this needs no decoder and stays cheap enough to run every time.
+  const manifest = JSON.parse(readFileSync(
+    new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
+  let checked = 0;
+  for (const [kind, section] of Object.entries({heroes: manifest.heroes, bosses: manifest.bosses})) {
+    for (const [id, sheet] of Object.entries(section)) {
+      const png = readFileSync(new URL(
+        `../web/public/battle-sprites/${sheet.file}`, import.meta.url));
+      const width = png.readUInt32BE(16);
+      const height = png.readUInt32BE(20);
+      assert.equal(width % sheet.frameWidth, 0,
+        `${kind}/${id}: ${width}px wide is not a whole number of ${sheet.frameWidth}px frames`);
+      assert.equal(height % sheet.frameHeight, 0,
+        `${kind}/${id}: ${height}px tall is not a whole number of ${sheet.frameHeight}px rows`);
+      const rows = height / sheet.frameHeight;
+      const columns = width / sheet.frameWidth;
+      for (const [name, clip] of Object.entries(sheet.clips)) {
+        assert.ok(clip.row < rows,
+          `${kind}/${id}: clip "${name}" wants row ${clip.row} but the sheet has ${rows} rows`);
+        assert.ok(clip.frames <= columns,
+          `${kind}/${id}: clip "${name}" wants ${clip.frames} frames but the sheet has ${columns}`);
+        checked++;
+      }
+    }
+  }
+  assert.ok(checked > 0, 'there are clips to check');
+});
+
 test('walk and victory are the only clips the hero sheets are short of', () => {
   // Stated as a fact so it stops being true the moment it stops being true: if a
   // regenerated sheet drops a row, this says which.

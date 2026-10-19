@@ -20,7 +20,13 @@
  * To unregister by hand: devtools → Application → Service workers → Unregister.
  */
 
-const VERSION = 'v1';
+// Bumped to v2 to discard asset caches written before media URLs carried a build
+// revision. Those entries are keyed to bare filenames, so they would otherwise keep
+// shadowing re-sized art: a cached 7-row sprite sheet served against a manifest that
+// expects 8 rows drew the wrong clip and then nothing. Changing the name makes `activate`
+// delete them. Media URLs now carry `?v=<sha>`, so this should not need bumping again for
+// art changes.
+const VERSION = 'v2';
 const SHELL_CACHE = `dbb-shell-${VERSION}`;
 const ASSET_CACHE = `dbb-assets-${VERSION}`;
 const CURRENT = new Set([SHELL_CACHE, ASSET_CACHE]);
@@ -75,13 +81,33 @@ async function cacheFirst(request, cacheName) {
   return response;
 }
 
+/** Deletes other cached revisions of the same file.
+ *
+ * Media URLs carry `?v=<sha>`, which is what stops a resized sheet being served from an
+ * entry cached against the old one. The cost is that every deploy introduces new keys
+ * while the old ones remain, and since this worker's own code no longer changes per
+ * deploy, `activate` does not run to clean them up — so without this the asset cache grows
+ * without bound, a few megabytes per deploy, on a player's phone. Keeping exactly one
+ * revision per path bounds it to the size of the game's media. */
+async function pruneOldRevisions(cache, url) {
+  for (const key of await cache.keys()) {
+    const other = new URL(key.url);
+    if (other.pathname === url.pathname && other.search !== url.search) {
+      await cache.delete(key).catch(() => {});
+    }
+  }
+}
+
 /** Serve from cache immediately, refresh in the background for next time. */
 async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
   const hit = await cache.match(request);
   const update = fetch(request)
-    .then(response => {
-      if (cacheable(response)) cache.put(request, response.clone()).catch(() => {});
+    .then(async response => {
+      if (cacheable(response)) {
+        await cache.put(request, response.clone()).catch(() => {});
+        await pruneOldRevisions(cache, new URL(request.url)).catch(() => {});
+      }
       return response;
     })
     .catch(() => null);

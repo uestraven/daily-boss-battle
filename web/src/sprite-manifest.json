@@ -39,17 +39,17 @@
      "frames": 8,
      "loop": false
     },
-    "victory": {
+    "walk": {
      "row": 6,
      "frames": 8,
      "loop": true,
-     "frameMs": 150
+     "frameMs": 110
     },
-    "walk": {
+    "victory": {
      "row": 7,
      "frames": 8,
      "loop": true,
-     "frameMs": 110
+     "frameMs": 150
     }
    },
    "name": "The Warden"

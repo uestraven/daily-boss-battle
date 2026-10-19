@@ -18,12 +18,17 @@ export function spriteMeta(kind: SpriteKind, id: string): SpriteMeta | null {
   return sections[kind][id] ?? null;
 }
 
-/** Uses the Vite deployment base so GitHub Pages/subpath builds work too. */
+/** Uses the Vite deployment base so GitHub Pages/subpath builds work too.
+ *
+ * Carries the build revision for the same reason the stage's loader does: these files are
+ * cached stale-while-revalidate under names that never change, so without it a returning
+ * player keeps the previous build's art for a visit. Formatted identically to the stage's
+ * URL for the same file, so both share one cache entry rather than downloading twice. */
 export function spriteUrl(kind: SpriteKind, id: string): string | null {
   const info = spriteMeta(kind, id);
   if (!info) return null;
   const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-  return `${base}battle-sprites/${info.file}`;
+  return `${base}battle-sprites/${info.file}?v=${__ASSET_REV__}`;
 }
 
 /** The validated animation sheet for an actor, or null when the manifest has no entry.
