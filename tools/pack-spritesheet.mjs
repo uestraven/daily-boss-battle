@@ -135,6 +135,44 @@ for (let seed = 0; seed < W * H; seed++) {
 
 let figures = comps.filter(c => c.n >= minPixels);
 
+/** Re-attaches a piece that broke off the figure it belongs to.
+ *
+ * The counterpart to splitMerged. A pose can come apart into more than one component --
+ * a shield held clear of the body, a weapon head, a trailing cloak -- and then it counts
+ * twice. Raising --min-pixels would hide the miscount by *deleting* the piece, which
+ * silently drops part of the pose: the Vanguard's row 2 col 6 had a 50x50, 1101px fragment
+ * that would have vanished that way.
+ *
+ * The test is containment: the fragment's box sits inside another figure's box. At eight
+ * poses to a row no whole pose fits inside another's box, so containment means a part, not
+ * a neighbour. That makes this safe to apply whatever the count, rather than only when it
+ * happens to reconcile. A merged figure carries every label it is made of, because the
+ * resampler keys on the label to avoid drawing a neighbour's pixels. */
+const joinDetached = list => {
+  const fits = (inner, outer) => inner !== outer
+    && inner.minx >= outer.minx - 2 && inner.maxx <= outer.maxx + 2
+    && inner.miny >= outer.miny - 2 && inner.maxy <= outer.maxy + 2;
+  // Largest first, so a fragment attaches to its figure rather than the reverse.
+  const hosts = [...list].sort((a, b) => b.n - a.n);
+  const merged = new Set();
+  const joins = [];
+  for (const piece of [...list].sort((a, b) => a.n - b.n)) {
+    if (merged.has(piece)) continue;
+    const host = hosts.find(h => h.n > piece.n && !merged.has(h) && fits(piece, h));
+    if (!host) continue;
+    host.ids = host.ids ?? new Set([host.id]);
+    host.ids.add(piece.id);
+    host.n += piece.n;
+    merged.add(piece);
+    joins.push(`${piece.w}x${piece.h} (${piece.n}px) into ${host.w}x${host.h}`);
+  }
+  if (joins.length) {
+    console.log(`  re-attached   ${joins.length} detached piece(s): ${joins.join(', ')}`);
+  }
+  return list.filter(f => !merged.has(f));
+};
+figures = joinDetached(figures);
+
 /** Splits a component that is really two frames touching.
  *
  * The most likely merge by far is a thrust whose weapon tip reaches into the next cell: a
@@ -231,8 +269,29 @@ if (figures.length !== cols * rows) {
   console.error('  Frames that touch merge into one component; frames that break up into');
   console.error('  separate pieces count twice. Either raise --min-pixels to ignore debris,');
   console.error('  or the sheet needs more space between poses.');
-  const sizes = figures.map(f => `${f.w}x${f.h}`).join(' ');
-  console.error(`  sizes: ${sizes}`);
+  // Positions, not just sizes. A bare size list says something is wrong without saying
+  // where to look, which means opening the source and hunting by eye. The source row and
+  // column are what actually locate the offender, so they are printed first, and the odd
+  // sizes are flagged against the median so the stray reads at a glance.
+  // Flagged on pixel count, not on height. A KO or prone row is legitimately short and
+  // wide -- the Vanguard's row 6 poses are 46-70px tall against a 126px median -- but it
+  // still carries a full figure's worth of pixels. Area is what separates a real pose from
+  // a fragment.
+  const areas = [...figures].map(f => f.n).sort((a, b) => a - b);
+  const medianN = areas[areas.length >> 1];
+  const cellW = W / cols, cellH = H / rows;
+  console.error('\n  every figure, by position in the source:');
+  for (const f of [...figures].sort((a, b) => (a.miny + a.maxy) - (b.miny + b.maxy)
+    || (a.minx + a.maxx) - (b.minx + b.maxx))) {
+    const row = Math.floor((f.miny + f.h / 2) / cellH);
+    const col = Math.floor((f.minx + f.w / 2) / cellW);
+    const odd = f.n < medianN * 0.4 ? '   <-- far fewer pixels than a pose; a fragment'
+      : f.w > cellW * 1.4 ? '   <-- much wider than a cell; two frames merged'
+      : '';
+    console.error(`    row ${row} col ${col}  ${String(f.w).padStart(3)}x${String(f.h).padStart(3)}`
+      + `  at (${f.minx},${f.miny})  ${String(f.n).padStart(5)} px${odd}`);
+  }
+  console.error(`\n  median figure ${medianN}px of ink. --min-pixels is currently ${minPixels}.`);
   process.exit(1);
 }
 
@@ -279,14 +338,14 @@ const dest = Buffer.alloc(outW * outH * 4);
  * the whole mask drew those strays as detached fragments at the edge of the cell. Keying on
  * the label means a frame can only ever draw its own figure, which also discards whatever
  * was orphaned by a split. */
-const sampleBox = (x0, y0, x1, y1, id) => {
+const sampleBox = (x0, y0, x1, y1, ids) => {
   let r = 0, g = 0, b = 0, hits = 0, total = 0;
   for (let y = Math.floor(y0); y < Math.ceil(y1); y++) {
     for (let x = Math.floor(x0); x < Math.ceil(x1); x++) {
       if (x < 0 || y < 0 || x >= W || y >= H) continue;
       total++;
       const i = y * W + x;
-      if (label[i] !== id) continue;
+      if (!ids.has(label[i])) continue;
       r += rgba[i * 4]; g += rgba[i * 4 + 1]; b += rgba[i * 4 + 2];
       hits++;
     }
@@ -311,7 +370,7 @@ for (let r = 0; r < rows; r++) {
       for (let dx = 0; dx < dw; dx++) {
         const sx0 = f.minx + (dx / dw) * f.w, sx1 = f.minx + ((dx + 1) / dw) * f.w;
         const sy0 = f.miny + (dy / dh) * f.h, sy1 = f.miny + ((dy + 1) / dh) * f.h;
-        const px = sampleBox(sx0, sy0, sx1, sy1, f.id);
+        const px = sampleBox(sx0, sy0, sx1, sy1, f.ids ?? new Set([f.id]));
         if (!px) continue;
         const di = ((oy + dy) * outW + (ox + dx)) * 4;
         dest[di] = px[0]; dest[di + 1] = px[1]; dest[di + 2] = px[2]; dest[di + 3] = px[3];
