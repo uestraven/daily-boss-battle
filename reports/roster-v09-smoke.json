@@ -159,6 +159,27 @@
         "truncated": true,
         "note": "No result is a proof of impossibility; encounters are practice-only pending curation."
       }
+    },
+    {
+      "id": "blade_tyrant",
+      "boss": "The Blade Tyrant",
+      "party": [
+        "brawler",
+        "magus",
+        "warden"
+      ],
+      "attackOnly": "defeat",
+      "boundedSearch": {
+        "bestFound": {
+          "stars": 3,
+          "actions": 18,
+          "heroHP": 385,
+          "tick": 64
+        },
+        "expanded": 1405,
+        "truncated": true,
+        "note": "No result is a proof of impossibility; encounters are practice-only pending curation."
+      }
     }
   ]
 }
