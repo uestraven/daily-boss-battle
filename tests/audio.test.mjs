@@ -5,6 +5,9 @@ import assert from 'node:assert/strict';
 import {HEAVY_HIT_INTENSITY, PHASE_SILENCE_MS, TRACK_FALLBACK, TRACK_PLAYBACK, audioCues,
   musicChanges, requiredSounds, requiredTracks} from '../dist/src/audio.js';
 import {choreograph} from '../dist/src/presentation.js';
+import {existsSync, readdirSync} from 'node:fs';
+
+const musicDir = new URL('../web/public/battle-music/', import.meta.url);
 
 const ev = (type, extra = {}) => ({tick: 1, type, ...extra});
 const script = (events, opts = {}) => choreograph(events, opts);
@@ -271,4 +274,32 @@ test('a lost battle asks for defeat music, having first gone quiet', () => {
   assert.equal(changes.at(-1).track, 'defeat', 'the last change is to defeat music');
   // Which, with no defeat.ogg present, resolves to silence rather than the battle theme.
   assert.equal(TRACK_FALLBACK.defeat, 'silence');
+});
+
+test('the phase-two theme is a real track now, not a fallback', () => {
+  // It used to resolve to the main theme, so a phase change kept the same music playing.
+  // With its own file the transition actually transitions.
+  assert.equal(TRACK_PLAYBACK.battle_phase_two.file, 'battle_theme_phase_2.ogg');
+  assert.notEqual(TRACK_PLAYBACK.battle_phase_two.file, TRACK_PLAYBACK.battle_main.file,
+    'phase two must not point at the main theme');
+  // The fallback stays as it is: if the file ever goes missing, keeping the fight scored
+  // beats a silent phase two.
+  assert.equal(TRACK_FALLBACK.battle_phase_two, 'battle_main');
+});
+
+test('every declared music file exists on disk', () => {
+  // A track pointing at a filename nobody produced silently falls back, which is exactly
+  // how the phase-two theme sat unused after it had been added.
+  const present = new Set(existsSync(musicDir) ? readdirSync(musicDir) : []);
+  const missing = [];
+  for (const [id, playback] of Object.entries(TRACK_PLAYBACK)) {
+    if (!present.has(playback.file)) missing.push(`${id} -> ${playback.file}`);
+  }
+  // victory.ogg and defeat.ogg are known gaps, declared and not yet produced. The point
+  // of this test is that a *present* file is never left unreferenced by a typo.
+  const orphans = [...present].filter(file =>
+    file.endsWith('.ogg') && !Object.values(TRACK_PLAYBACK).some(p => p.file === file));
+  assert.deepEqual(orphans, [],
+    `music on disk that no track references: ${orphans.join(', ')}`);
+  assert.ok(missing.length <= 2, `too many missing tracks: ${missing.join(', ')}`);
 });

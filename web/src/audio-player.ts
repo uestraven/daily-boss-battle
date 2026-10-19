@@ -87,12 +87,26 @@ function fetchBytes(url: string): Promise<ArrayBuffer | null> {
   return task;
 }
 
-/** Starts downloading audio without playing it, so the bytes are already here when the
- * first gesture unlocks the context. Skipped when muted: nothing will be heard, so
- * spending a mobile visitor's data on it would be rude. */
+/** Starts downloading the battle theme without playing it, so the bytes are already here
+ * when the first gesture unlocks the context. Skipped when muted: nothing will be heard,
+ * so spending a mobile visitor's data on it would be rude. */
 export function prefetchMusic(): void {
   if (muted) return;
   const playback = TRACK_PLAYBACK.battle_main;
+  if (playback) void fetchBytes(`${base()}${MUSIC_DIR}/${playback.file}`);
+}
+
+/** Starts downloading the phase-two theme, for when the fight gets there.
+ *
+ * Deliberately separate from prefetchMusic and called later. Each theme is over a
+ * megabyte, so fetching both at page load would spend 2.4 MB of a visitor's data before
+ * they have pressed anything. Fetching it only at the phase change is the other extreme
+ * and the bug this avoids: the switch is exactly when the bytes are needed, so the
+ * transition would land silent while it downloaded. Called once the battle is under way,
+ * which gives it the whole of phase one to arrive. */
+export function prefetchPhaseTwo(): void {
+  if (muted) return;
+  const playback = TRACK_PLAYBACK.battle_phase_two;
   if (playback) void fetchBytes(`${base()}${MUSIC_DIR}/${playback.file}`);
 }
 

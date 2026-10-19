@@ -77,17 +77,28 @@ console.log(`\n  music ${musicRows.filter(r => r.kb !== null).length}/${musicRow
   `   sfx ${sfxRows.filter(r => r.kb !== null).length}/${sfxRows.length}` +
   `   total ${total.toFixed(0)} KiB`);
 
+// Music is not one bucket: each track is fetched at a different point, and saying they
+// all load "at battle start" overstated the cost the moment a second theme existed.
+const kbOf = file => rows.find(r => r.file.endsWith(file) && r.kb !== null)?.kb ?? 0;
 const musicKb = rows.filter(r => r.kind === 'music' && r.kb !== null)
   .reduce((n, r) => n + r.kb, 0);
 const sfxKb = total - musicKb;
-console.log(`  music ${musicKb.toFixed(0)} KiB fetched at battle start; ` +
-  `effects ${sfxKb.toFixed(0)} KiB loaded lazily`);
+const mainKb = kbOf('battle_theme.ogg');
+const phaseTwoKb = kbOf('battle_theme_phase_2.ogg');
+console.log(`  ${mainKb.toFixed(0)} KiB on page load (the battle theme); ` +
+  `${phaseTwoKb.toFixed(0)} KiB once the battle starts (phase two);`);
+console.log(`  ${(musicKb - mainKb - phaseTwoKb).toFixed(0)} KiB of other music and ` +
+  `${sfxKb.toFixed(0)} KiB of effects on first use`);
 
 if (oversize) {
   console.log('');
   for (const row of rows.filter(r => r.hot)) {
     console.log(`  ${row.file} is ${row.kb.toFixed(0)} KiB at ${row.kbps.toFixed(0)} kbps.` +
-      (row.kind === 'music' ? ' It is fetched before the first battle can start.' : ''));
+      (row.file.endsWith('battle_theme.ogg')
+        ? ' It is fetched on page load, before the first battle can start.'
+        : row.file.endsWith('battle_theme_phase_2.ogg')
+          ? ' It is fetched when the battle starts, so it has phase one to arrive.'
+          : ''));
   }
   console.log('  Trim the bitrate rather than the content; q4 is ample at game-mix levels:');
   for (const row of rows.filter(r => r.hot)) {

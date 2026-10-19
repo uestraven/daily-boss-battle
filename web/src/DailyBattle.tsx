@@ -22,7 +22,7 @@ import {ShareCard} from './ShareCard.js';
 import {EmailSignup} from './EmailSignup.js';
 import {resultCardInputFrom} from '../../dist/src/result-card.js';
 import {audioCues, musicChanges} from '../../dist/src/audio.js';
-import {isMuted, playCues, playMusic, prefetchMusic, setMuted, unlockAudio} from './audio-player.js';
+import {isMuted, playCues, playMusic, prefetchMusic, prefetchPhaseTwo, setMuted, unlockAudio} from './audio-player.js';
 import {advanceToDecision as freshBattle} from '../../dist/src/engine.js';
 import {heroes} from '../../dist/src/roster.js';
 import {spriteSheet} from './sprite-catalog.js';
@@ -225,6 +225,10 @@ function Battle({def, catalog, tier, day}:
     if (audioStarted.current || isMuted()) return;
     audioStarted.current = true;
     void playMusic('battle_main');
+    // The fight is under way, so start pulling the phase-two theme now rather than at the
+    // transition. It is another megabyte, and the switch is the one moment it must not
+    // still be downloading.
+    prefetchPhaseTwo();
   }, []);
 
   // Sampled rather than run at 60fps: idle clips hold each frame for 160ms, so a 70ms

@@ -198,7 +198,8 @@ export function requiredSounds(): {id: SoundId; purpose: string}[] {
  * with none set, the whole file loops. */
 export const TRACK_PLAYBACK: Record<Exclude<MusicTrack, 'silence'>, TrackPlayback> = {
   battle_main: {file: 'battle_theme.ogg', gain: 0.7},
-  battle_phase_two: {file: 'battle_phase_two.ogg', gain: 0.75},
+  // Named for the pair it belongs to rather than the track id, matching battle_theme.ogg.
+  battle_phase_two: {file: 'battle_theme_phase_2.ogg', gain: 0.75},
   victory: {file: 'victory.ogg', gain: 0.8},
   defeat: {file: 'defeat.ogg', gain: 0.7},
 };
