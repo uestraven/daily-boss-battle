@@ -416,6 +416,46 @@ It shows the boss's announced intent and tick countdown, previews exact damage w
 reproduces. It drives the same choreography layer the real client will, so it is a
 genuine feel test, not a mock.
 
+### Testing any battle in the browser
+
+The daily is deliberately not choosable, which is right for players and useless for
+checking presentation: reaching a phase transition, a KO, a defeat screen or one
+character's animations otherwise means waiting for the day that serves them. These query
+parameters name a battle directly, and work on the deployed site as well as locally —
+which matters, because the service worker, real devices and the deployed asset paths are
+exactly what cannot be tested on a dev server.
+
+```
+?boss=storm_keeper&party=machinist,warden,monk   any of the 1760 boss-and-party pairings
+?day=2026-12-25                                  any of the 263 verified pool encounters
+?bosshp=46                                        boss opens at 46% HP
+?partyhp=25                                       every hero opens at 25% HP
+?phase=2                                          boss parked just above its threshold,
+                                                  so the next hit triggers the transition
+?mode=easy                                        force Easy or Normal, skip the landing
+?speed=0.5                                        scale playback, 0.25 to 4
+?dev                                              presentation-testing buttons
+?studio                                           the background authoring tool
+```
+
+Two properties make this safe to ship enabled:
+
+- **Anything that names an encounter or seeds state is unranked.** The screen starts it in
+  the same state the replay button uses, and that path never writes the ledger, so no
+  amount of testing can touch a day's record or streak. The banner says so on screen.
+  `?mode=` alone is the exception and stays ranked, since the day's own battle in Easy is
+  still the day's battle — and a day already under way keeps the mode it started with, so
+  a URL cannot flip a ranked fight to Easy to reveal the telegraph.
+- **A malformed parameter is an error, not a silent default.** `?partyhp=0` or
+  `?party=monk,warden` stops with a message naming the parameter. Quietly ignoring it
+  would show a perfectly valid battle that is not the one asked for, with nothing on
+  screen to reveal the mistake.
+
+Only 263 of the 1760 pairings are in the verified pool; the rest carry **no winnability
+guarantee**, so an arbitrary pairing may be impossible. The banner flags that too, so an
+unwinnable fight is not mistaken for a balance bug. Parsing and the opening-state rules
+are unit-tested in `tests/battle-params.test.mjs`.
+
 ## Development
 
 The tools run on Windows as well as POSIX: they load built modules through

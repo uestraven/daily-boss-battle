@@ -16,6 +16,9 @@ import {ABILITY_GROUPS, SUBMENU_GROUPS, availableActions, eligibleTargets, previ
 import {choreograph} from '../../dist/src/presentation.js';
 import {displayedValue, downAt, statusesAt} from '../../dist/src/stage.js';
 import {poolCatalog, selectDaily, targetTierFor, validatePool} from '../../dist/src/pool.js';
+import {applyOpeningState, isPresentationOnly, parseBattleParams, seedsOpeningState,
+  wantsCustomEncounter} from '../../dist/src/battle-params.js';
+import {buildEncounter} from '../../dist/src/generate.js';
 import {dailyStatistics, ensureDay, localDateKey, playDailyAction, setDayMode, stepForDay} from '../../dist/src/daily.js';
 import {loadLedger, saveLedger, clearLedger} from './storage.js';
 import {ShareCard} from './ShareCard.js';
@@ -96,6 +99,18 @@ const SPEED = (() => {
   return Number.isFinite(raw) && raw > 0 ? Math.min(4, Math.max(0.25, raw)) : 1;
 })();
 
+/** Battle configuration from the URL: `?boss=`, `?party=`, `?day=`, `?bosshp=`,
+ * `?partyhp=`, `?phase=`, `?mode=`. Parsed and validated in src/battle-params.ts.
+ *
+ * Any of these other than `?mode=` alone makes the attempt **unranked**: the screen seeds
+ * the same `replay` state that the replay button uses, and the action handler's replay
+ * branch never touches the ledger. So a configured battle cannot overwrite a day's record
+ * or its streak, which is what makes it safe to leave these enabled in production -- and
+ * being enabled in production is the point, because the service worker, real devices and
+ * the deployed asset paths are exactly what cannot be tested locally. */
+const CONFIG = parseBattleParams(
+  typeof window !== 'undefined' ? window.location.search : '');
+
 export default function DailyBattle() {
   // A tab left open past local midnight was stuck on yesterday's battle, because the date
   // was read once on mount. Poll for the change, and check on focus, which is when it is
@@ -116,27 +131,61 @@ export default function DailyBattle() {
     };
   }, []);
 
+  // A URL may ask for another day's encounter. The ledger still keys off the real date, so
+  // this only changes which fight is loaded -- and because any such request is unranked,
+  // no record is written under a date the player was not actually on.
+  const subject = CONFIG.sandbox?.day ?? day;
+
   // The pool is a verified artifact; if it cannot serve today, say so rather than
   // silently falling back to an unverified encounter.
   const setup = useMemo(() => {
+    // A malformed parameter is reported instead of being dropped. Playing on with a valid
+    // but different battle is the one outcome guaranteed to waste someone's time.
+    if (CONFIG.errors.length) {
+      return {error: `Cannot read the battle configuration:\n${CONFIG.errors.join('\n')}`} as const;
+    }
     try {
       const pool = validatePool(poolData as unknown as VerifiedPool);
-      const entry = selectDaily(day, pool);
-      if (!entry) return {error: `No verified encounter is available for ${day}.`} as const;
       const catalog = poolCatalog(pool);
-      return {catalog, def: catalog.definitionFor(day), entry} as const;
+      const request = CONFIG.sandbox;
+
+      // A named boss and party bypass the pool entirely. buildEncounter owns the
+      // validation -- unknown ids, a hero that collides with the boss -- and its errors
+      // land in the panel below.
+      if (request && wantsCustomEncounter(request)) {
+        const def = buildEncounter(request.bossId!, request.party!, {
+          id: `sandbox-${request.bossId}-${request.party!.join('-')}`,
+          contentVersion: `sandbox|${pool.contentHash}`,
+        });
+        return {catalog, def, entry: null, unranked: true} as const;
+      }
+
+      const entry = selectDaily(subject, pool);
+      if (!entry) return {error: `No verified encounter is available for ${subject}.`} as const;
+      return {
+        catalog, entry, def: catalog.definitionFor(subject),
+        unranked: request ? !isPresentationOnly(request) : false,
+      } as const;
     } catch (error) {
       return {error: error instanceof Error ? error.message : String(error)} as const;
     }
-  }, [day]);
+  }, [subject]);
 
   if ('error' in setup) {
     return (
       <main className="dbb-shell">
         <div className="rpg-window dbb-error">
           <h1>Daily Boss Battle</h1>
-          <p>{setup.error}</p>
-          <p className="dbb-hint">Rebuild the verified pool with <code>npm run pool:build</code>.</p>
+          <p style={{whiteSpace: 'pre-line'}}>{setup.error}</p>
+          {CONFIG.errors.length ? (
+            <p className="dbb-hint">
+              Expected <code>?boss=storm_keeper&amp;party=machinist,warden,monk</code>,
+              {' '}<code>?day=YYYY-MM-DD</code>, <code>?bosshp=46</code>,
+              {' '}<code>?partyhp=25</code>, <code>?phase=2</code>, <code>?mode=easy</code>.
+            </p>
+          ) : (
+            <p className="dbb-hint">Rebuild the verified pool with <code>npm run pool:build</code>.</p>
+          )}
         </div>
       </main>
     );
@@ -144,28 +193,45 @@ export default function DailyBattle() {
 
   return (
     <Battle
-      key={day}
+      // Remounts when the configured encounter changes, not just the date, so editing a
+      // parameter in the address bar starts a clean battle rather than grafting new
+      // actors onto the old state.
+      key={`${subject}|${setup.def.id}`}
       def={setup.def}
       catalog={setup.catalog}
-      tier={setup.entry.tier ?? 'standard'}
+      tier={setup.entry?.tier ?? 'standard'}
       day={day}
+      unranked={setup.unranked}
     />
   );
 }
 
-function Battle({def, catalog, tier, day}:
-  {def: EncounterDefinition; catalog: DailyCatalog; tier: string; day: string}) {
+function Battle({def, catalog, tier, day, unranked}:
+  {def: EncounterDefinition; catalog: DailyCatalog; tier: string; day: string;
+   unranked: boolean}) {
   // The ledger is the source of truth: it replays each stored action log, so a battle in
   // progress resumes exactly and a finished day stays finished.
   const [ledger, setLedger] = useState<DailyLedger>(() => ensureDay(loadLedger(catalog), day, catalog));
   /** The mode this day is being played under. A day already under way keeps the mode it
    * was started with, so it cannot be switched mid-fight to reveal a telegraph. */
-  const [mode, setMode] = useState<BattleMode>(
-    () => ledger.records[day]?.mode ?? readMode());
+  /** The record's own mode comes first, ahead of `?mode=`. A day already under way keeps
+   * the mode it started with, and `?mode=` alone is still a *ranked* attempt -- so letting
+   * the URL win would be a way to flip a ranked fight to Easy mid-battle and reveal the
+   * telegraph, which is the exact thing this ordering exists to prevent. On a fresh day,
+   * or in an unranked sandbox, there is no record and the parameter applies. */
+  const [mode, setMode] = useState<BattleMode>(() => unranked
+    // An unranked battle is not the recorded day, so the day's stored mode says nothing
+    // about it and the parameter is free to apply.
+    ? CONFIG.sandbox?.mode ?? readMode()
+    : ledger.records[day]?.mode ?? CONFIG.sandbox?.mode ?? readMode());
   /** The landing screen stands between arriving and playing, so the mode is a deliberate
    * choice rather than a default nobody saw. Skipped for a day already in progress or
    * finished: the choice was made, and re-asking would imply it could be changed. */
   const [showLanding, setShowLanding] = useState(() => {
+    // A URL that names a battle or a mode has already made both choices the landing screen
+    // asks for, so stopping to ask again is pure friction. The landing screen itself is
+    // still reachable the ordinary way, on the real daily.
+    if (unranked || CONFIG.sandbox?.mode) return false;
     const existing = ledger.records[day];
     return !existing || (existing.inputs.length === 0 && !existing.completed);
   });
@@ -188,8 +254,15 @@ function Battle({def, catalog, tier, day}:
    * idle from one clock to the other at the end of a batch would pop the frame. */
   const [idleMs, setIdleMs] = useState(0);
   /** An unranked replay, kept out of the ledger so it cannot overwrite the day's
-   * recorded result. v1 deliberately lets anyone replay as much as they like. */
-  const [replay, setReplay] = useState<BattleStep | null>(null);
+   * recorded result. v1 deliberately lets anyone replay as much as they like.
+   *
+   * A URL-configured battle starts here too, which is the whole of its isolation: the
+   * action handler's `if (replay)` branch plays against the engine directly and never
+   * calls saveLedger, so no amount of testing can touch a real record. Seeded in the
+   * initialiser rather than an effect so the first paint is already the configured
+   * battle -- via an effect, the day's real encounter would flash up first. */
+  const [replay, setReplay] = useState<BattleStep | null>(
+    () => unranked ? seededBattle(def) : null);
   const [mutedState, setMutedState] = useState(() => isMuted());
   /** Autoplay is blocked until a gesture, so the theme cannot start on load. Any gesture
    * counts though, so it starts on the first touch anywhere rather than waiting for an
@@ -325,19 +398,25 @@ function Battle({def, catalog, tier, day}:
   const countdown = nextBossCountdown(state);
   const beginBattle = useCallback((chosen: BattleMode) => {
     setMode(chosen);
-    try { window.localStorage.setItem(MODE_KEY, chosen); } catch { /* private mode */ }
-    // Recorded against the day as well as remembered as a preference, so the result card
-    // can say which interface it was earned under.
-    setLedger(previous => {
-      const next = setDayMode(previous, day, chosen);
-      saveLedger(next);
-      return next;
-    });
+    // Nothing persists for an unranked battle -- not the day's mode, not the preference.
+    // The landing screen is already skipped in that case, so this is belt and braces: it
+    // makes "a sandbox never writes storage" true of the code rather than true only of
+    // the route currently taken to reach it.
+    if (!unranked) {
+      try { window.localStorage.setItem(MODE_KEY, chosen); } catch { /* private mode */ }
+      // Recorded against the day as well as remembered as a preference, so the result card
+      // can say which interface it was earned under.
+      setLedger(previous => {
+        const next = setDayMode(previous, day, chosen);
+        saveLedger(next);
+        return next;
+      });
+    }
     setShowLanding(false);
     // The tap that starts the battle is a user gesture, which is exactly what autoplay
     // needs, so the theme can begin here rather than waiting for the first action.
     startAudio();
-  }, [day, startAudio]);
+  }, [day, startAudio, unranked]);
 
   /** Status badges for one actor, resolved against playback rather than the state the
    * batch ended in -- the same rule as the health bars, so a buff cannot appear before the
@@ -607,6 +686,17 @@ function Battle({def, catalog, tier, day}:
     // Capture phase, so the theme starts on the first touch even if a child stops the
     // event. Firing repeatedly is harmless: startAudio is idempotent.
     <main className="dbb-shell" onPointerDownCapture={startAudio}>
+      {unranked && (
+        // Says so on screen, because an unverified pairing may well be unwinnable: the
+        // pool covers 263 of the 1760 boss-and-party combinations, and the rest carry no
+        // guarantee at all. Without this, an impossible fight reads as a balance bug.
+        <div className="dbb-sandbox" role="status">
+          SANDBOX · unranked, nothing recorded ·{' '}
+          {def.actors[def.bossId]!.name} vs {state.party.map(id => names[id]).join(', ')}
+          {CONFIG.sandbox && wantsCustomEncounter(CONFIG.sandbox)
+            ? ' · not from the verified pool, so it may be unwinnable' : ''}
+        </div>
+      )}
       <header className="dbb-header">
         <span className="dbb-brand">✦ DAILY BOSS BATTLE</span>
         <span className="dbb-header-right">
@@ -828,6 +918,21 @@ function Battle({def, catalog, tier, day}:
       </section>
     </main>
   );
+}
+
+/** A fresh battle with the URL's requested opening state already applied.
+ *
+ * Built from the same primitives as the `?dev` buttons, so a state reachable by clicking
+ * is also reachable by link -- which is what makes it shareable and bookmarkable, and
+ * testable on a phone where there is no console. */
+function seededBattle(def: EncounterDefinition): BattleStep {
+  const step = freshBattle(createEncounter(def), def);
+  const request = CONFIG.sandbox;
+  if (!request || !seedsOpeningState(request)) return step;
+  // The rule itself lives in src/battle-params.ts, where it is unit-tested -- notably that
+  // `phase=2` parks the boss just above its threshold so the next hit triggers the
+  // transition, rather than below it where the transition would never fire.
+  return {...step, state: applyOpeningState(step.state, request, def.bossProgram.transitionPercent)};
 }
 
 /** Sets the boss to a fraction of max HP, for reaching a phase transition on demand. */

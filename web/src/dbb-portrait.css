@@ -170,6 +170,18 @@
   .dbb-hero, .rpg-menu-item, .rpg-menu-back { transition: none !important; }
 }
 
+/* A URL-configured battle. Loud on purpose: it is unranked and may be an unwinnable
+ * pairing, so it must never be mistaken for the real daily. */
+.dbb-sandbox {
+  padding: 4px 8px;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+  color: #1b1020;
+  background: var(--dbb-buff, #ffd36a);
+  text-align: center;
+}
+
 /* Dev-only presentation testing controls, shown with ?dev. */
 .dbb-dev { padding: 6px 8px; border-color: var(--dbb-buff, #ffd36a) !important; }
 .dbb-dev-label {
