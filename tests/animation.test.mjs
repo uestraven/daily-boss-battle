@@ -457,16 +457,16 @@ test('every declared clip row exists in the sheet it names', () => {
   assert.ok(checked > 0, 'there are clips to check');
 });
 
-test('walk and victory are the only clips the hero sheets are short of', () => {
+test('walk is the only clip the hero sheets are short of', () => {
   // Stated as a fact so it stops being true the moment it stops being true: if a
   // regenerated sheet drops a row, this says which.
   //
-  // Only these two are allowed to be absent, because only these two are absent for a
-  // reason rather than by oversight. Both fall back to idle, which reads as "standing
-  // there" -- acceptable for a walk-in and for a won battle, and wrong for anything else.
-  // The Nullifier is why victory is on the list: its eighth row came back as a crawling
-  // animal rather than a triumph, so it is better left unwired than drawn.
-  const OPTIONAL = ['walk', 'victory'];
+  // `victory` was briefly on this list, because the Nullifier's eighth row looked like a
+  // crawling animal rather than a triumph and I left it unwired. It was the victory: a
+  // four-legged pose is a feline victory display, the same thing the Warden's eighth row
+  // does. Wiring it put every real sheet back to a full set bar `walk`, so the narrower
+  // claim holds again -- and a narrower claim catches more.
+  const OPTIONAL = ['walk'];
   const manifest = JSON.parse(readFileSync(
     new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
   const realArt = Object.entries(manifest.heroes).filter(([, s]) => s.frameWidth >= 48);

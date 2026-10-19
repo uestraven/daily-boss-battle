@@ -53,19 +53,32 @@ by whole numbers. So sprites are small and must read as silhouettes.
 asked for.** No eight-row sheet has yet matched the brief exactly:
 
 The brief's order, 1-indexed, is: idle, attack, cast, item, hurt, defeat, walk, victory.
+All three eight-row sheets follow it, with one deviation:
 
-| sheet | what arrived |
-|---|---|
-| Machinist | believed `walk` at 7, `victory` at 8 — reversed; **unconfirmed** |
-| Warden | as briefed. Row 7 is an upright stride, row 8 a four-legged prowl |
-| Nullifier | believed `cast` at 2, `attack` at 3 — reversed; row 8 a four-legged crawl; **unconfirmed** |
+| sheet | row 8 | note |
+|---|---|---|
+| Machinist | victory, a front-facing flex | as briefed; row 7 is a side-on walk carrying the wrench |
+| Warden | victory, a four-legged prowl | as briefed; row 7 is an upright stride |
+| Nullifier | victory, a four-legged crawl | row 3 is a **guard** pose, where the brief has cast |
 
-**Ask rather than infer.** Both "reversed" readings above are mine from measurement, and the
-one I was most confident about — the Warden's — was wrong: I read its row 7 stride as a
-victory and its row 8 prowl as a walk, which had the character prowling on all fours to
-close distance and striding on the spot after winning. A four-legged pose is a *victory*
-display for a feline character, not a gait, and no measurement told me that. The person who
-wrote the brief knows the row list; the cost of asking is one message.
+**Ask rather than infer.** Every row order I inferred from measurement was wrong, and the
+errors were not random — each came from a plausible-looking statistic:
+
+- I read the Warden's row 7 stride as a victory and its row 8 prowl as a walk, so the
+  panther crawled on all fours to close distance and strode on the spot in triumph. A
+  four-legged pose is a feline *victory* display, not a gait. The foot-contact test could
+  not have caught it: four feet span the body, so the patch holds at 39–40px (swing 1)
+  where a stride swings it.
+- I read the Nullifier's rows 2 and 3 as reversed, on a median-luminance swing of 26 against
+  7 for every other row. Row 2 *is* the attack — a Nullifier's physical strike glows, so
+  brightness distinguishes a caster's attack from nothing at all.
+- I called the Nullifier's row 8 unusable and left victory unwired. It is the victory, the
+  same four-legged display as the Warden's.
+
+So treat the measurements in this section as a way to *check* a stated row list, never to
+derive one. The person who wrote the brief knows the order; asking costs one message. Note
+also that a brief may carry a row the engine has no clip for — the Nullifier's `guard` —
+which needs a decision rather than a guess about which clip it serves.
 
 This is harmless, since the manifest declares a row per clip, but it has to be *noticed*
 or the character flexes in triumph while walking into range, or mimes a spell to swing a

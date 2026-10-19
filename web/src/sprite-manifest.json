@@ -250,12 +250,12 @@
      "loop": true,
      "frameMs": 160
     },
-    "cast": {
+    "attack": {
      "row": 1,
      "frames": 8,
      "loop": false
     },
-    "attack": {
+    "cast": {
      "row": 2,
      "frames": 8,
      "loop": false
@@ -280,6 +280,12 @@
      "frames": 8,
      "loop": true,
      "frameMs": 110
+    },
+    "victory": {
+     "row": 7,
+     "frames": 8,
+     "loop": true,
+     "frameMs": 150
     }
    },
    "name": "The Nullifier"
