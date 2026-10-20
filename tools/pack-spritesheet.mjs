@@ -244,10 +244,15 @@ const attachSmallPieces = (keepers, all) => {
     if (!host) continue;
     host.ids = host.ids ?? new Set([host.id]);
     host.ids.add(piece.id);
+    // Never downward. The resampler bottom-aligns a figure's box to the cell floor, so the
+    // lowest pixel in that box *is* the ground line. The Oracle's walk has a gold mote
+    // below her hem in two frames: attaching it dropped the box, which planted the mote on
+    // the floor and lifted her body 8px off it -- a bounce mid-stride. A piece above or
+    // beside the figure is decoration; a piece below its feet would be underground anyway,
+    // so it is left outside the box and simply not drawn.
     host.minx = Math.min(host.minx, piece.minx);
     host.maxx = Math.max(host.maxx, piece.maxx);
     host.miny = Math.min(host.miny, piece.miny);
-    host.maxy = Math.max(host.maxy, piece.maxy);
     host.w = host.maxx - host.minx + 1;
     host.h = host.maxy - host.miny + 1;
     host.n += piece.n;
@@ -298,11 +303,11 @@ const joinDetached = list => {
     if (!host) continue;
     host.ids = host.ids ?? new Set([host.id]);
     host.ids.add(piece.id);
-    // The host's box has to grow to cover the piece, or the resampler crops it back off.
+    // The host's box has to grow to cover the piece, or the resampler crops it back off --
+    // but never downward, for the ground-line reason given in attachSmallPieces.
     host.minx = Math.min(host.minx, piece.minx);
     host.maxx = Math.max(host.maxx, piece.maxx);
     host.miny = Math.min(host.miny, piece.miny);
-    host.maxy = Math.max(host.maxy, piece.maxy);
     host.w = host.maxx - host.minx + 1;
     host.h = host.maxy - host.miny + 1;
     host.n += piece.n;
