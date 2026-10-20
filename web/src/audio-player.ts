@@ -170,9 +170,13 @@ export async function playMusic(track: MusicTrack): Promise<void> {
 
   const source = context.createBufferSource();
   source.buffer = buffer;
-  source.loop = true;
-  if (playback.loopStart !== undefined) source.loopStart = playback.loopStart;
-  if (playback.loopEnd !== undefined) source.loopEnd = playback.loopEnd;
+  // The battle themes loop; the victory and defeat pieces play once and stop. Loop points
+  // only mean anything when looping, so they are only applied then.
+  source.loop = playback.loop ?? true;
+  if (source.loop) {
+    if (playback.loopStart !== undefined) source.loopStart = playback.loopStart;
+    if (playback.loopEnd !== undefined) source.loopEnd = playback.loopEnd;
+  }
   const gain = context.createGain();
   gain.gain.value = playback.gain ?? 0.7;
   source.connect(gain);

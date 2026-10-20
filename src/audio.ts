@@ -26,9 +26,7 @@ export type SoundId =
   | 'interrupt'
   | 'nullify'
   | 'phase_sting'
-  | 'text_blip'
-  | 'victory_fanfare'
-  | 'defeat_sting';
+  | 'text_blip';
 
 export type MusicTrack = 'battle_main' | 'battle_phase_two' | 'victory' | 'defeat' | 'silence';
 
@@ -56,6 +54,10 @@ export type TrackPlayback = {
   loopEnd?: number;
   /** 0..1 mix level relative to the sound effects. */
   gain?: number;
+  /** Whether playback repeats. Defaults to true, which is right for the battle themes and
+   * wrong for the two result tracks: a 3.8s victory jingle on a loop plays twenty times
+   * over while the player reads their stars. They are scored once and then stop. */
+  loop?: boolean;
 };
 
 /** A hit at or above this fraction of a health bar uses the heavy variant. */
@@ -106,8 +108,13 @@ function cueFor(beat: Beat, options: AudioOptions): AudioCue | null {
     case 'status_off': return {at: beat.at, sound: 'status_off', gain: 0.45};
     case 'telegraph': return {at: beat.at, sound: 'telegraph', gain: 0.7};
     case 'phase': return {at: beat.at, sound: 'phase_sting', gain: 1};
-    case 'victory': return {at: beat.at, sound: 'victory_fanfare', gain: 1};
-    case 'defeat': return {at: beat.at, sound: 'defeat_sting', gain: 1};
+    // No cue for victory or defeat: both are scored by a music track now, and
+    // `musicChanges` switches to it on this same beat. They used to emit a sting as well,
+    // and because the sting file and the music file were byte-identical copies the result
+    // was one clip played twice at once -- music at 0.8 and effect at 1.0, from the same
+    // instant. Louder than intended and liable to phase.
+    case 'victory':
+    case 'defeat': return null;
     case 'message':
       if (beat.source === 'boss_interrupted') return {at: beat.at, sound: 'interrupt', gain: 0.8};
       if (beat.source === 'nullify_absorb') return {at: beat.at, sound: 'nullify', gain: 0.8};
@@ -192,8 +199,7 @@ export function requiredSounds(): {id: SoundId; purpose: string}[] {
     {id: 'nullify', purpose: 'A spell is absorbed'},
     {id: 'phase_sting', purpose: 'Boss phase transition; music cuts around it'},
     {id: 'text_blip', purpose: 'Per-character typing blip, opt-in'},
-    {id: 'victory_fanfare', purpose: 'Battle won'},
-    {id: 'defeat_sting', purpose: 'Battle lost'},
+
   ];
 }
 
@@ -203,8 +209,9 @@ export const TRACK_PLAYBACK: Record<Exclude<MusicTrack, 'silence'>, TrackPlaybac
   battle_main: {file: 'battle_theme.ogg', gain: 0.7},
   // Named for the pair it belongs to rather than the track id, matching battle_theme.ogg.
   battle_phase_two: {file: 'battle_theme_phase_2.ogg', gain: 0.75},
-  victory: {file: 'victory.ogg', gain: 0.8},
-  defeat: {file: 'defeat.ogg', gain: 0.7},
+  // Played once. Both are short result pieces, not beds to loop under a screen.
+  victory: {file: 'victory.ogg', gain: 0.8, loop: false},
+  defeat: {file: 'defeat.ogg', gain: 0.7, loop: false},
 };
 
 /** What to play when a track's own file does not exist yet.

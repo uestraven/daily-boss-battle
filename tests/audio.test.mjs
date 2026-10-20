@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {HEAVY_HIT_INTENSITY, PHASE_SILENCE_MS, TRACK_FALLBACK, TRACK_PLAYBACK, audioCues,
   musicChanges, requiredSounds, requiredTracks} from '../dist/src/audio.js';
-import {choreograph} from '../dist/src/presentation.js';
+import {TIMING, choreograph} from '../dist/src/presentation.js';
 import {existsSync, readdirSync} from 'node:fs';
 
 const musicDir = new URL('../web/public/battle-music/', import.meta.url);
@@ -302,4 +302,35 @@ test('every declared music file exists on disk', () => {
   assert.deepEqual(orphans, [],
     `music on disk that no track references: ${orphans.join(', ')}`);
   assert.ok(missing.length <= 2, `too many missing tracks: ${missing.join(', ')}`);
+});
+
+test('victory and defeat are scored once; the battle themes loop', () => {
+  // A 3.8s result piece on a loop plays over and over while the player reads their stars
+  // and shares their card. The battle themes are beds and must loop; these are not.
+  assert.equal(TRACK_PLAYBACK.victory.loop, false);
+  assert.equal(TRACK_PLAYBACK.defeat.loop, false);
+  for (const track of ['battle_main', 'battle_phase_two']) {
+    assert.notEqual(TRACK_PLAYBACK[track].loop, false, `${track} must keep looping`);
+  }
+});
+
+test('winning and losing emit no sound cue, only a music change', () => {
+  // They used to emit a sting as well -- and the sting file was a byte-identical copy of
+  // the music file, fired on the same beat, so one clip played twice at once at two
+  // different gains. Removing the cue is what makes the new tracks play cleanly.
+  for (const [kind, hold] of [['victory', 'victoryHold'], ['defeat', 'defeatHold']]) {
+    const script = {beats: [{at: 0, duration: TIMING[hold], kind, text: kind}], totalMs: 3000};
+    assert.deepEqual(audioCues(script), [], `${kind} should emit no cue`);
+    const changes = musicChanges(script);
+    assert.deepEqual(changes.map(c => c.track), [kind],
+      `${kind} should switch the music to its own track`);
+  }
+});
+
+test('the sound manifest no longer commissions the result stings', () => {
+  const ids = requiredSounds().map(s => s.id);
+  assert.ok(!ids.includes('victory_fanfare'), 'victory_fanfare is the music track now');
+  assert.ok(!ids.includes('defeat_sting'), 'defeat_sting is the music track now');
+  // phase_sting stays: it punctuates a transition the music plays through.
+  assert.ok(ids.includes('phase_sting'));
 });
