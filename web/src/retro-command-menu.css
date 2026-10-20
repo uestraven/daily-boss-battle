@@ -33,7 +33,21 @@
 .rpg-window .rpg-menu-cost, .rpg-window .rpg-menu-end {
   margin-left: auto; color: var(--dbb-text-secondary); white-space: nowrap; font-size: 12px;
 }
-.rpg-window .rpg-menu-back { margin-top: 9px; border-top: 1px solid rgba(230,236,245,.35); }
+/* Separator above the back entry in the vertical menu list.
+ *
+ * Scoped to `.rpg-menu-entry` on purpose. Written for RpgCommandMenu, where the back
+ * button is the last row of a column and a gap plus a hairline reads as a divider, it also
+ * matched the portrait battle screen's target row -- a horizontal flex row where the same
+ * button sits beside the target buttons with only `.rpg-menu-back` on it. There the 9px
+ * top margin dropped it below its siblings, and the 1px hairline replaced the 2px border
+ * those buttons share, so it read as misaligned and clipped along the top.
+ *
+ * Fixed here rather than overridden in dbb-portrait.css, which loads earlier and would
+ * lose the tie at equal specificity. */
+.rpg-window .rpg-menu-entry.rpg-menu-back {
+  margin-top: 9px;
+  border-top: 1px solid rgba(230,236,245,.35);
+}
 .rpg-window .rpg-menu-help { margin: 10px 6px 0; font-size: 11px; color: var(--dbb-text-secondary); }
 @media(max-width:650px) {
   .rpg-window .rpg-menu-entry { font-size: 16px; }
