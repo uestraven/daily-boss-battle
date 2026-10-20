@@ -178,12 +178,20 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
     return entry;
   };
 
-  for (const event of events) {
+  for (let index = 0; index < events.length; index++) {
+    const event = events[index]!;
     const actor = event.actorId;
     const target = event.targetId;
+    const next = events[index + 1];
 
     // A new actor taking the stage gets a beat of separation and a step forward.
-    const isActorAction = event.type === 'action_committed' || event.type === 'channel_started';
+    //
+    // `channel_resolved` counts. It is a channelled ability *landing* -- the boss's
+    // telegraphed attack arriving, or a lancer coming down from a jump -- which is an
+    // actor acting, not bookkeeping. Leaving it out was a real bug: see the case below.
+    const isActorAction = event.type === 'action_committed'
+      || event.type === 'channel_started'
+      || event.type === 'channel_resolved';
     if (isActorAction && actor !== lastActor) {
       cursor += lastActor === undefined ? 0 : TIMING.betweenActors;
       lastActor = actor;
@@ -191,7 +199,25 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
     }
 
     switch (event.type) {
+      // A channelled ability landing is choreographed exactly like a committed action, and
+      // for the same reason: the damage has to sit inside a strike phase of its own.
+      //
+      // Treating it as bookkeeping was a bug with teeth. `strikeAt` and `indicatorAt` only
+      // move on an actor action, so a resolution inherited whichever hero had just swung:
+      // the boss's channelled sweep landed at 750ms and 830ms, *inside* the hero's own
+      // strike, every damage number in the batch stacked up at 1500ms, and the boss played
+      // no strike clip at all because no beat said it was acting. It read as the boss
+      // countering simultaneously -- which is exactly what it was doing.
+      case 'channel_resolved':
       case 'action_committed': {
+        // Committing a *channelled* ability is presented by its wind-up alone. The engine
+        // emits `channel_started` immediately after the commit, so without this the actor
+        // walked out, swung, and walked back while nothing landed -- 1500ms of pantomime
+        // that reads as a missed attack -- and only then began to channel. The cast beat
+        // that follows is the honest presentation of committing to a channel.
+        if (event.type === 'action_committed'
+          && next?.type === 'channel_started' && next.actorId === actor) break;
+
         // Three beats, not one. Each carries the ability so the renderer can pick a clip
         // by what is being done: without it a spell and a potion are indistinguishable
         // from a swing.
@@ -363,8 +389,10 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
         break;
       }
       default:
-        // Bookkeeping events (ready, momentum, counters, channel_resolved) carry no
-        // presentation of their own; their consequences arrive as their own events.
+        // Bookkeeping events (ready, momentum, counter queues) carry no presentation of
+        // their own; their consequences arrive as their own events. `channel_resolved`
+        // used to be listed here and is handled above: it is an actor acting, and the
+        // damage it carries needs a strike phase of its own to land in.
         break;
     }
   }

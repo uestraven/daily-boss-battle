@@ -7,6 +7,7 @@ import {PACE, TIMING, beatsAt, choreograph, tweenValue} from '../dist/src/presen
 import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src/engine.js';
 import {buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
+import {actionInput, availableActions} from '../dist/src/play-ui.js';
 
 const ev = (type, extra = {}) => ({tick: 1, type, ...extra});
 const kinds = script => script.beats.map(b => b.kind);
@@ -167,11 +168,14 @@ test('silent mode drops log messages but keeps the action', () => {
 });
 
 test('bookkeeping events produce no presentation of their own', () => {
+  // `channel_resolved` was in this list and has been deliberately removed: it is an actor
+  // acting, so it now gets its own action phases. See the channelled-resolution test
+  // below for why -- as bookkeeping it made the boss appear to strike simultaneously with
+  // the hero who had just hit it.
   const script = choreograph([
     ev('ready', {actorId: 'monk'}),
     ev('momentum', {actorId: 'brawler', amount: 1}),
     ev('boss_counter_queued', {actorId: 'boss', details: 'rule'}),
-    ev('channel_resolved', {actorId: 'boss', abilityId: 'x'}),
   ]);
   assert.deepEqual(script.beats, [], 'no beats for internal bookkeeping');
 });
@@ -253,4 +257,109 @@ test('the hurt reaction is its own beat, outlasting the flash', () => {
     'it lasts longer than the flash, which is the point of separating them');
   // And the batch is long enough to contain it.
   assert.ok(script.totalMs >= hurt.at + hurt.duration);
+});
+
+test('a resolved channel is choreographed as its own action, not the previous actor\'s', () => {
+  // The bug this pins down: `channel_resolved` was treated as bookkeeping, and because
+  // `strikeAt`/`indicatorAt` only advance on an actor action, the damage it carries
+  // inherited the timings of whichever hero had just swung. A boss sweep landed at 750ms
+  // and 830ms -- inside the hero's own strike -- every damage number in the batch stacked
+  // at 1500ms, and the boss played no strike clip at all because no beat said it was
+  // acting. On screen the boss appeared to counter simultaneously with being hit.
+  const script = choreograph([
+    ev('action_committed', {actorId: 'hero', abilityId: 'swing'}),
+    ev('damage', {actorId: 'hero', targetId: 'boss', amount: 60, hpAfter: 940}),
+    ev('channel_resolved', {actorId: 'boss', abilityId: 'sweep'}),
+    ev('damage', {actorId: 'boss', targetId: 'hero', amount: 90, hpAfter: 210}),
+  ]);
+
+  const strikes = script.beats.filter(b => b.kind === 'strike');
+  assert.deepEqual(strikes.map(b => b.actorId), ['hero', 'boss'],
+    'the resolution gets a strike phase of its own, so the actor animates');
+
+  const heroStrike = strikes[0];
+  const bossStrike = strikes[1];
+  assert.ok(bossStrike.at >= heroStrike.at + heroStrike.duration + TIMING.betweenActors,
+    `the boss strike at ${bossStrike.at}ms must follow the hero's, which ends at `
+    + `${heroStrike.at + heroStrike.duration}ms, with a gap`);
+
+  // Each hit lands inside its own actor's strike, which is the invariant that was broken.
+  for (const impact of script.beats.filter(b => b.kind === 'impact')) {
+    const owner = strikes.find(s => s.actorId === impact.actorId);
+    assert.ok(owner && impact.at >= owner.at && impact.at < owner.at + owner.duration,
+      `${impact.actorId}'s impact at ${impact.at}ms must sit inside its own strike`);
+  }
+
+  // And the two sides' numbers are readable as separate events rather than stacked.
+  const numbers = script.beats.filter(b => b.kind === 'damage_number');
+  assert.equal(numbers.length, 2);
+  assert.notEqual(numbers[0].at, numbers[1].at, 'the damage numbers must not coincide');
+});
+
+test('across real encounters, every hit lands inside its own actor\'s strike', () => {
+  // The general form of the above, played through the engine rather than hand-built, so a
+  // future event type that carries damage without being recognised as an action is caught
+  // wherever it appears. Scanning turn by turn is what found `channel_resolved`.
+  const bosses = ['crush_wall', 'blade_tyrant', 'ink_lurker', 'mad_harlequin', 'spell_weaver'];
+  let checked = 0;
+  for (const bossId of bosses) {
+    const def = buildEncounter(bossId, ['machinist', 'warden', 'monk'],
+      {id: 'timing', contentVersion: 'timing'});
+    let step = advanceToDecision(createEncounter(def), def);
+    for (let turn = 0; turn < 40 && !step.state.result; turn++) {
+      const before = step.state.events.length;
+      const actorId = step.readyHeroIds[0];
+      if (!actorId) break;
+      // Chosen through the same helpers the screen uses, so the action is always one the
+      // actor can actually take. Hand-built inputs broke out of the loop after five hits
+      // and the scan proved almost nothing.
+      const offered = availableActions(step.state, def, actorId);
+      const choice = offered.find(o => o.ability.kind === 'physical') ?? offered[0];
+      if (!choice) break;
+      try {
+        step = applyPlayerAction(step.state,
+          actionInput(step.state, actorId, choice.ability, def.bossId), def);
+      } catch { break; }
+      const script = choreograph(step.state.events.slice(before), {});
+      const strikes = script.beats.filter(b => b.kind === 'strike');
+      for (const impact of script.beats.filter(b => b.kind === 'impact' && b.actorId)) {
+        // *Any* strike of that actor's, not its first: an actor legitimately acts twice in
+        // one batch -- the boss commits a channel, then its resolution lands later in the
+        // same batch -- and matching only the first reported a false failure.
+        const mine = strikes.filter(s => s.actorId === impact.actorId);
+        assert.ok(mine.length,
+          `${bossId} turn ${turn}: ${impact.actorId} dealt damage with no strike at all`);
+        const owner = mine.find(s => impact.at >= s.at && impact.at < s.at + s.duration);
+        assert.ok(owner,
+          `${bossId} turn ${turn}: ${impact.actorId}'s impact at ${impact.at}ms is outside `
+          + `every strike of its own (${mine.map(s => `${s.at}..${s.at + s.duration}`).join(', ')})`);
+        checked++;
+      }
+    }
+  }
+  assert.ok(checked > 50, `expected plenty of impacts to check, saw ${checked}`);
+});
+
+test('committing a channelled ability shows the wind-up, not a swing that lands nothing', () => {
+  // The engine emits channel_started straight after the commit. Choreographing both gave
+  // the actor a full approach-strike-retreat with no damage in it, immediately followed by
+  // the cast -- 1500ms of pantomime that reads as a missed attack, and this game has no
+  // miss mechanic at all, so it could only mislead.
+  const script = choreograph([
+    ev('action_committed', {actorId: 'boss', abilityId: 'sweep'}),
+    ev('channel_started', {actorId: 'boss', abilityId: 'sweep'}),
+  ]);
+  assert.deepEqual(kinds(script), ['cast'],
+    'the wind-up alone represents committing to a channel');
+
+  // An unchannelled commit still gets its phases, so this did not disarm the normal case.
+  // Filtered rather than sliced: beats are ordered by time, so the impact at 750ms sits
+  // between the strike and the retreat.
+  const direct = choreograph([
+    ev('action_committed', {actorId: 'boss', abilityId: 'slam'}),
+    ev('damage', {actorId: 'boss', targetId: 'monk', amount: 40, hpAfter: 260}),
+  ]);
+  assert.deepEqual(
+    kinds(direct).filter(k => k === 'approach' || k === 'strike' || k === 'retreat'),
+    ['approach', 'strike', 'retreat']);
 });
