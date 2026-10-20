@@ -11,7 +11,9 @@ const {requiredSounds, requiredTracks, TRACK_PLAYBACK} = await load('dist/src/au
 /** What actually matters here.
  *
  * The looping theme is fetched before the first battle can start, so its size is a real
- * cost. Sound effects are loaded lazily on first use and are a few tens of KiB each, so
+ * cost. Sound effects are prefetched at page load -- they used to load on first use, and a
+ * cue whose scheduled time passed while its file downloaded was silently dropped, which
+ * meant the first occurrence of every sound went unheard. They are a few tens of KiB each, so
  * their size is noise — and judging them by bitrate is misleading, because a third-of-a-
  * second clip is mostly Ogg header and reads as 200+ kbps however it was encoded.
  *
@@ -85,10 +87,11 @@ const musicKb = rows.filter(r => r.kind === 'music' && r.kb !== null)
 const sfxKb = total - musicKb;
 const mainKb = kbOf('battle_theme.ogg');
 const phaseTwoKb = kbOf('battle_theme_phase_2.ogg');
-console.log(`  ${mainKb.toFixed(0)} KiB on page load (the battle theme); ` +
+console.log(`  ${(mainKb + sfxKb).toFixed(0)} KiB on page load ` +
+  `(the battle theme plus every effect); ` +
   `${phaseTwoKb.toFixed(0)} KiB once the battle starts (phase two);`);
-console.log(`  ${(musicKb - mainKb - phaseTwoKb).toFixed(0)} KiB of other music and ` +
-  `${sfxKb.toFixed(0)} KiB of effects on first use`);
+console.log(`  ${(musicKb - mainKb - phaseTwoKb).toFixed(0)} KiB of result music ` +
+  '(victory and defeat) alongside phase two, so neither starts late');
 
 if (oversize) {
   console.log('');

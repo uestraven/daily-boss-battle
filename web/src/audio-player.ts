@@ -113,6 +113,42 @@ export function prefetchPhaseTwo(): void {
   if (muted) return;
   const playback = TRACK_PLAYBACK.battle_phase_two;
   if (playback) void fetchBytes(musicUrl(playback.file));
+  // The result tracks too, for the same reason one step further on. They are needed the
+  // instant a battle ends, and fetching them then makes the victory theme start a beat
+  // after the victory screen. 191 KiB between them, against a fight that lasts minutes.
+  // Music is only ever *late* in this situation, never dropped the way a cue is -- but
+  // late on the one screen a player stops to read is still worth avoiding.
+  for (const track of ['victory', 'defeat'] as const) {
+    const outcome = TRACK_PLAYBACK[track];
+    if (outcome) void fetchBytes(musicUrl(outcome.file));
+  }
+}
+
+/** Gets every effect ready before its first use.
+ *
+ * Effects were loaded at the moment they were needed, and playCues drops a cue whose
+ * scheduled time has already passed while its file was loading. So the *first* occurrence
+ * of each sound raced its own download and usually lost: the heal cue sits 1500ms into a
+ * potion's batch, and a potion is rare enough that the sound was never heard at all. The
+ * hit cues at 750ms had the same race and were simply less noticeable, being followed by
+ * dozens more that hit a warm cache.
+ *
+ * Called twice, which is the point. At page load there is no AudioContext yet -- it cannot
+ * exist before a user gesture -- so only the bytes are fetched, which needs no context.
+ * Called again from the gesture that unlocks audio, the bytes are already here and decode
+ * straight away, so everything is a decoded buffer well before the first action resolves.
+ *
+ * The whole effect set is 146 KiB, two orders smaller than one music track, so there is no
+ * reason to be selective. Sounds with no file yet cost one 404 each, cached as a null so
+ * it is never retried; that number shrinks as the set is commissioned. */
+export function prefetchSounds(sounds: readonly SoundId[]): void {
+  if (muted) return;
+  for (const sound of sounds) {
+    const url = soundUrl(sound);
+    // With a context, loadBuffer fetches *and* decodes. Without one, take the bytes now.
+    if (context) void loadBuffer(url);
+    else void fetchBytes(url);
+  }
 }
 
 async function loadBuffer(url: string): Promise<AudioBuffer | null> {

@@ -24,8 +24,8 @@ import {loadLedger, saveLedger, clearLedger} from './storage.js';
 import {ShareCard} from './ShareCard.js';
 import {EmailSignup} from './EmailSignup.js';
 import {resultCardInputFrom} from '../../dist/src/result-card.js';
-import {audioCues, musicChanges} from '../../dist/src/audio.js';
-import {isMuted, playCues, playMusic, prefetchMusic, prefetchPhaseTwo, setMuted, unlockAudio} from './audio-player.js';
+import {audioCues, musicChanges, requiredSounds} from '../../dist/src/audio.js';
+import {isMuted, playCues, playMusic, prefetchMusic, prefetchPhaseTwo, prefetchSounds, setMuted, unlockAudio} from './audio-player.js';
 import {advanceToDecision as freshBattle} from '../../dist/src/engine.js';
 import {heroes} from '../../dist/src/roster.js';
 import {spriteSheet} from './sprite-catalog.js';
@@ -47,6 +47,9 @@ import poolData from '../../dist-content/verified-pool.json';
 /** The player's own calendar date. See localDateKey: the date-to-encounter mapping is
  * still global, so this only decides when this browser rolls over, not what it gets. */
 const today = () => localDateKey(new Date());
+/** Every effect the choreography can ask for, derived from the sound manifest rather than
+ * listed here, so a new cue is prefetched without anyone remembering to add it. */
+const SOUND_IDS = requiredSounds().map(sound => sound.id);
 const ROLE_BY_ID: Record<string, string> = Object.fromEntries(heroes.map(h => [h.id, h.role]));
 
 type Phase = {kind: 'choosing'} | {kind: 'playing'} | {kind: 'over'};
@@ -291,12 +294,20 @@ function Battle({def, catalog, tier, day, unranked}:
   /** Start the download now. It needs no AudioContext, so it does not have to wait for a
    * gesture, and the theme is by far the largest asset: deferring the request until the
    * moment the music should start meant it arrived seconds late. */
-  useEffect(() => { prefetchMusic(); }, []);
+  useEffect(() => {
+    prefetchMusic();
+    // Bytes only at this point: decoding needs an AudioContext, which cannot exist until a
+    // gesture. The gesture handler calls this again to decode them.
+    prefetchSounds(SOUND_IDS);
+  }, []);
 
   /** Unlock on the first gesture anywhere and start the theme. Called from the command
    * menu, the mute button and the commit path, so whichever happens first wins. */
   const startAudio = useCallback(() => {
     unlockAudio();
+    // Now that a context exists the prefetched bytes can be decoded, so no cue has to race
+    // its own download. Cheap and idempotent: anything already decoded is a cache hit.
+    prefetchSounds(SOUND_IDS);
     // Muted means the mute button owns starting the music, so it is not wasted at gain 0.
     if (audioStarted.current || isMuted()) return;
     audioStarted.current = true;
