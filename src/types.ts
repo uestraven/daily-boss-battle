@@ -27,6 +27,19 @@ export type Ability = {
 export type BossProgram = { phaseOne:string[]; phaseOneRepeat:string[]; phaseTwo:string[]; phaseTwoRepeat:string[]; transitionPercent:number;
   /** Used when the scripted ability is unaffordable. Content-owned; the engine has no default. */
   fallbackAbility?:string };
+/** Critical hits on the basic attack. Absent means none, so frozen reference content and
+ * the legacy practice encounters keep the exact numbers their approved witnesses record.
+ *
+ * Opt-in for the same reason boss AI and enrage are: an engine addition that changes
+ * damage invalidates every recorded result it touches, and the v0.6 reference corpus
+ * exists precisely to be a fixed point. Generated encounters -- the verified pool and the
+ * daily -- opt in; the reference does not. */
+export type CriticalConfig = {
+  /** One basic attack in this many lands as a critical. */
+  oneIn:number;
+  /** Damage multiplier on a critical. */
+  multiplier:number;
+};
 /** Pressure curve that makes stalling lose. Boss outgoing damage scales once `fromTick` passes.
  * Absent on an encounter means no enrage, so existing content is unaffected. */
 export type EnrageConfig = { fromTick:number; stepTicks:number; percentPerStep:number; maxPercent:number };
@@ -73,6 +86,7 @@ export type EncounterDefinition = {
   bossProgram:BossProgram;
   bossAI?:BossAIConfig;
   enrage?:EnrageConfig;
+  criticals?:CriticalConfig;
   maxTicks:number;
 };
 export type ActiveStatus = {expiresAt:number; nextPulseAt?:number; element?:Element};
@@ -93,6 +107,10 @@ export type BattleEvent = {
    * `details` carries the human-readable form; this is the machine-readable one, so a
    * renderer can show the right badge without parsing prose. */
   status?:StatusId;
+  /** Set on a `damage` event that landed as a critical hit, so the renderer can announce
+   * it. Without a flag the only evidence is a number twice the size of the last one,
+   * which reads as a bug rather than a reward. */
+  critical?:boolean;
 };
 export type BattleState = {
   encounterId:string; engineVersion:string; contentVersion:string;

@@ -90,8 +90,11 @@ function cueFor(beat: Beat, options: AudioOptions): AudioCue | null {
       const kind = beat.abilityId ? options.abilityInfo?.[beat.abilityId]?.kind : undefined;
       // Shared with the effects layer, so a hit that flares also sounds like a spell.
       const magical = readsAsMagical(kind) || beat.source === 'poison_pulse';
+      // A critical always takes the heavy sample regardless of the shake it computed:
+      // it is a louder event by definition, and the audio is the first cue the player
+      // gets, landing with the impact rather than with the number half a second later.
       const sound: SoundId = magical ? 'hit_magical'
-        : intensity >= HEAVY_HIT_INTENSITY ? 'hit_heavy' : 'hit_physical';
+        : (beat.critical || intensity >= HEAVY_HIT_INTENSITY) ? 'hit_heavy' : 'hit_physical';
       return {at: beat.at, sound, gain: gainFor(intensity)};
     }
     case 'cast': return {at: beat.at, sound: 'cast_start', gain: 0.6};

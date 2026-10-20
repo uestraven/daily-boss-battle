@@ -3,7 +3,7 @@ import type {
   BattleInput, BattleState, BattleStep, EncounterDefinition, Element, StatusId,
   TargetRule, ItemId,
 } from './types.js';
-import {commitBossDecision,initBossAI,markLastAttacker,planBossAction,requiresBossIntentRefresh,selectBossTargets} from './boss-ai.js';
+import {commitBossDecision,initBossAI,markLastAttacker,mixSeed,planBossAction,requiresBossIntentRefresh,selectBossTargets} from './boss-ai.js';
 export type { BattleInput, BattleState, BattleStep, EncounterDefinition, ActionPreview } from './types.js';
 
 const copy = <T>(value:T):T => JSON.parse(JSON.stringify(value)) as T;
@@ -88,11 +88,66 @@ function phaseCheck(s:BattleState,def:EncounterDefinition):void{
     s.phase=2;event(s,'phase_change',{actorId:s.bossId,details:'Phase 2; previously selected boss intent retained'});
   }
 }
+/** The ability that can land a critical hit: the basic Attack command, nothing else.
+ *
+ * Deliberately narrow. Every special ability's damage was tuned and then *verified* --
+ * the pool proves each encounter winnable by replaying a witness -- so widening this
+ * perturbs numbers that have a proof attached to them. The basic attack is the one action
+ * every hero shares and the one a player falls back on, which is where a reward lands
+ * best anyway. */
+const CRITICAL_ABILITY='attack';
+/** The rate and multiplier generated encounters use. Content, not engine policy: the
+ * engine reads whatever the definition declares, and declares nothing itself. */
+export const CRITICAL_DEFAULT={oneIn:32,multiplier:2} as const;
+
+/** Whether this particular attack crits.
+ *
+ * Deterministic, which is not a compromise here but the requirement. The ledger proves a
+ * result by replaying its action log, and the verified pool proves an encounter winnable
+ * by replaying a witness; a `Math.random()` crit would invalidate both on the spot. Keyed
+ * the same way seeded boss targeting already is -- a hash of the encounter's own seed and
+ * the exact circumstances of the blow -- so it is unpredictable to the player, identical
+ * on every replay, and visible to the solver, which is what keeps the winnability proof
+ * exact rather than optimistic.
+ *
+ * The key includes the tick and both actor ids, so two heroes striking on the same tick
+ * do not share a verdict and the same hero striking twice does not repeat one. */
+/** The seed crits are keyed to, stable across every name an encounter is built under.
+ *
+ * It has to be `bossAI.seed`, which is `encounterSeed(bossSeed, party)`. The obvious
+ * choice -- hashing `def.id` -- would have been a silent trap: the pool builds its
+ * witnesses as `gen-<boss>-<party>` and the game plays the same fight as
+ * `daily-<date>-<boss>`, so the crit sequence would differ between proving an encounter
+ * winnable and playing it, and the proof would not transfer. This value is identical
+ * under both names. The fallback covers legacy encounters that predate opt-in boss AI;
+ * those are practice-only and never served as a daily. */
+function criticalSeed(def:EncounterDefinition):number{
+  if(def.bossAI)return def.bossAI.seed;
+  return mixSeed(0,`${def.bossId}|${def.party.join(',')}`);
+}
+
+function criticalHit(s:BattleState,def:EncounterDefinition,source:ActorState,target:ActorState,ability:Ability):boolean{
+  // Absent on an encounter means no criticals at all, which is what keeps the frozen
+  // reference corpus and its approved witnesses reproducing exactly.
+  if(!def.criticals)return false;
+  if(ability.id!==CRITICAL_ABILITY)return false;
+  // Heroes only: a crit is a reward. Doubling the boss's output would make encounters the
+  // pool has already proven winnable harder, for no gain in how the fight reads.
+  if(source.team!=='heroes')return false;
+  const key=`crit|${source.id}|${target.id}|${ability.id}|${s.tick}|${s.nextSequence}`;
+  return mixSeed(criticalSeed(def),key)%Math.max(1,def.criticals.oneIn)===0;
+}
+
 function harm(s:BattleState,def:EncounterDefinition,source:ActorState,target:ActorState,ability:Ability):number{
   if(!living(target))return 0;
-  const amount=Math.min(target.hp,calculateDamage(def,source,target,ability,s.tick));
+  const critical=criticalHit(s,def,source,target,ability);
+  // Doubled after the single final floor inside calculateDamage, so a crit is exactly
+  // twice what the blow would otherwise have been -- not a second rounding of its own.
+  const raw=calculateDamage(def,source,target,ability,s.tick);
+  const amount=Math.min(target.hp,critical?raw*(def.criticals?.multiplier??1):raw);
   target.hp-=amount;
-  event(s,'damage',{actorId:source.id,targetId:target.id,abilityId:ability.id,amount,hpAfter:target.hp});
+  event(s,'damage',{actorId:source.id,targetId:target.id,abilityId:ability.id,amount,hpAfter:target.hp,
+    ...(critical?{critical:true}:{})});
   if(target.hp===0){target.ready=false;target.atb=0;target.statuses={};s.covers=s.covers.filter(c=>c.guardianId!==target.id&&c.protectedId!==target.id);event(s,'ko',{actorId:target.id});}
   checkTerminal(s);
   if(!s.result){

@@ -443,11 +443,16 @@ export function composeFrame(input: ComposeInput): Frame {
       // entirely. "0" floating off a boss reads as a glitch, where "NO EFFECT" reads as
       // information -- and in Normal mode, where affinities are hidden, it is the only
       // way the player ever learns an element does nothing here.
+      // A critical says so rather than just being a bigger number. Doubled damage with
+      // no label is indistinguishable from a damage bug -- the same reason a zero reads
+      // as 'NO EFFECT' rather than '0'.
       text: beat.kind === 'heal_number'
         ? `+${beat.amount ?? 0}`
-        : (beat.amount ?? 0) === 0 ? 'NO EFFECT' : `${beat.amount}`,
+        : (beat.amount ?? 0) === 0 ? 'NO EFFECT'
+        : beat.critical ? `CRITICAL ${beat.amount}` : `${beat.amount}`,
       palette: beat.kind === 'heal_number' ? 'heal'
-        : (beat.amount ?? 0) === 0 ? 'warning' : 'damage',
+        : (beat.amount ?? 0) === 0 ? 'warning'
+        : beat.critical ? 'warning' : 'damage',
     });
   }
 

@@ -510,7 +510,9 @@ function Battle({def, catalog, tier, day, unranked}:
           case 'damage':
             return [event.amount === 0
               ? `· ${who(event.targetId)}: no effect`
-              : `· ${who(event.targetId)}: −${event.amount}`];
+              : event.critical
+                ? `· ${who(event.targetId)}: −${event.amount} CRITICAL`
+                : `· ${who(event.targetId)}: −${event.amount}`];
           case 'heal':
             return [`· ${who(event.targetId)}: +${event.amount}`];
           case 'ko':

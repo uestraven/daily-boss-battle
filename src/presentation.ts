@@ -50,6 +50,10 @@ export type Beat = {
   abilityId?: string;
   /** Which status a status_on / status_off beat concerns. */
   status?: StatusId;
+  /** Set on the impact and damage_number of a critical hit, so the renderer can announce
+   * it. A number twice the size of the last one with nothing to explain it reads as a
+   * bug, which is the same complaint unexplained misses drew. */
+  critical?: boolean;
   amount?: number;
   /** Health/mana tween endpoints, so a renderer needs no extra state. */
   from?: number;
@@ -251,11 +255,13 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
         const amount = event.amount ?? 0;
         const before = hp.get(target ?? '') ?? (event.hpAfter ?? 0) + amount;
         push({duration: TIMING.impact, kind: 'impact', actorId: actor, targetId: target,
-          abilityId: event.abilityId, source: event.type}, at);
+          abilityId: event.abilityId, source: event.type,
+          ...(event.critical ? {critical: true} : {})}, at);
         push({duration: TIMING.hurtReact, kind: 'hurt', targetId: target,
           abilityId: event.abilityId, source: event.type}, at);
         push({duration: TIMING.damageNumberHold, kind: 'damage_number', targetId: target,
-          amount, abilityId: event.abilityId, source: event.type}, shownAt);
+          amount, abilityId: event.abilityId, source: event.type,
+          ...(event.critical ? {critical: true} : {})}, shownAt);
         push({duration: TIMING.hpTween, kind: 'hp_change', targetId: target,
           from: before, to: event.hpAfter ?? Math.max(0, before - amount), amount,
           source: event.type}, shownAt);

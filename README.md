@@ -92,8 +92,23 @@ encounter/ruleset version.
 - All ATB calculations use integer virtual ticks; heroes have priority when newly ready
   alongside the boss.
 - Scheduled delayed impacts and status expiry are handled before new ATB readiness.
-- Attack results have no random damage, random crits, or misses. Element multipliers and
+- Attack results have no random damage and **no misses at all**. Element multipliers and
   combat modifiers are applied **before one final floor**.
+- **Critical hits are deterministic, not random.** The basic attack (`attack`, heroes
+  only) deals double damage on one blow in 32, decided by hashing the encounter's seed
+  with the circumstances of the blow — the same mechanism as seeded boss targeting. So it
+  is unpredictable to the player, identical on every replay, and visible to the solver,
+  which is what keeps a pool witness's win reproducible rather than lucky. A
+  `Math.random()` crit would invalidate every recorded result and every winnability proof.
+  The seed is `encounterSeed(bossSeed, party)` and deliberately **not** the definition id:
+  the pool builds witnesses as `gen-<boss>-<party>` and the app plays the same fight as
+  `daily-<date>-<boss>`, so an id-keyed crit would differ between proving an encounter and
+  playing it.
+- Criticals are **opt-in per encounter** (`criticals?: {oneIn, multiplier}`), like boss AI
+  and enrage. Generated encounters — the verified pool and every daily — opt in; the
+  frozen v0.6 reference corpus does not, so its approved witnesses keep reproducing
+  exactly. The settings are part of `contentHash()`, so retuning the rate invalidates the
+  pool instead of silently leaving proofs computed against different numbers.
 - The boss announces an ability and locked targets; boss phase changes preserve an
   already-announced action.
 - Wrong targets or missing resources cause rejection with **no state or time change**.

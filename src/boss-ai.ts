@@ -6,7 +6,12 @@ export type BossAIDecision = {
   target:BossTargetSelector; lockedAttacker?:ActorId;
 };
 
-function mixSeed(seed:number,key:string):number {
+/** Deterministic hash of a seed and a key string.
+ *
+ * Exported because the engine needs the same one for critical hits: two independent
+ * pseudo-random sources would be two things to reason about when auditing determinism,
+ * and this one is already load-bearing for seeded boss targeting. */
+export function mixSeed(seed:number,key:string):number {
   let h=(2166136261 ^ seed) >>> 0;
   for(let i=0;i<key.length;i++) h=Math.imul(h ^ key.charCodeAt(i),16777619)>>>0;
   h^=h>>>16;h=Math.imul(h,0x7feb352d)>>>0;

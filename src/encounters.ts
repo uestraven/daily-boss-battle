@@ -2,6 +2,7 @@
 import {reference001} from './reference.js';
 import {heroes,heroAbilities} from './roster.js';
 import type {Ability,BossCounterRule,BossOverrideRule,EncounterDefinition,EnrageConfig,Stats,BossTargetSelector} from './types.js';
+import {ENGINE_VERSION} from './version.js';
 const clone=<T>(v:T):T=>JSON.parse(JSON.stringify(v)) as T;
 export type BossProfile={id:string; name:string; theme:string;stats:Stats;
   /** Curated demonstration party. The daily pool drafts its own parties instead. */
@@ -86,6 +87,6 @@ export function buildPracticeEncounter(profile:BossProfile):EncounterDefinition 
   if(profile.counters)ai.counters=clone(profile.counters);
   const affinities:NonNullable<EncounterDefinition['affinities']>={};
   if(profile.affinities){affinities[profile.id]={};for(const [key,val] of Object.entries(profile.affinities))if(['weak','resist','immune'].includes(val))affinities[profile.id]![key as 'fire'|'ice'|'lightning']=val as 'weak'|'resist'|'immune';}
-  return {id:`practice-${profile.id}-v09`,engineVersion:'0.2.0-ai-opt-in',contentVersion:'0.9-baseline',party:[...profile.party],bossId:profile.id,actors:defActors,abilities,inventory:{potion:2,mana_vial:1,revive_tonic:1},affinities,bossProgram:{phaseOne:profile.phaseOne,phaseOneRepeat:profile.phaseOneRepeat,phaseTwo:profile.phaseTwo,phaseTwoRepeat:profile.phaseTwoRepeat,transitionPercent:profile.transitionPercent},bossAI:ai,maxTicks:2000};
+  return {id:`practice-${profile.id}-v09`,engineVersion:ENGINE_VERSION,contentVersion:'0.9-baseline',party:[...profile.party],bossId:profile.id,actors:defActors,abilities,inventory:{potion:2,mana_vial:1,revive_tonic:1},affinities,bossProgram:{phaseOne:profile.phaseOne,phaseOneRepeat:profile.phaseOneRepeat,phaseTwo:profile.phaseTwo,phaseTwoRepeat:profile.phaseTwoRepeat,transitionPercent:profile.transitionPercent},bossAI:ai,maxTicks:2000};
 }
 export const practiceEncounters=Object.fromEntries(bossProfiles.map(p=>[p.id,buildPracticeEncounter(p)])) as Record<string,EncounterDefinition>;

@@ -7,6 +7,7 @@
  */
 import {bossProfiles} from './encounters.js';
 import {reference001} from './reference.js';
+import {CRITICAL_DEFAULT} from './engine.js';
 import {heroes, heroAbilities} from './roster.js';
 import type {BossProfile} from './encounters.js';
 import type {ActorId, EncounterDefinition, EnrageConfig} from './types.js';
@@ -14,7 +15,8 @@ import type {ActorId, EncounterDefinition, EnrageConfig} from './types.js';
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 export const CONTENT_VERSION = '1.0-generated';
-export const ENGINE_VERSION = '0.2.0-ai-opt-in';
+export {ENGINE_VERSION} from './version.js';
+import {ENGINE_VERSION} from './version.js';
 
 /** Universal commands plus every hero signature ability. Filtering per party is
  * unnecessary: the engine validates ability ownership on every action. */
@@ -104,6 +106,10 @@ export function buildEncounter(
     id: options.id ?? encounterIdFor(profile.id, party),
     engineVersion: ENGINE_VERSION,
     contentVersion: options.contentVersion ?? CONTENT_VERSION,
+    // Generated encounters -- the verified pool and every daily -- have criticals. The
+    // pool proves them winnable *with* criticals, because the solver runs this same
+    // definition through the real engine.
+    criticals: {...CRITICAL_DEFAULT},
     party: [...party],
     bossId: profile.id,
     actors,
@@ -140,6 +146,11 @@ export function contentHash(): string {
     ]),
     engineVersion: ENGINE_VERSION,
     contentVersion: CONTENT_VERSION,
+    // The critical-hit settings every generated encounter carries. In the hash because
+    // they change damage: without them, retuning the rate from 1-in-32 to 1-in-16 would
+    // leave the pool looking valid while every winnability proof in it had been computed
+    // against different numbers -- the exact silent staleness this hash exists to catch.
+    criticals: CRITICAL_DEFAULT,
   });
   // FNV-1a over the serialized content; collision risk is irrelevant for staleness detection.
   let h = 2166136261;

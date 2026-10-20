@@ -1,12 +1,13 @@
 import {tyrantVariant007} from './variant.js';
 import type {EncounterDefinition} from './types.js';
+import {ENGINE_VERSION} from './version.js';
 
 const copy=<T>(x:T):T=>JSON.parse(JSON.stringify(x)) as T;
 /** Experimental targeting rules. Does not alter the approved v0.6 or v0.7 content. */
 export const tyrantAI008:EncounterDefinition={
   ...copy(tyrantVariant007),
   id:'reference-001-v08-ai',
-  engineVersion:'0.2.0-ai-opt-in',
+  engineVersion:ENGINE_VERSION,
   contentVersion:'0.8-ai-candidate',
   abilities:{
     ...copy(tyrantVariant007.abilities),
