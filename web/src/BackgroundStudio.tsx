@@ -11,7 +11,6 @@ import {backgroundForBoss,battleBackgrounds,backgroundIds,bundledBackgroundUrl} 
 import type {BackgroundId} from './background-catalog.js';
 import {clearCustomBackground,getCustomBackground,setCustomBackground} from './background-storage.js';
 
-const base=import.meta.env.BASE_URL;
 
 /** Layer with three priorities: user-imported art, bundled PNG, placeholder fallback. */
 export function BattleBackdrop({bossId,refresh,onManage}:{bossId:string;refresh:number;onManage:()=>void}) {
@@ -20,7 +19,7 @@ export function BattleBackdrop({bossId,refresh,onManage}:{bossId:string;refresh:
   const [kind,setKind]=useState<'imported'|'bundled'|'missing'>('missing');
   useEffect(()=>{
     let alive=true;let objectUrl:string|undefined;
-    const bundled=bundledBackgroundUrl(id,base);
+    const bundled=bundledBackgroundUrl(id);
     (async()=>{
       try{
         const blob=await getCustomBackground(id);

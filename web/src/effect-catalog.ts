@@ -12,6 +12,7 @@
 import manifest from './effect-manifest.json';
 import {validateEffectSheet} from '../../dist/src/effects.js';
 import type {EffectLibrary, EffectSheet} from '../../src/effects.js';
+import {mediaUrl} from './media-url.js';
 
 type ManifestEffect = EffectSheet;
 
@@ -39,7 +40,13 @@ export function effectLibrary(): EffectLibrary {
   return library;
 }
 
-/** Relative URL for an effect sheet, honouring the Vite deployment base. */
-export function effectUrl(file: string, base: string): string {
-  return `${base.replace(/\/?$/, '/')}battle-effects/${file}`;
+/** URL for an effect sheet.
+ *
+ * Through the shared helper, so it carries the build revision and matches the format the
+ * stage's loader uses for the same file. It has no callers today -- effect art is 0 of 7 --
+ * and that is exactly why it is worth routing now: the next caller would otherwise
+ * reintroduce an unversioned path, which is how the replaced victory theme ended up
+ * serving the old one. */
+export function effectUrl(file: string): string {
+  return mediaUrl('battle-effects', file);
 }

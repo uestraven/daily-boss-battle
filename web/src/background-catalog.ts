@@ -1,3 +1,4 @@
+import {mediaUrl} from './media-url.js';
 /** Art-direction brief and expected image filenames for the encounter arenas, one per
  * boss. `npm run art:check` fails if a boss has no arena, which is how the Mad Harlequin
  * and the Clockwork Emperor were found silently falling back to the Broken Span.
@@ -53,7 +54,13 @@ export const backgroundForBoss = (bossId:string):BackgroundId => {
   if (bossId in battleBackgrounds) return bossId as BackgroundId;
   return 'blade_tyrant'; // all three historical Blade Tyrant rulesets share the same arena
 };
-export const bundledBackgroundUrl = (id:BackgroundId,base:string) => `${base}battle-backgrounds/${battleBackgrounds[id].file}`;
+/** URL of a shipped arena PNG.
+ *
+ * Versioned through the shared helper, like every other media URL: the authoring tool
+ * loads the same files the stage does, so an unversioned URL here would both serve the
+ * tool stale art and create a second cache entry for a file already downloaded. The `base`
+ * parameter is gone because the helper owns that. */
+export const bundledBackgroundUrl = (id:BackgroundId) => mediaUrl('battle-backgrounds', battleBackgrounds[id].file);
 
 /** Arenas whose PNG is actually in `web/public/battle-backgrounds/`.
  *

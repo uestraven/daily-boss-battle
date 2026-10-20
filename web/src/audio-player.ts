@@ -12,12 +12,17 @@
  */
 import {TRACK_FALLBACK, TRACK_PLAYBACK} from '../../dist/src/audio.js';
 import type {AudioCue, MusicTrack, SoundId} from '../../src/audio.js';
+import {mediaUrl} from './media-url.js';
 
 const MUSIC_DIR = 'battle-music';
 const SFX_DIR = 'battle-sounds';
 const MUTE_KEY = 'daily-boss-battle.muted.v1';
 
-const base = (): string => import.meta.env.BASE_URL.replace(/\/?$/, '/');
+/** Versioned, so a replaced track is a new URL. Without this the service worker serves
+ * the previous build's bytes for the same filename, which is exactly what happened when
+ * the victory theme was replaced: the new file shipped and the old one played. */
+const musicUrl = (file: string): string => mediaUrl(MUSIC_DIR, file);
+const soundUrl = (sound: string): string => mediaUrl(SFX_DIR, `${sound}.ogg`);
 
 let context: AudioContext | null = null;
 let musicGain: GainNode | null = null;
@@ -93,7 +98,7 @@ function fetchBytes(url: string): Promise<ArrayBuffer | null> {
 export function prefetchMusic(): void {
   if (muted) return;
   const playback = TRACK_PLAYBACK.battle_main;
-  if (playback) void fetchBytes(`${base()}${MUSIC_DIR}/${playback.file}`);
+  if (playback) void fetchBytes(musicUrl(playback.file));
 }
 
 /** Starts downloading the phase-two theme, for when the fight gets there.
@@ -107,7 +112,7 @@ export function prefetchMusic(): void {
 export function prefetchPhaseTwo(): void {
   if (muted) return;
   const playback = TRACK_PLAYBACK.battle_phase_two;
-  if (playback) void fetchBytes(`${base()}${MUSIC_DIR}/${playback.file}`);
+  if (playback) void fetchBytes(musicUrl(playback.file));
 }
 
 async function loadBuffer(url: string): Promise<AudioBuffer | null> {
@@ -160,7 +165,7 @@ export async function playMusic(track: MusicTrack): Promise<void> {
   while (candidate !== 'silence' && !seen.has(candidate)) {
     seen.add(candidate);
     const attempt = TRACK_PLAYBACK[candidate];
-    buffer = attempt ? await loadBuffer(`${base()}${MUSIC_DIR}/${attempt.file}`) : null;
+    buffer = attempt ? await loadBuffer(musicUrl(attempt.file)) : null;
     if (buffer) break;
     candidate = TRACK_FALLBACK[candidate] ?? 'silence';
   }
@@ -197,7 +202,7 @@ export function playCues(cues: readonly AudioCue[]): void {
   const startedAt = context.currentTime;
   for (const cue of cues) {
     void (async () => {
-      const buffer = await loadBuffer(`${base()}${SFX_DIR}/${cue.sound}.ogg`);
+      const buffer = await loadBuffer(soundUrl(cue.sound));
       if (!buffer || !context) return;
       const when = startedAt + cue.at / 1000;
       // Already passed while the file was loading: skip rather than play out of sync.
@@ -217,10 +222,10 @@ export function playCues(cues: readonly AudioCue[]): void {
 export async function probeAssets(sounds: readonly SoundId[]): Promise<Record<string, boolean>> {
   const result: Record<string, boolean> = {};
   for (const [track, playback] of Object.entries(TRACK_PLAYBACK)) {
-    result[`music/${track}`] = Boolean(await loadBuffer(`${base()}${MUSIC_DIR}/${playback.file}`));
+    result[`music/${track}`] = Boolean(await loadBuffer(musicUrl(playback.file)));
   }
   for (const sound of sounds) {
-    result[`sfx/${sound}`] = Boolean(await loadBuffer(`${base()}${SFX_DIR}/${sound}.ogg`));
+    result[`sfx/${sound}`] = Boolean(await loadBuffer(soundUrl(sound)));
   }
   return result;
 }

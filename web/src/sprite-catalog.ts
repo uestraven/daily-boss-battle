@@ -1,5 +1,6 @@
 /** Visual assets only. Does not change any engine or encounter data. */
 import manifest from './sprite-manifest.json';
+import {mediaUrl} from './media-url.js';
 import {validateSheet} from '../../dist/src/animation.js';
 import type {SpriteSheet} from '../../src/animation.js';
 
@@ -27,8 +28,7 @@ export function spriteMeta(kind: SpriteKind, id: string): SpriteMeta | null {
 export function spriteUrl(kind: SpriteKind, id: string): string | null {
   const info = spriteMeta(kind, id);
   if (!info) return null;
-  const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-  return `${base}battle-sprites/${info.file}?v=${__ASSET_REV__}`;
+  return mediaUrl('battle-sprites', info.file);
 }
 
 /** The validated animation sheet for an actor, or null when the manifest has no entry.
