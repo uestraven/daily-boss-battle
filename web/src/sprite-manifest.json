@@ -631,45 +631,45 @@
   },
   "tide_maw": {
    "file": "bosses/tide_maw.png",
-   "frameWidth": 96,
+   "frameWidth": 112,
    "frameHeight": 96,
-   "anchorX": 48,
-   "anchorY": 94,
+   "anchorX": 56,
+   "anchorY": 96,
    "clips": {
     "idle": {
      "row": 0,
-     "frames": 2,
+     "frames": 8,
      "loop": true,
-     "frameMs": 320
+     "frameMs": 180
     },
     "attack": {
      "row": 1,
-     "frames": 4,
+     "frames": 8,
      "loop": false
     },
     "cast": {
      "row": 2,
-     "frames": 3,
+     "frames": 8,
      "loop": false
     },
     "hurt": {
      "row": 3,
-     "frames": 2,
+     "frames": 8,
      "loop": false
     },
     "ko": {
      "row": 4,
-     "frames": 3,
+     "frames": 8,
      "loop": false
     },
     "victory": {
      "row": 5,
-     "frames": 2,
+     "frames": 8,
      "loop": true,
-     "frameMs": 400
+     "frameMs": 180
     }
    },
-   "name": "tide_maw"
+   "name": "Tide Maw"
   },
   "ink_lurker": {
    "file": "bosses/ink_lurker.png",
