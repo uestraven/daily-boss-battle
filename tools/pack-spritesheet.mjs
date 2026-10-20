@@ -208,6 +208,60 @@ for (let seed = 0; seed < W * H; seed++) {
 
 let figures = comps.filter(c => c.n >= minPixels);
 
+/** Attaches sub-threshold pieces to the figure sharing their source cell.
+ *
+ * --min-pixels exists to drop scanner debris, and it ran before anything could claim a
+ * small piece as part of a pose. That cost the Oracle the sparkles around her staff: 45
+ * components in her attack row measure 8 to 399 pixels, which is 5 to 8 pixels once
+ * scaled -- small, deliberate, and silently binned. They were missing at every tolerance,
+ * so no sheet has ever shipped with them.
+ *
+ * Assignment is by source cell rather than by distance. A sparkle can sit well clear of
+ * the staff, so a gap threshold loose enough to catch it would also reach into the next
+ * frame; the cell boundary is exactly the line that must not be crossed. A piece is taken
+ * only when its cell holds precisely one real figure, so an ambiguous case is left alone
+ * rather than guessed at. */
+const attachSmallPieces = (keepers, all) => {
+  if (!keepers.length) return keepers;
+  const cellW = W / cols;
+  const cellH = H / rows;
+  const cellOf = c => `${Math.floor((c.minx + c.w / 2) / cellW)},${Math.floor((c.miny + c.h / 2) / cellH)}`;
+  const byCell = new Map();
+  for (const figure of keepers) {
+    const cell = cellOf(figure);
+    byCell.set(cell, byCell.has(cell) ? null : figure);
+  }
+  const inks = keepers.map(c => c.n).sort((a, b) => a - b);
+  const medianInk = inks[inks.length >> 1];
+  let attached = 0;
+  let pixels = 0;
+  for (const piece of all) {
+    if (piece.n >= minPixels) continue;
+    // Single stray pixels are noise in anyone's book.
+    if (piece.n < 8) continue;
+    if (piece.n > medianInk * 0.4) continue;
+    const host = byCell.get(cellOf(piece));
+    if (!host) continue;
+    host.ids = host.ids ?? new Set([host.id]);
+    host.ids.add(piece.id);
+    host.minx = Math.min(host.minx, piece.minx);
+    host.maxx = Math.max(host.maxx, piece.maxx);
+    host.miny = Math.min(host.miny, piece.miny);
+    host.maxy = Math.max(host.maxy, piece.maxy);
+    host.w = host.maxx - host.minx + 1;
+    host.h = host.maxy - host.miny + 1;
+    host.n += piece.n;
+    attached++;
+    pixels += piece.n;
+  }
+  if (attached) {
+    console.log(`  small pieces  kept ${attached} under --min-pixels ${minPixels} `
+      + `(${pixels}px) by the cell they sit in`);
+  }
+  return keepers;
+};
+figures = attachSmallPieces(figures, comps);
+
 /** Re-attaches a piece that broke off the figure it belongs to.
  *
  * The counterpart to splitMerged. A pose can come apart into more than one component --
