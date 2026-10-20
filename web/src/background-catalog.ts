@@ -9,7 +9,7 @@ export const battleBackgrounds = {
   blade_tyrant: {
     scene:'Broken Span', style:'16-bit pixel art', place:'Ruined stone bridge over an open chasm',
     file:'blade_tyrant.png', imageRendering:'pixelated' as const,
-    hint:'A narrow bridge deck crossing the frame, open sky and drop behind it. Keep the centre band clear so the boss sprite reads against empty space.',
+    hint:'A bridge deck crossing the frame, open sky and drop behind it. Keep the centre band clear so the boss sprite reads against empty space. The deck surface must reach from y=96 to the bottom edge: the party stands in three slots 26px apart, the lowest at y=162, and a deck that stops higher leaves two of them standing over the drop.',
   },
   tide_maw: {
     scene:'Sunken Waterway', style:'16-bit pixel art', place:'Flooded cavern with a subterranean lake',
