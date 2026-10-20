@@ -101,6 +101,79 @@ const isKey = i => {
 const mask = new Uint8Array(W * H);
 for (let i = 0; i < W * H; i++) mask[i] = isKey(i) ? 0 : 1;
 
+/** Checks the tolerance against the image rather than trusting it.
+ *
+ * The default of 180 assumes the background is the only thing near the key colour. That
+ * fails whenever a character shares the key's hue, and it fails silently: the Oracle's
+ * sheet keys a magenta background behind a figure shaded in lavender and pale purple, and
+ * at tolerance 300 it removed 80% of the image. The figure count still came out at 64,
+ * every per-frame check still passed, and the sheet was ruined -- a pile of disconnected
+ * skin and hair fragments. Only rendering it showed that.
+ *
+ * So the distance histogram is read directly. A keyable image is bimodal: a tight
+ * background cluster, a sparse valley of edge blends, then the character's mass. The
+ * tolerance belongs in the valley. If it reaches into the character, say so and name a
+ * better value -- that is cheap to compute and would have turned a silent ruin into a
+ * one-line warning. */
+(() => {
+  const BUCKET = 10;
+  const hist = new Array(Math.ceil(766 / BUCKET)).fill(0);
+  let counted = 0;
+  for (let i = 0; i < W * H; i++) {
+    if (rgba[i * 4 + 3] <= 8) continue;
+    const d = Math.abs(rgba[i * 4] - keyRgb[0]) + Math.abs(rgba[i * 4 + 1] - keyRgb[1])
+      + Math.abs(rgba[i * 4 + 2] - keyRgb[2]);
+    hist[Math.floor(d / BUCKET)]++;
+    counted++;
+  }
+  if (!counted) return;
+  const kept = mask.reduce((n, v) => n + v, 0);
+  const keptPercent = (100 * kept) / counted;
+  console.log(`  key           tolerance ${tolerance}, keeps ${keptPercent.toFixed(1)}% of the source`);
+
+  // Sparse means "not plausibly a region of the image": below a fifth of a percent.
+  const sparse = b => hist[b] < counted * 0.002;
+  // Skip any sparse buckets before the background cluster. The cluster is not centred on
+  // the key colour exactly -- this sheet's background is a noisy magenta whose mass sits
+  // at 20-49, with only 0.1% at 0-9 -- so starting the scan at zero finds "the background
+  // ends at 0" and recommends a tolerance of 5.
+  let b = 0;
+  while (b < hist.length && sparse(b)) b++;
+  if (b >= hist.length) return;
+  let backgroundEnds = b;
+  while (backgroundEnds < hist.length && !sparse(backgroundEnds)) backgroundEnds++;
+  let characterStarts = backgroundEnds;
+  while (characterStarts < hist.length && sparse(characterStarts)) characterStarts++;
+  if (characterStarts >= hist.length) return;
+
+  let characterTotal = 0;
+  let characterKeyed = 0;
+  for (let k = characterStarts; k < hist.length; k++) characterTotal += hist[k];
+  for (let k = characterStarts; k * BUCKET < tolerance && k < hist.length; k++) characterKeyed += hist[k];
+  const erodedPercent = characterTotal ? (100 * characterKeyed) / characterTotal : 0;
+  const valleyLow = backgroundEnds * BUCKET;
+  const valleyHigh = characterStarts * BUCKET;
+  const suggestion = Math.round((valleyLow + valleyHigh) / 2);
+  if (tolerance >= valleyHigh) {
+    // A warning, not a failure. Reaching into the artwork is sometimes the right call: the
+    // Blademage's sheet has a faint projectile trail in exactly this band, and keeping it
+    // bridges two frames into one 342px component, which collapses the shared scale and
+    // renders every sprite at 16px. Lowering its tolerance to the "correct" valley made
+    // that sheet far worse. So the tool reports what it sees and leaves the judgement to
+    // whoever can look at the result.
+    console.log(`\n  CHECK   tolerance ${tolerance} reaches past ${valleyHigh}, where this`);
+    console.log(`  image's own colours begin (its background sits below ${valleyLow}). Roughly`);
+    console.log(`  ${erodedPercent.toFixed(0)}% of the figure's pixels are being keyed away with it.`);
+    console.log('  Sometimes deliberate -- faint trails in this band keep touching frames');
+    console.log(`  apart -- but if the sheet looks wrong, try --tolerance ${suggestion} and`);
+    console.log('  compare. Render it; the frame count will not tell you.');
+  }
+  if (tolerance < valleyLow) {
+    console.log(`  key           NOTE tolerance ${tolerance} is below the background's spread `
+      + `(${valleyLow}); expect a fringe. --tolerance ${suggestion} is clear of both.`);
+  }
+})();
+
 // --- find figures ---------------------------------------------------------------------
 const label = new Int32Array(W * H).fill(-1);
 const stack = new Int32Array(W * H);
@@ -149,19 +222,35 @@ let figures = comps.filter(c => c.n >= minPixels);
  * happens to reconcile. A merged figure carries every label it is made of, because the
  * resampler keys on the label to avoid drawing a neighbour's pixels. */
 const joinDetached = list => {
-  const fits = (inner, outer) => inner !== outer
-    && inner.minx >= outer.minx - 2 && inner.maxx <= outer.maxx + 2
-    && inner.miny >= outer.miny - 2 && inner.maxy <= outer.maxy + 2;
-  // Largest first, so a fragment attaches to its figure rather than the reverse.
-  const hosts = [...list].sort((a, b) => b.n - a.n);
+  // A pose never carries a fifth of the ink of a typical one, so anything that light is a
+  // piece of something rather than a thing. Paired with touching boxes, that is enough to
+  // reattach it safely.
+  const inks = list.map(c => c.n).sort((a, b) => a - b);
+  const medianInk = inks.length ? inks[inks.length >> 1] : 0;
+  const fragmentary = c => medianInk > 0 && c.n < medianInk * 0.4;
+  // Overlapping or near-touching, in either axis. Containment alone was too strict: the
+  // Oracle's raised staff sticks out past its figure's box on two sides, overlapping
+  // without being inside it.
+  const touches = (a, b) => a !== b
+    && a.minx <= b.maxx + 3 && b.minx <= a.maxx + 3
+    && a.miny <= b.maxy + 3 && b.miny <= a.maxy + 3;
+
+  const hosts = [...list].sort((x, y) => y.n - x.n);
   const merged = new Set();
   const joins = [];
-  for (const piece of [...list].sort((a, b) => a.n - b.n)) {
-    if (merged.has(piece)) continue;
-    const host = hosts.find(h => h.n > piece.n && !merged.has(h) && fits(piece, h));
+  for (const piece of [...list].sort((x, y) => x.n - y.n)) {
+    if (merged.has(piece) || !fragmentary(piece)) continue;
+    const host = hosts.find(h => h.n > piece.n && !merged.has(h) && touches(piece, h));
     if (!host) continue;
     host.ids = host.ids ?? new Set([host.id]);
     host.ids.add(piece.id);
+    // The host's box has to grow to cover the piece, or the resampler crops it back off.
+    host.minx = Math.min(host.minx, piece.minx);
+    host.maxx = Math.max(host.maxx, piece.maxx);
+    host.miny = Math.min(host.miny, piece.miny);
+    host.maxy = Math.max(host.maxy, piece.maxy);
+    host.w = host.maxx - host.minx + 1;
+    host.h = host.maxy - host.miny + 1;
     host.n += piece.n;
     merged.add(piece);
     joins.push(`${piece.w}x${piece.h} (${piece.n}px) into ${host.w}x${host.h}`);
