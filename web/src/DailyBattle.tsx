@@ -33,6 +33,7 @@ import {effectLibrary} from './effect-catalog.js';
 import {backgroundForBoss, battleBackgrounds, hasBackgroundArt} from './background-catalog.js';
 import {BackgroundStudio} from './BackgroundStudio.js';
 import {STATUS_DISPLAY, visibleStatuses} from './status-display.js';
+import {disclosureFor} from '../../dist/src/disclosure.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {ActorId, BattleMode, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
 import type {DailyCatalog, DailyLedger} from '../../src/daily.js';
@@ -58,11 +59,13 @@ type Phase = {kind: 'choosing'} | {kind: 'playing'} | {kind: 'over'};
 const MODE_BLURB: Record<BattleMode, {title: string; detail: string}> = {
   easy: {
     title: 'Easy',
-    detail: 'Shows status effects, the boss\u2019s elemental weaknesses, and its next attack.',
+    detail: 'Shows status effects, the boss\u2019s elemental weaknesses, its next attack, '
+      + 'and what each action will do before you commit.',
   },
   normal: {
     title: 'Normal',
-    detail: 'No status badges, no warning, no elemental hints. Read the fight yourself.',
+    detail: 'No status badges, no warning, no elemental hints, no damage figures. '
+      + 'Read the fight yourself.',
   },
 };
 /** Bumped from v1 because the meaning of a stored value changed, not just the default.
@@ -377,15 +380,16 @@ function Battle({def, catalog, tier, day, unranked}:
     return result as Record<string, NonNullable<ReturnType<typeof spriteSheet>>>;
   }, [def]);
 
-  /** The whole difficulty policy, in one place.
+  /** The difficulty policy, read from the one table that defines it.
    *
    * Everything Easy adds is *information the interface already has*, never a change to the
-   * fight. Four things hang off this: status badges, the boss's telegraphed next attack,
-   * its elemental affinity tags, and the NO EFFECT label on abilities that cannot hurt it.
-   * Keeping it one named flag rather than four scattered `mode === 'easy'` checks is the
-   * point -- a new reveal should be an obvious decision about difficulty, not something
-   * that quietly lands in Normal because nobody remembered the policy existed. */
-  const reveals = mode === 'easy';
+   * fight. This used to be a single `reveals` boolean whose comment claimed it was the
+   * whole policy and listed the four things hanging off it -- while the action preview,
+   * which prints exact damage and names the boss's newly announced attack, showed in
+   * Normal the entire time. A boolean cannot tell you what was never attached to it. Each
+   * disclosure is now a named field in src/disclosure.ts, so a new one has to state a
+   * position for both modes before it compiles. */
+  const show = disclosureFor(mode);
 
   /** Non-null only while a batch is animating, so every read below has one rule. */
   const pending = phase.kind === 'playing' ? held : null;
@@ -422,7 +426,7 @@ function Battle({def, catalog, tier, day, unranked}:
    * batch ended in -- the same rule as the health bars, so a buff cannot appear before the
    * spell that granted it has played. */
   const statusBadges = useCallback((id: ActorId) => {
-    if (!reveals) return null;
+    if (!show.statuses) return null;
     const ids = visibleStatuses(statusesAt(script, id, timeMs, state.actors[id]?.statuses ?? {}));
     if (!ids.length) return null;
     return (
@@ -438,11 +442,11 @@ function Battle({def, catalog, tier, day, unranked}:
         })}
       </div>
     );
-  }, [reveals, script, timeMs, state]);
+  }, [show.statuses, script, timeMs, state]);
 
   /** The telegraph as the player should see it now: last turn's while this turn animates,
    * so the boss's next move is not revealed before the current one has landed. */
-  const shownTelegraph = !reveals ? null : pending
+  const shownTelegraph = !show.telegraph ? null : pending
     ? pending.telegraph
     : countdown ? {countdown, targetIds: state.bossIntent?.targetIds ?? []} : null;
 
@@ -534,12 +538,12 @@ function Battle({def, catalog, tier, day, unranked}:
    * Which is exactly why they belong to Easy: in Normal, spending that turn *is* the
    * fight. */
   const affinityNotes = useMemo(() => {
-    if (!reveals) return [];
+    if (!show.affinities) return [];
     const table = def.affinities?.[def.bossId] ?? {};
     return Object.entries(table)
       .filter(([, affinity]) => affinity && affinity !== 'neutral')
       .map(([element, affinity]) => ({element, affinity: affinity as string}));
-  }, [def, reveals]);
+  }, [def, show.affinities]);
 
   const offered = useMemo(() => {
     if (!actorId) return [];
@@ -550,14 +554,14 @@ function Battle({def, catalog, tier, day, unranked}:
       // there, which also keeps a dimmed menu item from leaking it without the label.
       const isOffensive = option.ability.kind === 'physical' || option.ability.kind === 'magical';
       let noEffect = false;
-      if (reveals && isOffensive && (option.ability.power ?? 0) > 0) {
+      if (show.noEffect && isOffensive && (option.ability.power ?? 0) > 0) {
         const actor = state.actors[actorId];
         const boss = state.actors[state.bossId];
         if (actor && boss) noEffect = calculateDamage(def, actor, boss, option.ability, state.tick) <= 0;
       }
       return {...option, noEffect};
     });
-  }, [state, def, actorId, reveals]);
+  }, [state, def, actorId, show.noEffect]);
   /** Offered actions bucketed by menu group, preserving the order availableActions gave
    * them. A group with nothing in it is simply absent, so the Brawler never sees a Magic
    * command it cannot use. */
@@ -581,13 +585,18 @@ function Battle({def, catalog, tier, day, unranked}:
   );
   const preview = useMemo(() => {
     if (!selected || !actorId) return null;
+    // Normal withholds this entirely. Every line of it is read off the live fight state --
+    // the exact damage against this boss, a status it would apply, the boss reacting by
+    // announcing something new -- so it answers "what will this do" without the player
+    // having to spend a turn finding out, which in Normal is the fight.
+    if (!show.actionPreview) return null;
     try {
       const input = actionInput(state, actorId, selected.ability);
       return previewDisplay(state, def, input, previewAction(state, input, def));
     } catch {
       return null;
     }
-  }, [selected, actorId, state, def]);
+  }, [selected, actorId, state, def, show.actionPreview]);
 
   const stars = starsForResult(state);
   const record = ledger.records[day];
