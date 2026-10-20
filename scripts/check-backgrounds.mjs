@@ -83,6 +83,11 @@ for (const boss of bossIds) {
 
 const briefedFiles = new Set([...arenas.values()].map(a => a.file));
 for (const file of onDisk) {
+  // A `-test` or `_test` suffix is the documented name for a full-resolution source kept
+  // beside the packed arena: gitignored, never shipped, and deliberately not declared by
+  // any arena. Reporting those is noise, and a check that reports things the convention
+  // says are fine is a check people stop reading.
+  if (/[-_]test\.png$/.test(file)) continue;
   if (!briefedFiles.has(file)) advice.push(`${file} is in battle-backgrounds/ but no arena declares it`);
 }
 // An arena briefed for a boss that no longer exists is dead weight in the brief.
