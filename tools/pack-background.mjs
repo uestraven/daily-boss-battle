@@ -11,9 +11,9 @@
  *
  *   node tools/pack-background.mjs <input.png> --out <output.png> [--colours 64]
  */
-import {readFileSync, writeFileSync} from 'node:fs';
+import {readdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {decodePng, encodePng} from './png.mjs';
-import {load} from './load.mjs';
+import {load, repoPath} from './load.mjs';
 
 const {STAGE} = await load('dist/src/stage.js');
 
@@ -161,14 +161,68 @@ if (recede > 0) {
   console.log(`  recede        ${(recede * 100).toFixed(0)}% toward the stage backdrop`);
 }
 
-/** Where the characters stand. A backdrop brighter than the sprites in these rectangles
- * swallows them, and the darkest sheet so far has a median luminance of 38. */
+/** Where the characters stand, and who stands there.
+ *
+ * The verdict used to be a fixed brightness threshold -- darker than 45 was "OK" -- on the
+ * assumption that a dark backdrop is a safe one. That is wrong, and wrong in a way that
+ * mattered: what hides a sprite is a backdrop of *similar luminance*, not a bright one. A
+ * dark figure against bright mist is a silhouette and reads beautifully.
+ *
+ * Judged on brightness alone the tool approved the Sunken Waterway, where the Warden's
+ * median of 36 sits against a party zone of 35 -- a contrast of 1, which is a character
+ * you cannot see -- and flagged the Broken Span as LOUD when every hero has 35+ of
+ * separation on it, the best in the game. It also printed hardcoded sprite medians as
+ * "reference" that had gone stale as the sheets were replaced: it claimed the Oracle was
+ * 86 when its current sheet measures 48.
+ *
+ * So the zones are now measured against the real sheets, read off disk, and the verdict is
+ * the worst-case contrast rather than the absolute level. The party zone is checked against
+ * every hero because any party can be drawn for any boss; the boss zone against that
+ * boss's own sheet, found from the output filename.
+ */
 const ZONES = [
-  {label: 'behind the boss', x: 36, y: 8, w: 112, h: 96},
-  {label: 'behind the party', x: 208, y: 56, w: 68, h: 92},
-  {label: 'under the HP bar', x: 16, y: 8, w: 288, h: 14},
+  {label: 'behind the boss', x: 36, y: 8, w: 112, h: 96, against: 'boss'},
+  {label: 'behind the party', x: 208, y: 56, w: 68, h: 92, against: 'heroes'},
+  {label: 'under the HP bar', x: 16, y: 8, w: 288, h: 14, against: null},
 ];
 const lum = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+const medianOf = values => {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
+};
+
+/** Median luminance of a sheet's opaque pixels, or null when it cannot be read. */
+function sheetMedian(file) {
+  try {
+    const image = decodePng(readFileSync(file));
+    const values = [];
+    for (let i = 0; i < image.width * image.height; i++) {
+      const o = i * 4;
+      if (image.rgba[o + 3] > 8) values.push(lum(image.rgba[o], image.rgba[o + 1], image.rgba[o + 2]));
+    }
+    return values.length ? medianOf(values) : null;
+  } catch { return null; }
+}
+
+/** Every sheet in a directory, as {id, median}, skipping local `-test` sources. */
+function sheetsIn(dir) {
+  const found = [];
+  try {
+    for (const name of readdirSync(dir)) {
+      if (!name.endsWith('.png') || /[-_]test\.png$/.test(name)) continue;
+      const median = sheetMedian(`${dir}/${name}`);
+      if (median !== null) found.push({id: name.replace(/\.png$/, ''), median});
+    }
+  } catch { /* directory absent: fall back to no comparison */ }
+  return found;
+}
+
+const spriteRoot = repoPath('web/public/battle-sprites');
+const heroSheets = sheetsIn(`${spriteRoot}/heroes`);
+const bossSheets = sheetsIn(`${spriteRoot}/bosses`);
+const arenaId = out.replace(/^.*[\\/]/, '').replace(/\.png$/, '');
+const bossSheet = bossSheets.find(b => b.id === arenaId) ?? null;
+
 console.log('');
 for (const z of ZONES) {
   const vals = [];
@@ -181,12 +235,55 @@ for (const z of ZONES) {
   vals.sort((a, b) => a - b);
   const median = vals[Math.floor(vals.length / 2)];
   const p90 = vals[Math.floor(vals.length * 0.9)];
-  const verdict = median <= 45 ? 'OK  ' : median <= 70 ? 'BUSY' : 'LOUD';
-  console.log(`  ${verdict} ${z.label.padEnd(18)} median luminance ${median.toFixed(0).padStart(3)}` +
-    `  90th ${p90.toFixed(0).padStart(3)}`);
+
+  // Busyness drives the verdict, because it is the thing nothing downstream can fix. The
+  // sprites carry an outline rim precisely so they separate from a backdrop of similar
+  // value, and that rim works regardless of luminance -- but no rim rescues a sprite
+  // standing in front of high-frequency detail.
+  //
+  // Luminance contrast is reported rather than judged, because judging it is not possible:
+  // the roster spans 37 to 131, so every backdrop level is within 25 of *some* hero. A
+  // dark floor hides the Warden; a pale one hides the Brawler. Naming which heroes are
+  // closest is useful; failing the art for it is not.
+  let edges = 0;
+  let edgeCount = 0;
+  for (let y = z.y; y < z.y + z.h; y++) {
+    for (let x = z.x; x < z.x + z.w - 1; x++) {
+      const a = (y * outW + x) * 4;
+      const b = (y * outW + x + 1) * 4;
+      edges += Math.abs(lum(dest[a], dest[a + 1], dest[a + 2]) - lum(dest[b], dest[b + 1], dest[b + 2]));
+      edgeCount++;
+    }
+  }
+  const busyness = edgeCount ? edges / edgeCount : 0;
+  // Shipping arenas measure 4.8 to 7.1 behind the party; 10.8 is the busiest accepted.
+  const verdict = busyness <= 8 ? 'OK  ' : busyness <= 14 ? 'BUSY' : 'LOUD';
+
+  const compare = z.against === 'heroes' ? heroSheets
+    : z.against === 'boss' ? (bossSheet ? [bossSheet] : [])
+    : [];
+  let note = `  busyness ${busyness.toFixed(1).padStart(4)}`;
+  if (compare.length) {
+    const closest = compare
+      .map(sheet => ({id: sheet.id, contrast: Math.abs(sheet.median - median)}))
+      .sort((a, b) => a.contrast - b.contrast)
+      .slice(0, 3)
+      .map(c => `${c.id} ${c.contrast.toFixed(0)}`);
+    note += `  least separation: ${closest.join(', ')}`;
+  }
+  console.log(`  ${verdict.padEnd(5)} ${z.label.padEnd(18)} lum ${median.toFixed(0).padStart(3)}` +
+    `  90th ${p90.toFixed(0).padStart(3)}${note}`);
 }
-console.log('  (sprite medians for reference: Warden 38, Blademage 66, Oracle 86, Brawler 88.');
-console.log('   A zone brighter than the sprite standing in it will swallow its silhouette.)');
+if (heroSheets.length) {
+  const darkest = [...heroSheets].sort((a, b) => a.median - b.median)[0];
+  const brightest = [...heroSheets].sort((a, b) => b.median - a.median)[0];
+  console.log(`  (measured from the real sheets: ${heroSheets.length} heroes, `
+    + `${darkest.id} darkest at ${darkest.median.toFixed(0)}, `
+    + `${brightest.id} brightest at ${brightest.median.toFixed(0)}.`);
+  console.log('   Verdict is busyness, which no outline rim can compensate for. Luminance'
+    + ' separation is reported, not judged: the roster spans the whole range, so every');
+  console.log('   backdrop level sits close to someone.)');
+}
 
 writeFileSync(out, encodePng(outW, outH, dest));
 const seen = new Set();
