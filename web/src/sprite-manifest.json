@@ -186,8 +186,14 @@
      "frames": 8,
      "loop": false
     },
-    "victory": {
+    "walk": {
      "row": 6,
+     "frames": 8,
+     "loop": true,
+     "frameMs": 110
+    },
+    "victory": {
+     "row": 7,
      "frames": 8,
      "loop": true,
      "frameMs": 150
