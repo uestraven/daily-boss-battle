@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "contentHash": "b8dfe3ea-19183",
-  "generatedAt": "2026-10-17T05:00:22.666Z",
+  "contentHash": "21fe5698-19223",
+  "generatedAt": "2026-10-20T19:33:11.938Z",
   "gateConfig": {
-    "name": "quick",
+    "name": "full",
     "gatesVersion": 2,
     "gates": [
       "winnable",
@@ -16,40 +16,40 @@
     ],
     "beamWidth": 48,
     "maxHeroActions": 36,
-    "maxExpansions": 1800,
-    "maxSolutions": 6,
+    "maxExpansions": 5000,
+    "maxSolutions": 12,
     "minDistinctStrategies": 3,
     "minActions": 12,
     "maxActions": 32,
-    "forcedAbilityProbes": 0
+    "forcedAbilityProbes": 3
   },
   "summary": {
     "combinations": 1264,
-    "accepted": 263,
-    "rejected": 1001,
+    "accepted": 319,
+    "rejected": 945,
     "errors": 0,
     "byTier": {
-      "approachable": 107,
-      "standard": 97,
-      "punishing": 59
+      "approachable": 118,
+      "standard": 133,
+      "punishing": 68
     },
     "byBoss": {
-      "tide_maw": 27,
-      "ink_lurker": 36,
-      "crush_wall": 31,
+      "tide_maw": 46,
+      "ink_lurker": 47,
+      "crush_wall": 30,
       "storm_keeper": 39,
-      "spell_weaver": 27,
-      "mad_harlequin": 39,
+      "spell_weaver": 34,
+      "mad_harlequin": 44,
       "clockwork_emperor": 22,
-      "blade_tyrant": 42
+      "blade_tyrant": 57
     },
     "failureTally": {
-      "winnable": 646,
-      "multi_path": 572,
-      "losable": 378,
-      "length_band": 257,
-      "non_trivial": 209,
-      "no_forced_ability": 197,
+      "winnable": 629,
+      "no_forced_ability": 395,
+      "losable": 374,
+      "multi_path": 360,
+      "length_band": 247,
+      "non_trivial": 215,
       "no_dead_kit": 110
     }
   },
@@ -87,7 +87,7 @@
         "bestStars": 3,
         "bestActions": 15,
         "bestTick": 64,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 57
       },
       "tier": "approachable"
@@ -106,7 +106,7 @@
         "bestStars": 3,
         "bestActions": 14,
         "bestTick": 55,
-        "distinctStrategies": 5,
+        "distinctStrategies": 8,
         "marginPercent": 58
       },
       "tier": "approachable"
@@ -125,7 +125,7 @@
         "bestStars": 3,
         "bestActions": 14,
         "bestTick": 50,
-        "distinctStrategies": 5,
+        "distinctStrategies": 6,
         "marginPercent": 56
       },
       "tier": "approachable"
@@ -144,10 +144,86 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 70,
-        "distinctStrategies": 6,
+        "distinctStrategies": 10,
         "marginPercent": 28
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-blade_tyrant-blademage-channeler-thief",
+      "bossId": "blade_tyrant",
+      "party": [
+        "blademage",
+        "channeler",
+        "thief"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 18,
+        "bestTick": 60,
+        "distinctStrategies": 6,
+        "marginPercent": 31
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-blade_tyrant-blademage-channeler-warden",
+      "bossId": "blade_tyrant",
+      "party": [
+        "blademage",
+        "channeler",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 19,
+        "bestTick": 70,
+        "distinctStrategies": 3,
+        "marginPercent": 36
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-blade_tyrant-blademage-lancer-oracle",
+      "bossId": "blade_tyrant",
+      "party": [
+        "blademage",
+        "lancer",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 14,
+        "bestTick": 60,
+        "distinctStrategies": 4,
+        "marginPercent": 59
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-blade_tyrant-blademage-magus-warden",
+      "bossId": "blade_tyrant",
+      "party": [
+        "blademage",
+        "magus",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 14,
+        "bestTick": 52,
+        "distinctStrategies": 4,
+        "marginPercent": 66
+      },
+      "tier": "approachable"
     },
     {
       "id": "gen-blade_tyrant-blademage-monk-oracle",
@@ -163,7 +239,7 @@
         "bestStars": 3,
         "bestActions": 12,
         "bestTick": 40,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 67
       },
       "tier": "approachable"
@@ -182,7 +258,7 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 50,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 69
       },
       "tier": "approachable"
@@ -201,46 +277,46 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 70,
-        "distinctStrategies": 3,
-        "marginPercent": 28
+        "distinctStrategies": 4,
+        "marginPercent": 23
       },
       "tier": "standard"
     },
     {
-      "id": "gen-blade_tyrant-blademage-thief-warden",
-      "bossId": "blade_tyrant",
-      "party": [
-        "blademage",
-        "thief",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 18,
-        "bestTick": 60,
-        "distinctStrategies": 4,
-        "marginPercent": 36
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-blade_tyrant-brawler-channeler-machinist",
+      "id": "gen-blade_tyrant-brawler-channeler-magus",
       "bossId": "blade_tyrant",
       "party": [
         "brawler",
         "channeler",
-        "machinist"
+        "magus"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 12,
-        "bestTick": 44,
+        "bestActions": 17,
+        "bestTick": 64,
+        "distinctStrategies": 3,
+        "marginPercent": 41
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-blade_tyrant-brawler-channeler-monk",
+      "bossId": "blade_tyrant",
+      "party": [
+        "brawler",
+        "channeler",
+        "monk"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 14,
+        "bestTick": 45,
         "distinctStrategies": 6,
-        "marginPercent": 64
+        "marginPercent": 65
       },
       "tier": "approachable"
     },
@@ -258,10 +334,29 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 64,
-        "distinctStrategies": 3,
+        "distinctStrategies": 7,
         "marginPercent": 49
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-blade_tyrant-brawler-channeler-vanguard",
+      "bossId": "blade_tyrant",
+      "party": [
+        "brawler",
+        "channeler",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 56,
+        "distinctStrategies": 5,
+        "marginPercent": 55
+      },
+      "tier": "approachable"
     },
     {
       "id": "gen-blade_tyrant-brawler-channeler-warden",
@@ -294,10 +389,10 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 17,
-        "bestTick": 60,
-        "distinctStrategies": 5,
-        "marginPercent": 39
+        "bestActions": 16,
+        "bestTick": 56,
+        "distinctStrategies": 10,
+        "marginPercent": 42
       },
       "tier": "approachable"
     },
@@ -315,7 +410,7 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 60,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 29
       },
       "tier": "standard"
@@ -334,7 +429,7 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 55,
-        "distinctStrategies": 4,
+        "distinctStrategies": 5,
         "marginPercent": 36
       },
       "tier": "approachable"
@@ -370,10 +465,29 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 20,
-        "bestTick": 64,
+        "bestActions": 18,
+        "bestTick": 56,
         "distinctStrategies": 4,
-        "marginPercent": 47
+        "marginPercent": 35
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-blade_tyrant-brawler-oracle-warden",
+      "bossId": "blade_tyrant",
+      "party": [
+        "brawler",
+        "oracle",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 20,
+        "bestTick": 70,
+        "distinctStrategies": 3,
+        "marginPercent": 48
       },
       "tier": "approachable"
     },
@@ -391,10 +505,29 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 78,
-        "distinctStrategies": 3,
+        "distinctStrategies": 7,
         "marginPercent": 32
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-blade_tyrant-channeler-lancer-nullifier",
+      "bossId": "blade_tyrant",
+      "party": [
+        "channeler",
+        "lancer",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 77,
+        "distinctStrategies": 4,
+        "marginPercent": 37
+      },
+      "tier": "approachable"
     },
     {
       "id": "gen-blade_tyrant-channeler-lancer-oracle",
@@ -408,10 +541,10 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 21,
-        "bestTick": 92,
-        "distinctStrategies": 4,
-        "marginPercent": 32
+        "bestActions": 23,
+        "bestTick": 96,
+        "distinctStrategies": 3,
+        "marginPercent": 36
       },
       "tier": "standard"
     },
@@ -427,12 +560,50 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 23,
-        "bestTick": 84,
+        "bestActions": 21,
+        "bestTick": 77,
         "distinctStrategies": 4,
-        "marginPercent": 26
+        "marginPercent": 45
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-blade_tyrant-channeler-lancer-vanguard",
+      "bossId": "blade_tyrant",
+      "party": [
+        "channeler",
+        "lancer",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 74,
+        "distinctStrategies": 4,
+        "marginPercent": 69
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-blade_tyrant-channeler-machinist-nullifier",
+      "bossId": "blade_tyrant",
+      "party": [
+        "channeler",
+        "machinist",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 13,
+        "bestTick": 55,
+        "distinctStrategies": 4,
+        "marginPercent": 65
+      },
+      "tier": "approachable"
     },
     {
       "id": "gen-blade_tyrant-channeler-machinist-thief",
@@ -448,7 +619,7 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 44,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 63
       },
       "tier": "approachable"
@@ -467,7 +638,7 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 78,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 17
       },
       "tier": "punishing"
@@ -486,7 +657,7 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 80,
-        "distinctStrategies": 5,
+        "distinctStrategies": 6,
         "marginPercent": 47
       },
       "tier": "standard"
@@ -505,7 +676,7 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 55,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 55
       },
       "tier": "approachable"
@@ -522,9 +693,9 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 18,
-        "bestTick": 61,
-        "distinctStrategies": 5,
+        "bestActions": 17,
+        "bestTick": 63,
+        "distinctStrategies": 10,
         "marginPercent": 40
       },
       "tier": "approachable"
@@ -543,7 +714,7 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 56,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 53
       },
       "tier": "approachable"
@@ -562,7 +733,7 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 63,
-        "distinctStrategies": 4,
+        "distinctStrategies": 5,
         "marginPercent": 52
       },
       "tier": "approachable"
@@ -581,7 +752,7 @@
         "bestStars": 3,
         "bestActions": 25,
         "bestTick": 90,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 26
       },
       "tier": "standard"
@@ -600,8 +771,27 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 66,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 44
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-blade_tyrant-lancer-monk-oracle",
+      "bossId": "blade_tyrant",
+      "party": [
+        "lancer",
+        "monk",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 13,
+        "bestTick": 54,
+        "distinctStrategies": 4,
+        "marginPercent": 68
       },
       "tier": "approachable"
     },
@@ -619,7 +809,7 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 77,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 33
       },
       "tier": "standard"
@@ -638,27 +828,8 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 77,
-        "distinctStrategies": 5,
+        "distinctStrategies": 7,
         "marginPercent": 42
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-blade_tyrant-lancer-oracle-vanguard",
-      "bossId": "blade_tyrant",
-      "party": [
-        "lancer",
-        "oracle",
-        "vanguard"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 66,
-        "distinctStrategies": 3,
-        "marginPercent": 70
       },
       "tier": "approachable"
     },
@@ -674,12 +845,12 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 20,
+        "bestActions": 22,
         "bestTick": 90,
-        "distinctStrategies": 3,
-        "marginPercent": 53
+        "distinctStrategies": 5,
+        "marginPercent": 36
       },
-      "tier": "approachable"
+      "tier": "standard"
     },
     {
       "id": "gen-blade_tyrant-machinist-nullifier-thief",
@@ -695,7 +866,7 @@
         "bestStars": 3,
         "bestActions": 12,
         "bestTick": 44,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 65
       },
       "tier": "approachable"
@@ -714,7 +885,7 @@
         "bestStars": 3,
         "bestActions": 15,
         "bestTick": 50,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 47
       },
       "tier": "approachable"
@@ -733,8 +904,27 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 66,
-        "distinctStrategies": 4,
+        "distinctStrategies": 9,
         "marginPercent": 58
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-blade_tyrant-magus-nullifier-warden",
+      "bossId": "blade_tyrant",
+      "party": [
+        "magus",
+        "nullifier",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 66,
+        "distinctStrategies": 4,
+        "marginPercent": 49
       },
       "tier": "approachable"
     },
@@ -771,10 +961,48 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 78,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 15
       },
       "tier": "punishing"
+    },
+    {
+      "id": "gen-blade_tyrant-monk-nullifier-thief",
+      "bossId": "blade_tyrant",
+      "party": [
+        "monk",
+        "nullifier",
+        "thief"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 14,
+        "bestTick": 45,
+        "distinctStrategies": 4,
+        "marginPercent": 66
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-blade_tyrant-monk-oracle-thief",
+      "bossId": "blade_tyrant",
+      "party": [
+        "monk",
+        "oracle",
+        "thief"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 16,
+        "bestTick": 48,
+        "distinctStrategies": 3,
+        "marginPercent": 63
+      },
+      "tier": "approachable"
     },
     {
       "id": "gen-blade_tyrant-monk-oracle-vanguard",
@@ -790,8 +1018,27 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 44,
-        "distinctStrategies": 4,
+        "distinctStrategies": 8,
         "marginPercent": 69
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-blade_tyrant-nullifier-oracle-vanguard",
+      "bossId": "blade_tyrant",
+      "party": [
+        "nullifier",
+        "oracle",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 66,
+        "distinctStrategies": 3,
+        "marginPercent": 45
       },
       "tier": "approachable"
     },
@@ -809,7 +1056,7 @@
         "bestStars": 3,
         "bestActions": 24,
         "bestTick": 90,
-        "distinctStrategies": 4,
+        "distinctStrategies": 8,
         "marginPercent": 18
       },
       "tier": "punishing"
@@ -826,12 +1073,50 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 23,
-        "bestTick": 77,
-        "distinctStrategies": 3,
-        "marginPercent": 24
+        "bestActions": 22,
+        "bestTick": 72,
+        "distinctStrategies": 4,
+        "marginPercent": 37
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-blade_tyrant-oracle-thief-vanguard",
+      "bossId": "blade_tyrant",
+      "party": [
+        "oracle",
+        "thief",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 18,
+        "bestTick": 64,
+        "distinctStrategies": 3,
+        "marginPercent": 68
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-blade_tyrant-oracle-thief-warden",
+      "bossId": "blade_tyrant",
+      "party": [
+        "oracle",
+        "thief",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 25,
+        "bestTick": 84,
+        "distinctStrategies": 5,
+        "marginPercent": 19
+      },
+      "tier": "punishing"
     },
     {
       "id": "gen-blade_tyrant-oracle-vanguard-warden",
@@ -847,27 +1132,27 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 77,
-        "distinctStrategies": 5,
+        "distinctStrategies": 7,
         "marginPercent": 27
       },
       "tier": "standard"
     },
     {
-      "id": "gen-clockwork_emperor-blademage-brawler-channeler",
+      "id": "gen-clockwork_emperor-blademage-brawler-warden",
       "bossId": "clockwork_emperor",
       "party": [
         "blademage",
         "brawler",
-        "channeler"
+        "warden"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 55,
+        "bestActions": 19,
+        "bestTick": 60,
         "distinctStrategies": 3,
-        "marginPercent": 22
+        "marginPercent": 27
       },
       "tier": "standard"
     },
@@ -885,7 +1170,7 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 45,
-        "distinctStrategies": 5,
+        "distinctStrategies": 7,
         "marginPercent": 27
       },
       "tier": "standard"
@@ -902,10 +1187,29 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 19,
+        "bestActions": 18,
+        "bestTick": 66,
+        "distinctStrategies": 5,
+        "marginPercent": 24
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-clockwork_emperor-blademage-lancer-warden",
+      "bossId": "clockwork_emperor",
+      "party": [
+        "blademage",
+        "lancer",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
         "bestTick": 70,
         "distinctStrategies": 3,
-        "marginPercent": 24
+        "marginPercent": 32
       },
       "tier": "standard"
     },
@@ -923,7 +1227,7 @@
         "bestStars": 3,
         "bestActions": 12,
         "bestTick": 43,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 66
       },
       "tier": "approachable"
@@ -942,8 +1246,46 @@
         "bestStars": 3,
         "bestActions": 15,
         "bestTick": 55,
-        "distinctStrategies": 3,
-        "marginPercent": 76
+        "distinctStrategies": 5,
+        "marginPercent": 30
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-clockwork_emperor-blademage-magus-warden",
+      "bossId": "clockwork_emperor",
+      "party": [
+        "blademage",
+        "magus",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 18,
+        "bestTick": 70,
+        "distinctStrategies": 4,
+        "marginPercent": 22
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-clockwork_emperor-blademage-monk-oracle",
+      "bossId": "clockwork_emperor",
+      "party": [
+        "blademage",
+        "monk",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 15,
+        "bestTick": 54,
+        "distinctStrategies": 5,
+        "marginPercent": 67
       },
       "tier": "approachable"
     },
@@ -961,29 +1303,48 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 54,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 37
       },
       "tier": "approachable"
     },
     {
-      "id": "gen-clockwork_emperor-blademage-oracle-vanguard",
+      "id": "gen-clockwork_emperor-brawler-channeler-warden",
       "bossId": "clockwork_emperor",
       "party": [
-        "blademage",
-        "oracle",
-        "vanguard"
+        "brawler",
+        "channeler",
+        "warden"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 57,
+        "bestActions": 21,
+        "bestTick": 70,
         "distinctStrategies": 3,
-        "marginPercent": 67
+        "marginPercent": 20
       },
-      "tier": "approachable"
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-clockwork_emperor-brawler-machinist-warden",
+      "bossId": "clockwork_emperor",
+      "party": [
+        "brawler",
+        "machinist",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 15,
+        "bestTick": 50,
+        "distinctStrategies": 4,
+        "marginPercent": 27
+      },
+      "tier": "standard"
     },
     {
       "id": "gen-clockwork_emperor-brawler-monk-warden",
@@ -999,27 +1360,27 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 54,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 28
       },
       "tier": "standard"
     },
     {
-      "id": "gen-clockwork_emperor-channeler-machinist-warden",
+      "id": "gen-clockwork_emperor-channeler-monk-warden",
       "bossId": "clockwork_emperor",
       "party": [
         "channeler",
-        "machinist",
+        "monk",
         "warden"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 14,
+        "bestActions": 16,
         "bestTick": 55,
-        "distinctStrategies": 3,
-        "marginPercent": 24
+        "distinctStrategies": 5,
+        "marginPercent": 25
       },
       "tier": "standard"
     },
@@ -1037,27 +1398,8 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 52,
-        "distinctStrategies": 3,
-        "marginPercent": 40
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-clockwork_emperor-lancer-machinist-warden",
-      "bossId": "clockwork_emperor",
-      "party": [
-        "lancer",
-        "machinist",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 66,
         "distinctStrategies": 4,
-        "marginPercent": 55
+        "marginPercent": 40
       },
       "tier": "approachable"
     },
@@ -1074,8 +1416,8 @@
       "difficulty": {
         "bestStars": 3,
         "bestActions": 17,
-        "bestTick": 64,
-        "distinctStrategies": 3,
+        "bestTick": 68,
+        "distinctStrategies": 7,
         "marginPercent": 41
       },
       "tier": "approachable"
@@ -1094,46 +1436,8 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 70,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 55
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-clockwork_emperor-machinist-magus-oracle",
-      "bossId": "clockwork_emperor",
-      "party": [
-        "machinist",
-        "magus",
-        "oracle"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 13,
-        "bestTick": 55,
-        "distinctStrategies": 4,
-        "marginPercent": 63
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-clockwork_emperor-machinist-magus-warden",
-      "bossId": "clockwork_emperor",
-      "party": [
-        "machinist",
-        "magus",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 14,
-        "bestTick": 55,
-        "distinctStrategies": 3,
-        "marginPercent": 69
       },
       "tier": "approachable"
     },
@@ -1151,7 +1455,7 @@
         "bestStars": 3,
         "bestActions": 12,
         "bestTick": 43,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 68
       },
       "tier": "approachable"
@@ -1170,29 +1474,10 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 45,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 31
       },
       "tier": "standard"
-    },
-    {
-      "id": "gen-clockwork_emperor-machinist-oracle-thief",
-      "bossId": "clockwork_emperor",
-      "party": [
-        "machinist",
-        "oracle",
-        "thief"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 54,
-        "distinctStrategies": 4,
-        "marginPercent": 66
-      },
-      "tier": "approachable"
     },
     {
       "id": "gen-clockwork_emperor-machinist-oracle-vanguard",
@@ -1208,27 +1493,8 @@
         "bestStars": 3,
         "bestActions": 12,
         "bestTick": 44,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 68
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-clockwork_emperor-machinist-oracle-warden",
-      "bossId": "clockwork_emperor",
-      "party": [
-        "machinist",
-        "oracle",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 55,
-        "distinctStrategies": 3,
-        "marginPercent": 69
       },
       "tier": "approachable"
     },
@@ -1246,7 +1512,7 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 65,
-        "distinctStrategies": 3,
+        "distinctStrategies": 7,
         "marginPercent": 23
       },
       "tier": "standard"
@@ -1264,9 +1530,28 @@
       "difficulty": {
         "bestStars": 3,
         "bestActions": 15,
-        "bestTick": 54,
-        "distinctStrategies": 3,
+        "bestTick": 52,
+        "distinctStrategies": 4,
         "marginPercent": 66
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-clockwork_emperor-monk-vanguard-warden",
+      "bossId": "clockwork_emperor",
+      "party": [
+        "monk",
+        "vanguard",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 18,
+        "bestTick": 63,
+        "distinctStrategies": 4,
+        "marginPercent": 71
       },
       "tier": "approachable"
     },
@@ -1284,7 +1569,7 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 60,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 35
       },
       "tier": "standard"
@@ -1303,7 +1588,7 @@
         "bestStars": 3,
         "bestActions": 23,
         "bestTick": 72,
-        "distinctStrategies": 4,
+        "distinctStrategies": 3,
         "marginPercent": 45
       },
       "tier": "standard"
@@ -1322,7 +1607,7 @@
         "bestStars": 3,
         "bestActions": 15,
         "bestTick": 55,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 28
       },
       "tier": "standard"
@@ -1341,29 +1626,10 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 90,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 11
       },
       "tier": "punishing"
-    },
-    {
-      "id": "gen-crush_wall-blademage-machinist-nullifier",
-      "bossId": "crush_wall",
-      "party": [
-        "blademage",
-        "machinist",
-        "nullifier"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 17,
-        "bestTick": 66,
-        "distinctStrategies": 4,
-        "marginPercent": 21
-      },
-      "tier": "standard"
     },
     {
       "id": "gen-crush_wall-blademage-machinist-oracle",
@@ -1404,25 +1670,6 @@
       "tier": "approachable"
     },
     {
-      "id": "gen-crush_wall-blademage-monk-nullifier",
-      "bossId": "crush_wall",
-      "party": [
-        "blademage",
-        "monk",
-        "nullifier"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 20,
-        "bestTick": 70,
-        "distinctStrategies": 3,
-        "marginPercent": 20
-      },
-      "tier": "punishing"
-    },
-    {
       "id": "gen-crush_wall-blademage-monk-oracle",
       "bossId": "crush_wall",
       "party": [
@@ -1435,11 +1682,11 @@
       "difficulty": {
         "bestStars": 3,
         "bestActions": 19,
-        "bestTick": 61,
-        "distinctStrategies": 3,
-        "marginPercent": 36
+        "bestTick": 68,
+        "distinctStrategies": 9,
+        "marginPercent": 13
       },
-      "tier": "approachable"
+      "tier": "punishing"
     },
     {
       "id": "gen-crush_wall-blademage-monk-warden",
@@ -1461,6 +1708,25 @@
       "tier": "approachable"
     },
     {
+      "id": "gen-crush_wall-blademage-nullifier-warden",
+      "bossId": "crush_wall",
+      "party": [
+        "blademage",
+        "nullifier",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 26,
+        "bestTick": 90,
+        "distinctStrategies": 7,
+        "marginPercent": 13
+      },
+      "tier": "punishing"
+    },
+    {
       "id": "gen-crush_wall-blademage-vanguard-warden",
       "bossId": "crush_wall",
       "party": [
@@ -1474,7 +1740,7 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 80,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 16
       },
       "tier": "punishing"
@@ -1493,7 +1759,7 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 56,
-        "distinctStrategies": 5,
+        "distinctStrategies": 6,
         "marginPercent": 22
       },
       "tier": "standard"
@@ -1512,7 +1778,7 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 56,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 18
       },
       "tier": "punishing"
@@ -1531,7 +1797,7 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 66,
-        "distinctStrategies": 5,
+        "distinctStrategies": 7,
         "marginPercent": 45
       },
       "tier": "approachable"
@@ -1569,27 +1835,27 @@
         "bestStars": 3,
         "bestActions": 23,
         "bestTick": 72,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 45
       },
       "tier": "standard"
     },
     {
-      "id": "gen-crush_wall-channeler-machinist-oracle",
+      "id": "gen-crush_wall-brawler-oracle-vanguard",
       "bossId": "crush_wall",
       "party": [
-        "channeler",
-        "machinist",
-        "oracle"
+        "brawler",
+        "oracle",
+        "vanguard"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 19,
-        "bestTick": 72,
+        "bestActions": 25,
+        "bestTick": 84,
         "distinctStrategies": 3,
-        "marginPercent": 14
+        "marginPercent": 12
       },
       "tier": "punishing"
     },
@@ -1607,7 +1873,7 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 77,
-        "distinctStrategies": 5,
+        "distinctStrategies": 6,
         "marginPercent": 12
       },
       "tier": "punishing"
@@ -1643,12 +1909,12 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 17,
-        "bestTick": 64,
-        "distinctStrategies": 3,
-        "marginPercent": 39
+        "bestActions": 18,
+        "bestTick": 74,
+        "distinctStrategies": 7,
+        "marginPercent": 32
       },
-      "tier": "approachable"
+      "tier": "standard"
     },
     {
       "id": "gen-crush_wall-lancer-machinist-warden",
@@ -1662,12 +1928,31 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 18,
-        "bestTick": 77,
+        "bestActions": 19,
+        "bestTick": 76,
         "distinctStrategies": 4,
-        "marginPercent": 40
+        "marginPercent": 39
       },
       "tier": "approachable"
+    },
+    {
+      "id": "gen-crush_wall-lancer-monk-nullifier",
+      "bossId": "crush_wall",
+      "party": [
+        "lancer",
+        "monk",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 20,
+        "bestTick": 76,
+        "distinctStrategies": 4,
+        "marginPercent": 25
+      },
+      "tier": "standard"
     },
     {
       "id": "gen-crush_wall-lancer-monk-oracle",
@@ -1702,7 +1987,7 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 82,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 47
       },
       "tier": "standard"
@@ -1721,7 +2006,7 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 63,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 23
       },
       "tier": "standard"
@@ -1759,84 +2044,65 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 63,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 37
       },
       "tier": "approachable"
     },
     {
-      "id": "gen-crush_wall-machinist-nullifier-oracle",
+      "id": "gen-crush_wall-machinist-oracle-vanguard",
       "bossId": "crush_wall",
       "party": [
         "machinist",
-        "nullifier",
-        "oracle"
+        "oracle",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 60,
+        "distinctStrategies": 4,
+        "marginPercent": 19
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-crush_wall-machinist-vanguard-warden",
+      "bossId": "crush_wall",
+      "party": [
+        "machinist",
+        "vanguard",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 18,
+        "bestTick": 66,
+        "distinctStrategies": 4,
+        "marginPercent": 26
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-crush_wall-monk-oracle-vanguard",
+      "bossId": "crush_wall",
+      "party": [
+        "monk",
+        "oracle",
+        "vanguard"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
         "bestActions": 20,
-        "bestTick": 72,
-        "distinctStrategies": 5,
-        "marginPercent": 2
-      },
-      "tier": "punishing"
-    },
-    {
-      "id": "gen-crush_wall-machinist-nullifier-warden",
-      "bossId": "crush_wall",
-      "party": [
-        "machinist",
-        "nullifier",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 22,
-        "bestTick": 80,
+        "bestTick": 70,
         "distinctStrategies": 3,
-        "marginPercent": 22
-      },
-      "tier": "standard"
-    },
-    {
-      "id": "gen-crush_wall-machinist-oracle-warden",
-      "bossId": "crush_wall",
-      "party": [
-        "machinist",
-        "oracle",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 21,
-        "bestTick": 76,
-        "distinctStrategies": 3,
-        "marginPercent": 13
-      },
-      "tier": "punishing"
-    },
-    {
-      "id": "gen-crush_wall-machinist-thief-warden",
-      "bossId": "crush_wall",
-      "party": [
-        "machinist",
-        "thief",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 23,
-        "bestTick": 77,
-        "distinctStrategies": 3,
-        "marginPercent": 18
+        "marginPercent": 19
       },
       "tier": "punishing"
     },
@@ -1852,9 +2118,9 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 22,
-        "bestTick": 77,
-        "distinctStrategies": 3,
+        "bestActions": 21,
+        "bestTick": 72,
+        "distinctStrategies": 6,
         "marginPercent": 13
       },
       "tier": "punishing"
@@ -1879,6 +2145,63 @@
       "tier": "standard"
     },
     {
+      "id": "gen-ink_lurker-blademage-brawler-nullifier",
+      "bossId": "ink_lurker",
+      "party": [
+        "blademage",
+        "brawler",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 21,
+        "bestTick": 74,
+        "distinctStrategies": 3,
+        "marginPercent": 25
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-ink_lurker-blademage-brawler-oracle",
+      "bossId": "ink_lurker",
+      "party": [
+        "blademage",
+        "brawler",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 20,
+        "bestTick": 67,
+        "distinctStrategies": 5,
+        "marginPercent": 18
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-ink_lurker-blademage-channeler-lancer",
+      "bossId": "ink_lurker",
+      "party": [
+        "blademage",
+        "channeler",
+        "lancer"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 19,
+        "bestTick": 78,
+        "distinctStrategies": 4,
+        "marginPercent": 22
+      },
+      "tier": "standard"
+    },
+    {
       "id": "gen-ink_lurker-blademage-channeler-machinist",
       "bossId": "ink_lurker",
       "party": [
@@ -1892,7 +2215,7 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 62,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 35
       },
       "tier": "standard"
@@ -1911,27 +2234,8 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 63,
-        "distinctStrategies": 3,
+        "distinctStrategies": 7,
         "marginPercent": 35
-      },
-      "tier": "standard"
-    },
-    {
-      "id": "gen-ink_lurker-blademage-channeler-nullifier",
-      "bossId": "ink_lurker",
-      "party": [
-        "blademage",
-        "channeler",
-        "nullifier"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 24,
-        "bestTick": 95,
-        "distinctStrategies": 3,
-        "marginPercent": 21
       },
       "tier": "standard"
     },
@@ -1949,7 +2253,7 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 70,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 14
       },
       "tier": "punishing"
@@ -1968,7 +2272,7 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 80,
-        "distinctStrategies": 5,
+        "distinctStrategies": 6,
         "marginPercent": 20
       },
       "tier": "punishing"
@@ -1985,10 +2289,10 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 22,
-        "bestTick": 88,
-        "distinctStrategies": 3,
-        "marginPercent": 24
+        "bestActions": 21,
+        "bestTick": 80,
+        "distinctStrategies": 4,
+        "marginPercent": 38
       },
       "tier": "standard"
     },
@@ -2004,9 +2308,9 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 18,
-        "bestTick": 63,
-        "distinctStrategies": 3,
+        "bestActions": 17,
+        "bestTick": 60,
+        "distinctStrategies": 6,
         "marginPercent": 35
       },
       "tier": "standard"
@@ -2025,7 +2329,7 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 72,
-        "distinctStrategies": 4,
+        "distinctStrategies": 8,
         "marginPercent": 23
       },
       "tier": "standard"
@@ -2043,11 +2347,11 @@
       "difficulty": {
         "bestStars": 3,
         "bestActions": 19,
-        "bestTick": 62,
+        "bestTick": 72,
         "distinctStrategies": 4,
-        "marginPercent": 33
+        "marginPercent": 19
       },
-      "tier": "standard"
+      "tier": "punishing"
     },
     {
       "id": "gen-ink_lurker-blademage-monk-warden",
@@ -2063,27 +2367,27 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 72,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 25
       },
       "tier": "standard"
     },
     {
-      "id": "gen-ink_lurker-blademage-nullifier-vanguard",
+      "id": "gen-ink_lurker-blademage-nullifier-oracle",
       "bossId": "ink_lurker",
       "party": [
         "blademage",
         "nullifier",
-        "vanguard"
+        "oracle"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 21,
-        "bestTick": 80,
-        "distinctStrategies": 3,
-        "marginPercent": 18
+        "bestActions": 26,
+        "bestTick": 99,
+        "distinctStrategies": 4,
+        "marginPercent": 4
       },
       "tier": "punishing"
     },
@@ -2101,7 +2405,7 @@
         "bestStars": 3,
         "bestActions": 29,
         "bestTick": 110,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 20
       },
       "tier": "punishing"
@@ -2118,9 +2422,9 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 26,
-        "bestTick": 88,
-        "distinctStrategies": 3,
+        "bestActions": 25,
+        "bestTick": 80,
+        "distinctStrategies": 4,
         "marginPercent": 17
       },
       "tier": "punishing"
@@ -2139,7 +2443,7 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 58,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 46
       },
       "tier": "approachable"
@@ -2156,12 +2460,31 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 19,
-        "bestTick": 64,
+        "bestActions": 18,
+        "bestTick": 63,
         "distinctStrategies": 6,
         "marginPercent": 31
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-ink_lurker-brawler-channeler-vanguard",
+      "bossId": "ink_lurker",
+      "party": [
+        "brawler",
+        "channeler",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 20,
+        "bestTick": 72,
+        "distinctStrategies": 6,
+        "marginPercent": 9
+      },
+      "tier": "punishing"
     },
     {
       "id": "gen-ink_lurker-brawler-machinist-oracle",
@@ -2177,8 +2500,27 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 64,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 28
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-ink_lurker-brawler-machinist-warden",
+      "bossId": "ink_lurker",
+      "party": [
+        "brawler",
+        "machinist",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 19,
+        "bestTick": 66,
+        "distinctStrategies": 7,
+        "marginPercent": 33
       },
       "tier": "standard"
     },
@@ -2196,10 +2538,10 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 72,
-        "distinctStrategies": 3,
-        "marginPercent": 25
+        "distinctStrategies": 5,
+        "marginPercent": 18
       },
-      "tier": "standard"
+      "tier": "punishing"
     },
     {
       "id": "gen-ink_lurker-brawler-monk-oracle",
@@ -2214,7 +2556,7 @@
       "difficulty": {
         "bestStars": 3,
         "bestActions": 21,
-        "bestTick": 64,
+        "bestTick": 62,
         "distinctStrategies": 3,
         "marginPercent": 28
       },
@@ -2234,7 +2576,7 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 76,
-        "distinctStrategies": 4,
+        "distinctStrategies": 5,
         "marginPercent": 28
       },
       "tier": "standard"
@@ -2253,29 +2595,10 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 70,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 25
       },
       "tier": "standard"
-    },
-    {
-      "id": "gen-ink_lurker-channeler-machinist-oracle",
-      "bossId": "ink_lurker",
-      "party": [
-        "channeler",
-        "machinist",
-        "oracle"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 20,
-        "bestTick": 75,
-        "distinctStrategies": 4,
-        "marginPercent": 14
-      },
-      "tier": "punishing"
     },
     {
       "id": "gen-ink_lurker-channeler-machinist-vanguard",
@@ -2291,7 +2614,7 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 66,
-        "distinctStrategies": 3,
+        "distinctStrategies": 7,
         "marginPercent": 36
       },
       "tier": "approachable"
@@ -2310,8 +2633,27 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 85,
-        "distinctStrategies": 4,
+        "distinctStrategies": 9,
         "marginPercent": 25
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-ink_lurker-channeler-monk-nullifier",
+      "bossId": "ink_lurker",
+      "party": [
+        "channeler",
+        "monk",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 22,
+        "bestTick": 82,
+        "distinctStrategies": 4,
+        "marginPercent": 31
       },
       "tier": "standard"
     },
@@ -2329,7 +2671,7 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 84,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 12
       },
       "tier": "punishing"
@@ -2348,7 +2690,7 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 63,
-        "distinctStrategies": 5,
+        "distinctStrategies": 8,
         "marginPercent": 28
       },
       "tier": "standard"
@@ -2367,8 +2709,27 @@
         "bestStars": 3,
         "bestActions": 24,
         "bestTick": 88,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 18
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-ink_lurker-channeler-oracle-vanguard",
+      "bossId": "ink_lurker",
+      "party": [
+        "channeler",
+        "oracle",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 26,
+        "bestTick": 101,
+        "distinctStrategies": 4,
+        "marginPercent": 20
       },
       "tier": "punishing"
     },
@@ -2384,9 +2745,9 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 19,
+        "bestActions": 17,
         "bestTick": 77,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 52
       },
       "tier": "approachable"
@@ -2405,8 +2766,27 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 78,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 33
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-ink_lurker-lancer-monk-nullifier",
+      "bossId": "ink_lurker",
+      "party": [
+        "lancer",
+        "monk",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 21,
+        "bestTick": 81,
+        "distinctStrategies": 4,
+        "marginPercent": 24
       },
       "tier": "standard"
     },
@@ -2422,9 +2802,9 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 24,
-        "bestTick": 102,
-        "distinctStrategies": 3,
+        "bestActions": 23,
+        "bestTick": 99,
+        "distinctStrategies": 4,
         "marginPercent": 18
       },
       "tier": "punishing"
@@ -2442,30 +2822,68 @@
       "difficulty": {
         "bestStars": 3,
         "bestActions": 17,
-        "bestTick": 60,
-        "distinctStrategies": 3,
+        "bestTick": 66,
+        "distinctStrategies": 7,
         "marginPercent": 24
       },
       "tier": "standard"
     },
     {
-      "id": "gen-ink_lurker-machinist-nullifier-oracle",
+      "id": "gen-ink_lurker-machinist-nullifier-thief",
       "bossId": "ink_lurker",
       "party": [
         "machinist",
         "nullifier",
-        "oracle"
+        "thief"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 22,
-        "bestTick": 84,
+        "bestActions": 24,
+        "bestTick": 85,
         "distinctStrategies": 4,
-        "marginPercent": 15
+        "marginPercent": 33
       },
-      "tier": "punishing"
+      "tier": "standard"
+    },
+    {
+      "id": "gen-ink_lurker-machinist-nullifier-warden",
+      "bossId": "ink_lurker",
+      "party": [
+        "machinist",
+        "nullifier",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 23,
+        "bestTick": 88,
+        "distinctStrategies": 7,
+        "marginPercent": 27
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-ink_lurker-machinist-oracle-vanguard",
+      "bossId": "ink_lurker",
+      "party": [
+        "machinist",
+        "oracle",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 64,
+        "distinctStrategies": 8,
+        "marginPercent": 26
+      },
+      "tier": "standard"
     },
     {
       "id": "gen-ink_lurker-machinist-thief-warden",
@@ -2481,6 +2899,82 @@
         "bestStars": 3,
         "bestActions": 24,
         "bestTick": 80,
+        "distinctStrategies": 4,
+        "marginPercent": 17
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-ink_lurker-monk-nullifier-thief",
+      "bossId": "ink_lurker",
+      "party": [
+        "monk",
+        "nullifier",
+        "thief"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 26,
+        "bestTick": 88,
+        "distinctStrategies": 3,
+        "marginPercent": 20
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-ink_lurker-monk-nullifier-vanguard",
+      "bossId": "ink_lurker",
+      "party": [
+        "monk",
+        "nullifier",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 19,
+        "bestTick": 72,
+        "distinctStrategies": 3,
+        "marginPercent": 18
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-ink_lurker-monk-nullifier-warden",
+      "bossId": "ink_lurker",
+      "party": [
+        "monk",
+        "nullifier",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 25,
+        "bestTick": 90,
+        "distinctStrategies": 4,
+        "marginPercent": 27
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-ink_lurker-monk-oracle-thief",
+      "bossId": "ink_lurker",
+      "party": [
+        "monk",
+        "oracle",
+        "thief"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 24,
+        "bestTick": 72,
         "distinctStrategies": 3,
         "marginPercent": 17
       },
@@ -2525,11 +3019,11 @@
       "tier": "punishing"
     },
     {
-      "id": "gen-ink_lurker-monk-vanguard-warden",
-      "bossId": "ink_lurker",
+      "id": "gen-mad_harlequin-blademage-brawler-warden",
+      "bossId": "mad_harlequin",
       "party": [
-        "monk",
-        "vanguard",
+        "blademage",
+        "brawler",
         "warden"
       ],
       "passed": true,
@@ -2537,9 +3031,9 @@
       "difficulty": {
         "bestStars": 3,
         "bestActions": 21,
-        "bestTick": 73,
+        "bestTick": 70,
         "distinctStrategies": 3,
-        "marginPercent": 25
+        "marginPercent": 51
       },
       "tier": "standard"
     },
@@ -2557,7 +3051,7 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 77,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 63
       },
       "tier": "standard"
@@ -2595,7 +3089,7 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 66,
-        "distinctStrategies": 5,
+        "distinctStrategies": 4,
         "marginPercent": 56
       },
       "tier": "approachable"
@@ -2614,7 +3108,7 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 77,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 57
       },
       "tier": "standard"
@@ -2631,9 +3125,9 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 17,
-        "bestTick": 66,
-        "distinctStrategies": 3,
+        "bestActions": 16,
+        "bestTick": 60,
+        "distinctStrategies": 6,
         "marginPercent": 64
       },
       "tier": "approachable"
@@ -2652,7 +3146,7 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 80,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 32
       },
       "tier": "standard"
@@ -2671,8 +3165,27 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 78,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 27
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-mad_harlequin-blademage-magus-warden",
+      "bossId": "mad_harlequin",
+      "party": [
+        "blademage",
+        "magus",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 22,
+        "bestTick": 80,
+        "distinctStrategies": 4,
+        "marginPercent": 44
       },
       "tier": "standard"
     },
@@ -2696,6 +3209,44 @@
       "tier": "standard"
     },
     {
+      "id": "gen-mad_harlequin-blademage-oracle-warden",
+      "bossId": "mad_harlequin",
+      "party": [
+        "blademage",
+        "oracle",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 24,
+        "bestTick": 90,
+        "distinctStrategies": 4,
+        "marginPercent": 41
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-mad_harlequin-brawler-channeler-lancer",
+      "bossId": "mad_harlequin",
+      "party": [
+        "brawler",
+        "channeler",
+        "lancer"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 18,
+        "bestTick": 66,
+        "distinctStrategies": 3,
+        "marginPercent": 61
+      },
+      "tier": "approachable"
+    },
+    {
       "id": "gen-mad_harlequin-brawler-channeler-magus",
       "bossId": "mad_harlequin",
       "party": [
@@ -2709,7 +3260,7 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 66,
-        "distinctStrategies": 3,
+        "distinctStrategies": 7,
         "marginPercent": 49
       },
       "tier": "approachable"
@@ -2728,7 +3279,7 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 77,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 44
       },
       "tier": "standard"
@@ -2747,27 +3298,27 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 72,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 38
       },
       "tier": "standard"
     },
     {
-      "id": "gen-mad_harlequin-brawler-lancer-oracle",
+      "id": "gen-mad_harlequin-brawler-channeler-warden",
       "bossId": "mad_harlequin",
       "party": [
         "brawler",
-        "lancer",
-        "oracle"
+        "channeler",
+        "warden"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
         "bestActions": 22,
-        "bestTick": 84,
-        "distinctStrategies": 3,
-        "marginPercent": 45
+        "bestTick": 72,
+        "distinctStrategies": 6,
+        "marginPercent": 44
       },
       "tier": "standard"
     },
@@ -2785,7 +3336,7 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 64,
-        "distinctStrategies": 4,
+        "distinctStrategies": 5,
         "marginPercent": 50
       },
       "tier": "approachable"
@@ -2804,7 +3355,7 @@
         "bestStars": 3,
         "bestActions": 23,
         "bestTick": 80,
-        "distinctStrategies": 6,
+        "distinctStrategies": 8,
         "marginPercent": 44
       },
       "tier": "standard"
@@ -2823,8 +3374,8 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 80,
-        "distinctStrategies": 5,
-        "marginPercent": 42
+        "distinctStrategies": 4,
+        "marginPercent": 34
       },
       "tier": "standard"
     },
@@ -2859,10 +3410,10 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 26,
+        "bestActions": 25,
         "bestTick": 88,
-        "distinctStrategies": 4,
-        "marginPercent": 33
+        "distinctStrategies": 5,
+        "marginPercent": 25
       },
       "tier": "standard"
     },
@@ -2878,29 +3429,67 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 27,
-        "bestTick": 88,
-        "distinctStrategies": 3,
-        "marginPercent": 41
+        "bestActions": 24,
+        "bestTick": 80,
+        "distinctStrategies": 4,
+        "marginPercent": 50
       },
-      "tier": "punishing"
+      "tier": "standard"
     },
     {
-      "id": "gen-mad_harlequin-brawler-oracle-thief",
+      "id": "gen-mad_harlequin-brawler-oracle-vanguard",
       "bossId": "mad_harlequin",
       "party": [
         "brawler",
         "oracle",
-        "thief"
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 20,
+        "bestTick": 66,
+        "distinctStrategies": 3,
+        "marginPercent": 47
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-mad_harlequin-channeler-lancer-machinist",
+      "bossId": "mad_harlequin",
+      "party": [
+        "channeler",
+        "lancer",
+        "machinist"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 15,
+        "bestTick": 66,
+        "distinctStrategies": 4,
+        "marginPercent": 65
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-mad_harlequin-channeler-lancer-nullifier",
+      "bossId": "mad_harlequin",
+      "party": [
+        "channeler",
+        "lancer",
+        "nullifier"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
         "bestActions": 25,
-        "bestTick": 80,
-        "distinctStrategies": 3,
-        "marginPercent": 26
+        "bestTick": 102,
+        "distinctStrategies": 7,
+        "marginPercent": 49
       },
       "tier": "standard"
     },
@@ -2918,7 +3507,7 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 66,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 51
       },
       "tier": "approachable"
@@ -2937,8 +3526,8 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 63,
-        "distinctStrategies": 6,
-        "marginPercent": 49
+        "distinctStrategies": 11,
+        "marginPercent": 56
       },
       "tier": "approachable"
     },
@@ -2956,7 +3545,7 @@
         "bestStars": 3,
         "bestActions": 23,
         "bestTick": 80,
-        "distinctStrategies": 4,
+        "distinctStrategies": 8,
         "marginPercent": 24
       },
       "tier": "standard"
@@ -2973,9 +3562,9 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 20,
-        "bestTick": 72,
-        "distinctStrategies": 3,
+        "bestActions": 19,
+        "bestTick": 66,
+        "distinctStrategies": 7,
         "marginPercent": 63
       },
       "tier": "approachable"
@@ -2992,10 +3581,10 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 23,
-        "bestTick": 88,
-        "distinctStrategies": 5,
-        "marginPercent": 59
+        "bestActions": 22,
+        "bestTick": 80,
+        "distinctStrategies": 3,
+        "marginPercent": 55
       },
       "tier": "standard"
     },
@@ -3013,27 +3602,8 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 77,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 73
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-mad_harlequin-lancer-machinist-oracle",
-      "bossId": "mad_harlequin",
-      "party": [
-        "lancer",
-        "machinist",
-        "oracle"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 17,
-        "bestTick": 66,
-        "distinctStrategies": 3,
-        "marginPercent": 52
       },
       "tier": "approachable"
     },
@@ -3051,29 +3621,67 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 77,
-        "distinctStrategies": 4,
+        "distinctStrategies": 5,
         "marginPercent": 51
       },
       "tier": "approachable"
     },
     {
-      "id": "gen-mad_harlequin-lancer-nullifier-vanguard",
+      "id": "gen-mad_harlequin-lancer-magus-nullifier",
       "bossId": "mad_harlequin",
       "party": [
         "lancer",
-        "nullifier",
-        "vanguard"
+        "magus",
+        "nullifier"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 23,
-        "bestTick": 94,
-        "distinctStrategies": 4,
-        "marginPercent": 51
+        "bestActions": 24,
+        "bestTick": 99,
+        "distinctStrategies": 9,
+        "marginPercent": 37
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-mad_harlequin-lancer-nullifier-oracle",
+      "bossId": "mad_harlequin",
+      "party": [
+        "lancer",
+        "nullifier",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 29,
+        "bestTick": 120,
+        "distinctStrategies": 6,
+        "marginPercent": 25
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-mad_harlequin-lancer-nullifier-warden",
+      "bossId": "mad_harlequin",
+      "party": [
+        "lancer",
+        "nullifier",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 31,
+        "bestTick": 110,
+        "distinctStrategies": 8,
+        "marginPercent": 43
+      },
+      "tier": "punishing"
     },
     {
       "id": "gen-mad_harlequin-machinist-magus-nullifier",
@@ -3089,8 +3697,27 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 77,
-        "distinctStrategies": 6,
+        "distinctStrategies": 9,
         "marginPercent": 42
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-mad_harlequin-machinist-magus-oracle",
+      "bossId": "mad_harlequin",
+      "party": [
+        "machinist",
+        "magus",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 65,
+        "distinctStrategies": 4,
+        "marginPercent": 46
       },
       "tier": "approachable"
     },
@@ -3108,7 +3735,7 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 77,
-        "distinctStrategies": 5,
+        "distinctStrategies": 8,
         "marginPercent": 40
       },
       "tier": "approachable"
@@ -3133,25 +3760,6 @@
       "tier": "approachable"
     },
     {
-      "id": "gen-mad_harlequin-machinist-nullifier-thief",
-      "bossId": "mad_harlequin",
-      "party": [
-        "machinist",
-        "nullifier",
-        "thief"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 22,
-        "bestTick": 77,
-        "distinctStrategies": 3,
-        "marginPercent": 42
-      },
-      "tier": "standard"
-    },
-    {
       "id": "gen-mad_harlequin-magus-monk-nullifier",
       "bossId": "mad_harlequin",
       "party": [
@@ -3165,46 +3773,8 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 78,
-        "distinctStrategies": 4,
+        "distinctStrategies": 8,
         "marginPercent": 56
-      },
-      "tier": "standard"
-    },
-    {
-      "id": "gen-mad_harlequin-magus-monk-oracle",
-      "bossId": "mad_harlequin",
-      "party": [
-        "magus",
-        "monk",
-        "oracle"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 20,
-        "bestTick": 78,
-        "distinctStrategies": 6,
-        "marginPercent": 47
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-mad_harlequin-magus-monk-warden",
-      "bossId": "mad_harlequin",
-      "party": [
-        "magus",
-        "monk",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 21,
-        "bestTick": 78,
-        "distinctStrategies": 4,
-        "marginPercent": 46
       },
       "tier": "standard"
     },
@@ -3221,9 +3791,9 @@
       "difficulty": {
         "bestStars": 3,
         "bestActions": 23,
-        "bestTick": 79,
+        "bestTick": 84,
         "distinctStrategies": 4,
-        "marginPercent": 51
+        "marginPercent": 43
       },
       "tier": "standard"
     },
@@ -3260,16 +3830,16 @@
         "bestStars": 3,
         "bestActions": 23,
         "bestTick": 79,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 44
       },
       "tier": "standard"
     },
     {
-      "id": "gen-mad_harlequin-nullifier-vanguard-warden",
+      "id": "gen-mad_harlequin-oracle-vanguard-warden",
       "bossId": "mad_harlequin",
       "party": [
-        "nullifier",
+        "oracle",
         "vanguard",
         "warden"
       ],
@@ -3279,8 +3849,8 @@
         "bestStars": 3,
         "bestActions": 28,
         "bestTick": 100,
-        "distinctStrategies": 3,
-        "marginPercent": 34
+        "distinctStrategies": 4,
+        "marginPercent": 29
       },
       "tier": "punishing"
     },
@@ -3298,7 +3868,7 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 64,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 23
       },
       "tier": "standard"
@@ -3317,7 +3887,7 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 70,
-        "distinctStrategies": 6,
+        "distinctStrategies": 8,
         "marginPercent": 4
       },
       "tier": "punishing"
@@ -3336,7 +3906,7 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 80,
-        "distinctStrategies": 4,
+        "distinctStrategies": 5,
         "marginPercent": 27
       },
       "tier": "standard"
@@ -3355,7 +3925,7 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 76,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 9
       },
       "tier": "punishing"
@@ -3380,6 +3950,25 @@
       "tier": "approachable"
     },
     {
+      "id": "gen-spell_weaver-blademage-nullifier-warden",
+      "bossId": "spell_weaver",
+      "party": [
+        "blademage",
+        "nullifier",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 24,
+        "bestTick": 88,
+        "distinctStrategies": 6,
+        "marginPercent": 30
+      },
+      "tier": "standard"
+    },
+    {
       "id": "gen-spell_weaver-blademage-oracle-vanguard",
       "bossId": "spell_weaver",
       "party": [
@@ -3395,6 +3984,25 @@
         "bestTick": 70,
         "distinctStrategies": 3,
         "marginPercent": 14
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-spell_weaver-brawler-channeler-nullifier",
+      "bossId": "spell_weaver",
+      "party": [
+        "brawler",
+        "channeler",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 23,
+        "bestTick": 77,
+        "distinctStrategies": 4,
+        "marginPercent": 19
       },
       "tier": "punishing"
     },
@@ -3429,10 +4037,48 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 25,
+        "bestActions": 24,
         "bestTick": 80,
         "distinctStrategies": 5,
         "marginPercent": 7
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-spell_weaver-brawler-lancer-nullifier",
+      "bossId": "spell_weaver",
+      "party": [
+        "brawler",
+        "lancer",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 21,
+        "bestTick": 80,
+        "distinctStrategies": 5,
+        "marginPercent": 35
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-spell_weaver-brawler-nullifier-thief",
+      "bossId": "spell_weaver",
+      "party": [
+        "brawler",
+        "nullifier",
+        "thief"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 23,
+        "bestTick": 72,
+        "distinctStrategies": 4,
+        "marginPercent": 16
       },
       "tier": "punishing"
     },
@@ -3448,12 +4094,31 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 21,
+        "bestActions": 20,
         "bestTick": 72,
         "distinctStrategies": 3,
         "marginPercent": 5
       },
       "tier": "punishing"
+    },
+    {
+      "id": "gen-spell_weaver-channeler-lancer-machinist",
+      "bossId": "spell_weaver",
+      "party": [
+        "channeler",
+        "lancer",
+        "machinist"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 16,
+        "bestTick": 66,
+        "distinctStrategies": 5,
+        "marginPercent": 33
+      },
+      "tier": "standard"
     },
     {
       "id": "gen-spell_weaver-channeler-lancer-monk",
@@ -3467,12 +4132,12 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 18,
-        "bestTick": 72,
-        "distinctStrategies": 3,
-        "marginPercent": 12
+        "bestActions": 17,
+        "bestTick": 66,
+        "distinctStrategies": 4,
+        "marginPercent": 27
       },
-      "tier": "punishing"
+      "tier": "standard"
     },
     {
       "id": "gen-spell_weaver-channeler-machinist-monk",
@@ -3488,7 +4153,7 @@
         "bestStars": 3,
         "bestActions": 15,
         "bestTick": 55,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 52
       },
       "tier": "approachable"
@@ -3507,7 +4172,7 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 77,
-        "distinctStrategies": 4,
+        "distinctStrategies": 5,
         "marginPercent": 13
       },
       "tier": "punishing"
@@ -3526,7 +4191,7 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 76,
-        "distinctStrategies": 4,
+        "distinctStrategies": 5,
         "marginPercent": 33
       },
       "tier": "standard"
@@ -3545,8 +4210,27 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 66,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 25
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-spell_weaver-channeler-machinist-warden",
+      "bossId": "spell_weaver",
+      "party": [
+        "channeler",
+        "machinist",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 20,
+        "bestTick": 77,
+        "distinctStrategies": 3,
+        "marginPercent": 22
       },
       "tier": "standard"
     },
@@ -3564,8 +4248,8 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 77,
-        "distinctStrategies": 4,
-        "marginPercent": 38
+        "distinctStrategies": 8,
+        "marginPercent": 36
       },
       "tier": "standard"
     },
@@ -3583,8 +4267,27 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 77,
-        "distinctStrategies": 5,
+        "distinctStrategies": 9,
         "marginPercent": 20
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-spell_weaver-channeler-vanguard-warden",
+      "bossId": "spell_weaver",
+      "party": [
+        "channeler",
+        "vanguard",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 28,
+        "bestTick": 100,
+        "distinctStrategies": 5,
+        "marginPercent": 12
       },
       "tier": "punishing"
     },
@@ -3600,48 +4303,10 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 18,
-        "bestTick": 77,
+        "bestActions": 16,
+        "bestTick": 66,
         "distinctStrategies": 4,
-        "marginPercent": 33
-      },
-      "tier": "standard"
-    },
-    {
-      "id": "gen-spell_weaver-lancer-monk-nullifier",
-      "bossId": "spell_weaver",
-      "party": [
-        "lancer",
-        "monk",
-        "nullifier"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 18,
-        "bestTick": 72,
-        "distinctStrategies": 3,
-        "marginPercent": 24
-      },
-      "tier": "standard"
-    },
-    {
-      "id": "gen-spell_weaver-lancer-monk-oracle",
-      "bossId": "spell_weaver",
-      "party": [
-        "lancer",
-        "monk",
-        "oracle"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 19,
-        "bestTick": 78,
-        "distinctStrategies": 6,
-        "marginPercent": 36
+        "marginPercent": 63
       },
       "tier": "approachable"
     },
@@ -3659,46 +4324,27 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 72,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 41
       },
       "tier": "approachable"
     },
     {
-      "id": "gen-spell_weaver-lancer-nullifier-vanguard",
+      "id": "gen-spell_weaver-lancer-nullifier-oracle",
       "bossId": "spell_weaver",
       "party": [
         "lancer",
         "nullifier",
-        "vanguard"
+        "oracle"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 23,
-        "bestTick": 94,
-        "distinctStrategies": 3,
-        "marginPercent": 37
-      },
-      "tier": "standard"
-    },
-    {
-      "id": "gen-spell_weaver-lancer-nullifier-warden",
-      "bossId": "spell_weaver",
-      "party": [
-        "lancer",
-        "nullifier",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 31,
-        "bestTick": 116,
-        "distinctStrategies": 3,
-        "marginPercent": 4
+        "bestActions": 30,
+        "bestTick": 120,
+        "distinctStrategies": 6,
+        "marginPercent": 22
       },
       "tier": "punishing"
     },
@@ -3735,7 +4381,7 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 77,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 14
       },
       "tier": "punishing"
@@ -3754,10 +4400,48 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 65,
-        "distinctStrategies": 5,
+        "distinctStrategies": 8,
         "marginPercent": 1
       },
       "tier": "punishing"
+    },
+    {
+      "id": "gen-spell_weaver-machinist-oracle-warden",
+      "bossId": "spell_weaver",
+      "party": [
+        "machinist",
+        "oracle",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 19,
+        "bestTick": 64,
+        "distinctStrategies": 4,
+        "marginPercent": 26
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-spell_weaver-monk-nullifier-oracle",
+      "bossId": "spell_weaver",
+      "party": [
+        "monk",
+        "nullifier",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 24,
+        "bestTick": 88,
+        "distinctStrategies": 4,
+        "marginPercent": 42
+      },
+      "tier": "standard"
     },
     {
       "id": "gen-spell_weaver-monk-nullifier-warden",
@@ -3773,29 +4457,67 @@
         "bestStars": 3,
         "bestActions": 24,
         "bestTick": 81,
-        "distinctStrategies": 4,
+        "distinctStrategies": 8,
         "marginPercent": 14
       },
       "tier": "punishing"
     },
     {
-      "id": "gen-spell_weaver-nullifier-oracle-vanguard",
+      "id": "gen-spell_weaver-monk-thief-warden",
       "bossId": "spell_weaver",
       "party": [
-        "nullifier",
-        "oracle",
-        "vanguard"
+        "monk",
+        "thief",
+        "warden"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 28,
-        "bestTick": 110,
-        "distinctStrategies": 4,
-        "marginPercent": 26
+        "bestActions": 21,
+        "bestTick": 64,
+        "distinctStrategies": 5,
+        "marginPercent": 25
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-spell_weaver-nullifier-vanguard-warden",
+      "bossId": "spell_weaver",
+      "party": [
+        "nullifier",
+        "vanguard",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 26,
+        "bestTick": 99,
+        "distinctStrategies": 5,
+        "marginPercent": 15
       },
       "tier": "punishing"
+    },
+    {
+      "id": "gen-storm_keeper-blademage-brawler-nullifier",
+      "bossId": "storm_keeper",
+      "party": [
+        "blademage",
+        "brawler",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 14,
+        "bestTick": 48,
+        "distinctStrategies": 4,
+        "marginPercent": 75
+      },
+      "tier": "approachable"
     },
     {
       "id": "gen-storm_keeper-blademage-brawler-warden",
@@ -3811,7 +4533,7 @@
         "bestStars": 3,
         "bestActions": 14,
         "bestTick": 48,
-        "distinctStrategies": 5,
+        "distinctStrategies": 9,
         "marginPercent": 40
       },
       "tier": "approachable"
@@ -3829,11 +4551,30 @@
       "difficulty": {
         "bestStars": 3,
         "bestActions": 15,
-        "bestTick": 58,
-        "distinctStrategies": 3,
+        "bestTick": 55,
+        "distinctStrategies": 4,
         "marginPercent": 79
       },
       "tier": "approachable"
+    },
+    {
+      "id": "gen-storm_keeper-blademage-lancer-oracle",
+      "bossId": "storm_keeper",
+      "party": [
+        "blademage",
+        "lancer",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 14,
+        "bestTick": 58,
+        "distinctStrategies": 3,
+        "marginPercent": 6
+      },
+      "tier": "punishing"
     },
     {
       "id": "gen-storm_keeper-blademage-machinist-warden",
@@ -3893,25 +4634,6 @@
       "tier": "approachable"
     },
     {
-      "id": "gen-storm_keeper-blademage-nullifier-oracle",
-      "bossId": "storm_keeper",
-      "party": [
-        "blademage",
-        "nullifier",
-        "oracle"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 60,
-        "distinctStrategies": 4,
-        "marginPercent": 10
-      },
-      "tier": "punishing"
-    },
-    {
       "id": "gen-storm_keeper-blademage-nullifier-thief",
       "bossId": "storm_keeper",
       "party": [
@@ -3925,7 +4647,7 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 55,
-        "distinctStrategies": 4,
+        "distinctStrategies": 5,
         "marginPercent": 38
       },
       "tier": "approachable"
@@ -3944,48 +4666,29 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 50,
-        "distinctStrategies": 6,
+        "distinctStrategies": 8,
         "marginPercent": 79
       },
       "tier": "approachable"
     },
     {
-      "id": "gen-storm_keeper-blademage-nullifier-warden",
-      "bossId": "storm_keeper",
-      "party": [
-        "blademage",
-        "nullifier",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 60,
-        "distinctStrategies": 3,
-        "marginPercent": 15
-      },
-      "tier": "punishing"
-    },
-    {
-      "id": "gen-storm_keeper-blademage-oracle-warden",
+      "id": "gen-storm_keeper-blademage-oracle-thief",
       "bossId": "storm_keeper",
       "party": [
         "blademage",
         "oracle",
-        "warden"
+        "thief"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 60,
+        "bestActions": 15,
+        "bestTick": 48,
         "distinctStrategies": 3,
-        "marginPercent": 10
+        "marginPercent": 37
       },
-      "tier": "punishing"
+      "tier": "approachable"
     },
     {
       "id": "gen-storm_keeper-blademage-vanguard-warden",
@@ -4001,7 +4704,7 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 50,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 10
       },
       "tier": "punishing"
@@ -4020,7 +4723,7 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 56,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 38
       },
       "tier": "approachable"
@@ -4058,7 +4761,7 @@
         "bestStars": 3,
         "bestActions": 12,
         "bestTick": 44,
-        "distinctStrategies": 5,
+        "distinctStrategies": 10,
         "marginPercent": 41
       },
       "tier": "approachable"
@@ -4077,7 +4780,7 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 44,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 39
       },
       "tier": "approachable"
@@ -4094,9 +4797,9 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 14,
-        "bestTick": 45,
-        "distinctStrategies": 3,
+        "bestActions": 13,
+        "bestTick": 44,
+        "distinctStrategies": 6,
         "marginPercent": 42
       },
       "tier": "approachable"
@@ -4115,7 +4818,7 @@
         "bestStars": 3,
         "bestActions": 12,
         "bestTick": 36,
-        "distinctStrategies": 6,
+        "distinctStrategies": 9,
         "marginPercent": 36
       },
       "tier": "approachable"
@@ -4134,7 +4837,7 @@
         "bestStars": 3,
         "bestActions": 14,
         "bestTick": 45,
-        "distinctStrategies": 4,
+        "distinctStrategies": 8,
         "marginPercent": 40
       },
       "tier": "approachable"
@@ -4159,6 +4862,44 @@
       "tier": "approachable"
     },
     {
+      "id": "gen-storm_keeper-brawler-nullifier-vanguard",
+      "bossId": "storm_keeper",
+      "party": [
+        "brawler",
+        "nullifier",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 13,
+        "bestTick": 44,
+        "distinctStrategies": 4,
+        "marginPercent": 43
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-storm_keeper-brawler-nullifier-warden",
+      "bossId": "storm_keeper",
+      "party": [
+        "brawler",
+        "nullifier",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 20,
+        "bestTick": 66,
+        "distinctStrategies": 3,
+        "marginPercent": 26
+      },
+      "tier": "standard"
+    },
+    {
       "id": "gen-storm_keeper-brawler-oracle-vanguard",
       "bossId": "storm_keeper",
       "party": [
@@ -4170,12 +4911,31 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 14,
+        "bestActions": 13,
         "bestTick": 48,
-        "distinctStrategies": 3,
+        "distinctStrategies": 7,
         "marginPercent": 39
       },
       "tier": "approachable"
+    },
+    {
+      "id": "gen-storm_keeper-brawler-oracle-warden",
+      "bossId": "storm_keeper",
+      "party": [
+        "brawler",
+        "oracle",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 60,
+        "distinctStrategies": 6,
+        "marginPercent": 10
+      },
+      "tier": "punishing"
     },
     {
       "id": "gen-storm_keeper-lancer-machinist-warden",
@@ -4189,12 +4949,12 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 13,
-        "bestTick": 50,
-        "distinctStrategies": 4,
-        "marginPercent": 18
+        "bestActions": 12,
+        "bestTick": 48,
+        "distinctStrategies": 8,
+        "marginPercent": 59
       },
-      "tier": "punishing"
+      "tier": "approachable"
     },
     {
       "id": "gen-storm_keeper-lancer-monk-nullifier",
@@ -4229,10 +4989,67 @@
         "bestStars": 3,
         "bestActions": 12,
         "bestTick": 54,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 23
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-storm_keeper-lancer-monk-warden",
+      "bossId": "storm_keeper",
+      "party": [
+        "lancer",
+        "monk",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 13,
+        "bestTick": 54,
+        "distinctStrategies": 6,
+        "marginPercent": 33
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-storm_keeper-lancer-nullifier-thief",
+      "bossId": "storm_keeper",
+      "party": [
+        "lancer",
+        "nullifier",
+        "thief"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 22,
+        "bestTick": 72,
+        "distinctStrategies": 5,
+        "marginPercent": 42
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-storm_keeper-lancer-oracle-vanguard",
+      "bossId": "storm_keeper",
+      "party": [
+        "lancer",
+        "oracle",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 15,
+        "bestTick": 60,
+        "distinctStrategies": 5,
+        "marginPercent": 7
+      },
+      "tier": "punishing"
     },
     {
       "id": "gen-storm_keeper-machinist-magus-nullifier",
@@ -4249,28 +5066,9 @@
         "bestActions": 13,
         "bestTick": 55,
         "distinctStrategies": 5,
-        "marginPercent": 37
+        "marginPercent": 32
       },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-storm_keeper-machinist-monk-warden",
-      "bossId": "storm_keeper",
-      "party": [
-        "machinist",
-        "monk",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 12,
-        "bestTick": 44,
-        "distinctStrategies": 3,
-        "marginPercent": 45
-      },
-      "tier": "approachable"
+      "tier": "standard"
     },
     {
       "id": "gen-storm_keeper-machinist-nullifier-oracle",
@@ -4286,83 +5084,7 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 55,
-        "distinctStrategies": 4,
-        "marginPercent": 42
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-storm_keeper-machinist-nullifier-thief",
-      "bossId": "storm_keeper",
-      "party": [
-        "machinist",
-        "nullifier",
-        "thief"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 13,
-        "bestTick": 44,
-        "distinctStrategies": 3,
-        "marginPercent": 74
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-storm_keeper-machinist-nullifier-warden",
-      "bossId": "storm_keeper",
-      "party": [
-        "machinist",
-        "nullifier",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 14,
-        "bestTick": 55,
-        "distinctStrategies": 3,
-        "marginPercent": 51
-      },
-      "tier": "approachable"
-    },
-    {
-      "id": "gen-storm_keeper-machinist-oracle-warden",
-      "bossId": "storm_keeper",
-      "party": [
-        "machinist",
-        "oracle",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 15,
-        "bestTick": 54,
-        "distinctStrategies": 3,
-        "marginPercent": 9
-      },
-      "tier": "punishing"
-    },
-    {
-      "id": "gen-storm_keeper-machinist-thief-warden",
-      "bossId": "storm_keeper",
-      "party": [
-        "machinist",
-        "thief",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 14,
-        "bestTick": 48,
-        "distinctStrategies": 3,
+        "distinctStrategies": 7,
         "marginPercent": 42
       },
       "tier": "approachable"
@@ -4381,7 +5103,7 @@
         "bestStars": 3,
         "bestActions": 14,
         "bestTick": 54,
-        "distinctStrategies": 5,
+        "distinctStrategies": 9,
         "marginPercent": 40
       },
       "tier": "approachable"
@@ -4398,12 +5120,12 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 53,
-        "distinctStrategies": 4,
-        "marginPercent": 43
+        "bestActions": 15,
+        "bestTick": 52,
+        "distinctStrategies": 7,
+        "marginPercent": 4
       },
-      "tier": "approachable"
+      "tier": "punishing"
     },
     {
       "id": "gen-storm_keeper-monk-nullifier-thief",
@@ -4419,7 +5141,7 @@
         "bestStars": 3,
         "bestActions": 15,
         "bestTick": 48,
-        "distinctStrategies": 3,
+        "distinctStrategies": 8,
         "marginPercent": 42
       },
       "tier": "approachable"
@@ -4438,7 +5160,7 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 45,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 78
       },
       "tier": "approachable"
@@ -4457,7 +5179,7 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 60,
-        "distinctStrategies": 3,
+        "distinctStrategies": 7,
         "marginPercent": 45
       },
       "tier": "approachable"
@@ -4476,29 +5198,10 @@
         "bestStars": 3,
         "bestActions": 15,
         "bestTick": 48,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 36
       },
       "tier": "approachable"
-    },
-    {
-      "id": "gen-storm_keeper-monk-oracle-warden",
-      "bossId": "storm_keeper",
-      "party": [
-        "monk",
-        "oracle",
-        "warden"
-      ],
-      "passed": true,
-      "failedGates": [],
-      "difficulty": {
-        "bestStars": 3,
-        "bestActions": 16,
-        "bestTick": 52,
-        "distinctStrategies": 6,
-        "marginPercent": 10
-      },
-      "tier": "punishing"
     },
     {
       "id": "gen-storm_keeper-monk-thief-warden",
@@ -4514,7 +5217,7 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 54,
-        "distinctStrategies": 3,
+        "distinctStrategies": 7,
         "marginPercent": 10
       },
       "tier": "punishing"
@@ -4533,7 +5236,7 @@
         "bestStars": 3,
         "bestActions": 13,
         "bestTick": 45,
-        "distinctStrategies": 4,
+        "distinctStrategies": 7,
         "marginPercent": 48
       },
       "tier": "approachable"
@@ -4552,10 +5255,48 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 60,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 52
       },
       "tier": "approachable"
+    },
+    {
+      "id": "gen-tide_maw-blademage-brawler-oracle",
+      "bossId": "tide_maw",
+      "party": [
+        "blademage",
+        "brawler",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 60,
+        "distinctStrategies": 5,
+        "marginPercent": 22
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-blademage-channeler-nullifier",
+      "bossId": "tide_maw",
+      "party": [
+        "blademage",
+        "channeler",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 66,
+        "distinctStrategies": 5,
+        "marginPercent": 27
+      },
+      "tier": "standard"
     },
     {
       "id": "gen-tide_maw-blademage-channeler-oracle",
@@ -4571,7 +5312,7 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 70,
-        "distinctStrategies": 6,
+        "distinctStrategies": 7,
         "marginPercent": 22
       },
       "tier": "standard"
@@ -4590,10 +5331,29 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 70,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 18
       },
       "tier": "punishing"
+    },
+    {
+      "id": "gen-tide_maw-blademage-lancer-oracle",
+      "bossId": "tide_maw",
+      "party": [
+        "blademage",
+        "lancer",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 16,
+        "bestTick": 70,
+        "distinctStrategies": 4,
+        "marginPercent": 25
+      },
+      "tier": "standard"
     },
     {
       "id": "gen-tide_maw-blademage-lancer-warden",
@@ -4609,10 +5369,48 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 70,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 35
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-blademage-magus-nullifier",
+      "bossId": "tide_maw",
+      "party": [
+        "blademage",
+        "magus",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 20,
+        "bestTick": 78,
+        "distinctStrategies": 7,
+        "marginPercent": 31
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-blademage-monk-nullifier",
+      "bossId": "tide_maw",
+      "party": [
+        "blademage",
+        "monk",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 16,
+        "bestTick": 55,
+        "distinctStrategies": 3,
+        "marginPercent": 55
+      },
+      "tier": "approachable"
     },
     {
       "id": "gen-tide_maw-blademage-monk-warden",
@@ -4628,7 +5426,7 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 60,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 36
       },
       "tier": "approachable"
@@ -4647,10 +5445,29 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 70,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 56
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-blademage-nullifier-vanguard",
+      "bossId": "tide_maw",
+      "party": [
+        "blademage",
+        "nullifier",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 16,
+        "bestTick": 60,
+        "distinctStrategies": 3,
+        "marginPercent": 56
+      },
+      "tier": "approachable"
     },
     {
       "id": "gen-tide_maw-blademage-nullifier-warden",
@@ -4666,7 +5483,7 @@
         "bestStars": 3,
         "bestActions": 22,
         "bestTick": 80,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 58
       },
       "tier": "standard"
@@ -4685,7 +5502,7 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 60,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 54
       },
       "tier": "approachable"
@@ -4702,10 +5519,10 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 23,
-        "bestTick": 84,
+        "bestActions": 22,
+        "bestTick": 80,
         "distinctStrategies": 3,
-        "marginPercent": 10
+        "marginPercent": 19
       },
       "tier": "punishing"
     },
@@ -4729,6 +5546,25 @@
       "tier": "standard"
     },
     {
+      "id": "gen-tide_maw-brawler-channeler-lancer",
+      "bossId": "tide_maw",
+      "party": [
+        "brawler",
+        "channeler",
+        "lancer"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 64,
+        "distinctStrategies": 4,
+        "marginPercent": 43
+      },
+      "tier": "approachable"
+    },
+    {
       "id": "gen-tide_maw-brawler-channeler-warden",
       "bossId": "tide_maw",
       "party": [
@@ -4742,8 +5578,27 @@
         "bestStars": 3,
         "bestActions": 21,
         "bestTick": 70,
-        "distinctStrategies": 5,
+        "distinctStrategies": 7,
         "marginPercent": 15
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-tide_maw-brawler-lancer-oracle",
+      "bossId": "tide_maw",
+      "party": [
+        "brawler",
+        "lancer",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 19,
+        "bestTick": 72,
+        "distinctStrategies": 6,
+        "marginPercent": 17
       },
       "tier": "punishing"
     },
@@ -4761,8 +5616,27 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 56,
-        "distinctStrategies": 4,
+        "distinctStrategies": 8,
         "marginPercent": 31
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-brawler-magus-nullifier",
+      "bossId": "tide_maw",
+      "party": [
+        "brawler",
+        "magus",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 22,
+        "bestTick": 78,
+        "distinctStrategies": 3,
+        "marginPercent": 26
       },
       "tier": "standard"
     },
@@ -4780,10 +5654,67 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 51,
-        "distinctStrategies": 3,
+        "distinctStrategies": 4,
         "marginPercent": 38
       },
       "tier": "approachable"
+    },
+    {
+      "id": "gen-tide_maw-brawler-nullifier-thief",
+      "bossId": "tide_maw",
+      "party": [
+        "brawler",
+        "nullifier",
+        "thief"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 21,
+        "bestTick": 64,
+        "distinctStrategies": 3,
+        "marginPercent": 37
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-brawler-nullifier-vanguard",
+      "bossId": "tide_maw",
+      "party": [
+        "brawler",
+        "nullifier",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 18,
+        "bestTick": 64,
+        "distinctStrategies": 12,
+        "marginPercent": 27
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-brawler-oracle-warden",
+      "bossId": "tide_maw",
+      "party": [
+        "brawler",
+        "oracle",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 23,
+        "bestTick": 78,
+        "distinctStrategies": 5,
+        "marginPercent": 25
+      },
+      "tier": "standard"
     },
     {
       "id": "gen-tide_maw-channeler-lancer-monk",
@@ -4799,7 +5730,7 @@
         "bestStars": 3,
         "bestActions": 14,
         "bestTick": 55,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 43
       },
       "tier": "approachable"
@@ -4818,7 +5749,7 @@
         "bestStars": 3,
         "bestActions": 20,
         "bestTick": 74,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 14
       },
       "tier": "punishing"
@@ -4837,7 +5768,7 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 66,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 42
       },
       "tier": "approachable"
@@ -4856,7 +5787,7 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 66,
-        "distinctStrategies": 4,
+        "distinctStrategies": 8,
         "marginPercent": 28
       },
       "tier": "standard"
@@ -4875,8 +5806,65 @@
         "bestStars": 3,
         "bestActions": 17,
         "bestTick": 63,
-        "distinctStrategies": 5,
+        "distinctStrategies": 6,
         "marginPercent": 23
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-channeler-oracle-warden",
+      "bossId": "tide_maw",
+      "party": [
+        "channeler",
+        "oracle",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 28,
+        "bestTick": 108,
+        "distinctStrategies": 4,
+        "marginPercent": 6
+      },
+      "tier": "punishing"
+    },
+    {
+      "id": "gen-tide_maw-lancer-machinist-nullifier",
+      "bossId": "tide_maw",
+      "party": [
+        "lancer",
+        "machinist",
+        "nullifier"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 15,
+        "bestTick": 66,
+        "distinctStrategies": 5,
+        "marginPercent": 37
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-tide_maw-lancer-machinist-warden",
+      "bossId": "tide_maw",
+      "party": [
+        "lancer",
+        "machinist",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 16,
+        "bestTick": 66,
+        "distinctStrategies": 4,
+        "marginPercent": 34
       },
       "tier": "standard"
     },
@@ -4913,16 +5901,35 @@
         "bestStars": 3,
         "bestActions": 16,
         "bestTick": 72,
-        "distinctStrategies": 4,
+        "distinctStrategies": 5,
         "marginPercent": 24
       },
       "tier": "standard"
     },
     {
-      "id": "gen-tide_maw-lancer-nullifier-oracle",
+      "id": "gen-tide_maw-lancer-monk-warden",
       "bossId": "tide_maw",
       "party": [
         "lancer",
+        "monk",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 18,
+        "bestTick": 66,
+        "distinctStrategies": 5,
+        "marginPercent": 33
+      },
+      "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-machinist-nullifier-oracle",
+      "bossId": "tide_maw",
+      "party": [
+        "machinist",
         "nullifier",
         "oracle"
       ],
@@ -4930,12 +5937,12 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 23,
-        "bestTick": 108,
-        "distinctStrategies": 4,
-        "marginPercent": 12
+        "bestActions": 19,
+        "bestTick": 66,
+        "distinctStrategies": 3,
+        "marginPercent": 39
       },
-      "tier": "punishing"
+      "tier": "approachable"
     },
     {
       "id": "gen-tide_maw-machinist-nullifier-thief",
@@ -4951,7 +5958,7 @@
         "bestStars": 3,
         "bestActions": 19,
         "bestTick": 66,
-        "distinctStrategies": 4,
+        "distinctStrategies": 6,
         "marginPercent": 52
       },
       "tier": "approachable"
@@ -4970,7 +5977,7 @@
         "bestStars": 3,
         "bestActions": 15,
         "bestTick": 55,
-        "distinctStrategies": 3,
+        "distinctStrategies": 6,
         "marginPercent": 55
       },
       "tier": "approachable"
@@ -4989,7 +5996,7 @@
         "bestStars": 3,
         "bestActions": 18,
         "bestTick": 65,
-        "distinctStrategies": 3,
+        "distinctStrategies": 5,
         "marginPercent": 29
       },
       "tier": "standard"
@@ -5006,12 +6013,31 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 20,
-        "bestTick": 66,
-        "distinctStrategies": 3,
+        "bestActions": 19,
+        "bestTick": 64,
+        "distinctStrategies": 5,
         "marginPercent": 28
       },
       "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-monk-nullifier-oracle",
+      "bossId": "tide_maw",
+      "party": [
+        "monk",
+        "nullifier",
+        "oracle"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 19,
+        "bestTick": 66,
+        "distinctStrategies": 7,
+        "marginPercent": 43
+      },
+      "tier": "approachable"
     },
     {
       "id": "gen-tide_maw-monk-nullifier-thief",
@@ -5025,31 +6051,69 @@
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 20,
-        "bestTick": 64,
+        "bestActions": 19,
+        "bestTick": 63,
         "distinctStrategies": 4,
         "marginPercent": 43
       },
       "tier": "approachable"
     },
     {
-      "id": "gen-tide_maw-oracle-thief-warden",
+      "id": "gen-tide_maw-monk-nullifier-vanguard",
       "bossId": "tide_maw",
       "party": [
-        "oracle",
-        "thief",
+        "monk",
+        "nullifier",
+        "vanguard"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 17,
+        "bestTick": 63,
+        "distinctStrategies": 4,
+        "marginPercent": 69
+      },
+      "tier": "approachable"
+    },
+    {
+      "id": "gen-tide_maw-monk-nullifier-warden",
+      "bossId": "tide_maw",
+      "party": [
+        "monk",
+        "nullifier",
         "warden"
       ],
       "passed": true,
       "failedGates": [],
       "difficulty": {
         "bestStars": 3,
-        "bestActions": 31,
-        "bestTick": 104,
+        "bestActions": 21,
+        "bestTick": 72,
         "distinctStrategies": 3,
-        "marginPercent": 3
+        "marginPercent": 41
       },
-      "tier": "punishing"
+      "tier": "standard"
+    },
+    {
+      "id": "gen-tide_maw-nullifier-vanguard-warden",
+      "bossId": "tide_maw",
+      "party": [
+        "nullifier",
+        "vanguard",
+        "warden"
+      ],
+      "passed": true,
+      "failedGates": [],
+      "difficulty": {
+        "bestStars": 3,
+        "bestActions": 24,
+        "bestTick": 88,
+        "distinctStrategies": 3,
+        "marginPercent": 48
+      },
+      "tier": "standard"
     }
   ]
 }
