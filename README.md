@@ -477,6 +477,18 @@ The tools run on Windows as well as POSIX: they load built modules through
 `tools/load.mjs`, because dynamic `import()` of an absolute path throws
 `ERR_UNSUPPORTED_ESM_URL_SCHEME` on Windows (`C:` parses as a URL scheme).
 
+**Run `npm run web:types` before pushing.** `npm run web:build` is the real gate, but it
+needs `vite` and `react` installed, and on a machine where `npm install` cannot run
+`tsc --project web/tsconfig.json` reports only *"cannot find type definition file for
+'vite/client'"* and then **does not typecheck the program at all**. That silence reads as
+success. It is how a refactor that deleted a helper and left its call site reached
+Cloudflare: the undefined identifier was invisible locally and failed the deploy.
+
+`web:types` typechecks the same sources against deliberate `any` shims in
+`tools/web-type-shim.d.ts`, so the program resolves and errors about *our own* names
+surface. It will not check React usage — that is what the build is for — but it catches the
+class of mistake that refactoring causes.
+
 ```bash
 npm run verify           # typecheck + tests + behavior guard + golden replay
 npm test                 # 109 tests, no browser needed

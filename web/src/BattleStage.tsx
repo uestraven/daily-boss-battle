@@ -82,6 +82,25 @@ function imageAt(url: string): HTMLImageElement | null {
   return null;
 }
 
+/** Whether a source rectangle lies inside the decoded image, warned about once per sheet
+ * and row so a mismatch is reported rather than silently drawn as a blank.
+ *
+ * `drawImage` given a source rect past the bottom edge draws nothing and raises nothing,
+ * so a manifest row the image lacks makes a character vanish with no clue why -- which is
+ * what a stale cached sheet did when the sheets grew an eighth row. */
+const warnedRows = new Set<string>();
+function inSheet(image: HTMLImageElement, sheet: {file: string; sy: number; sh: number}): boolean {
+  if (sheet.sy + sheet.sh <= image.naturalHeight) return true;
+  const key = `${sheet.file}@${sheet.sy}`;
+  if (!warnedRows.has(key)) {
+    warnedRows.add(key);
+    console.warn(`${sheet.file}: row at y=${sheet.sy} is outside the image `
+      + `(${image.naturalWidth}x${image.naturalHeight}); drawing the first row instead. `
+      + 'The manifest and the art disagree, or a stale copy is cached.');
+  }
+  return false;
+}
+
 const sheetImage = (file: string): HTMLImageElement | null =>
   imageAt(mediaUrl('battle-sprites', file));
 const effectImage = (file: string): HTMLImageElement | null =>
