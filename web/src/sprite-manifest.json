@@ -489,7 +489,7 @@
      "row": 0,
      "frames": 8,
      "loop": true,
-     "frameMs": 160
+     "frameMs": 170
     },
     "attack": {
      "row": 1,
@@ -516,8 +516,14 @@
      "frames": 8,
      "loop": false
     },
-    "victory": {
+    "walk": {
      "row": 6,
+     "frames": 8,
+     "loop": true,
+     "frameMs": 125
+    },
+    "victory": {
+     "row": 7,
      "frames": 8,
      "loop": true,
      "frameMs": 150
