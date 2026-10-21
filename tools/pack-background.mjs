@@ -191,27 +191,46 @@ const medianOf = values => {
   return sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
 };
 
-/** Median luminance of a sheet's opaque pixels, or null when it cannot be read. */
-function sheetMedian(file) {
+/** Median colour of a region, on three opponent-ish axes.
+ *
+ * Luminance alone was not enough, and it misled twice. It reported the Mad Harlequin as
+ * 2 apart from its own arena -- alarming -- when the figure is bright magenta and the
+ * backdrop desaturated brown, which the eye separates easily. It also named the Vanguard
+ * and the Warden as the closest heroes on that arena when both are comfortable in colour,
+ * while missing the Machinist, which genuinely is close.
+ *
+ * So: lightness, red-vs-green and yellow-vs-blue. Crude next to a real perceptual space,
+ * but it ranks pairings the way looking at them does, which is the only thing asked of it.
+ */
+const colourOf = pixels => {
+  const l = [], rg = [], yb = [];
+  for (const [r, g, b] of pixels) { l.push(lum(r, g, b)); rg.push(r - g); yb.push((r + g) / 2 - b); }
+  return {lum: medianOf(l), rg: medianOf(rg), yb: medianOf(yb)};
+};
+/** Distance between two median colours. */
+const apart = (a, b) => Math.round(Math.hypot(a.lum - b.lum, a.rg - b.rg, a.yb - b.yb));
+
+/** Median colour of a sheet's opaque pixels, or null when it cannot be read. */
+function sheetColour(file) {
   try {
     const image = decodePng(readFileSync(file));
-    const values = [];
+    const pixels = [];
     for (let i = 0; i < image.width * image.height; i++) {
       const o = i * 4;
-      if (image.rgba[o + 3] > 8) values.push(lum(image.rgba[o], image.rgba[o + 1], image.rgba[o + 2]));
+      if (image.rgba[o + 3] > 8) pixels.push([image.rgba[o], image.rgba[o + 1], image.rgba[o + 2]]);
     }
-    return values.length ? medianOf(values) : null;
+    return pixels.length ? colourOf(pixels) : null;
   } catch { return null; }
 }
 
-/** Every sheet in a directory, as {id, median}, skipping local `-test` sources. */
+/** Every sheet in a directory, as {id, colour}, skipping local `-test` sources. */
 function sheetsIn(dir) {
   const found = [];
   try {
     for (const name of readdirSync(dir)) {
       if (!name.endsWith('.png') || /[-_]test\.png$/.test(name)) continue;
-      const median = sheetMedian(`${dir}/${name}`);
-      if (median !== null) found.push({id: name.replace(/\.png$/, ''), median});
+      const colour = sheetColour(`${dir}/${name}`);
+      if (colour) found.push({id: name.replace(/\.png$/, ''), colour});
     }
   } catch { /* directory absent: fall back to no comparison */ }
   return found;
@@ -226,15 +245,18 @@ const bossSheet = bossSheets.find(b => b.id === arenaId) ?? null;
 console.log('');
 for (const z of ZONES) {
   const vals = [];
+  const pixels = [];
   for (let y = z.y; y < z.y + z.h; y++) {
     for (let x = z.x; x < z.x + z.w; x++) {
       const i = (y * outW + x) * 4;
       vals.push(lum(dest[i], dest[i + 1], dest[i + 2]));
+      pixels.push([dest[i], dest[i + 1], dest[i + 2]]);
     }
   }
   vals.sort((a, b) => a - b);
   const median = vals[Math.floor(vals.length / 2)];
   const p90 = vals[Math.floor(vals.length * 0.9)];
+  const zoneColour = colourOf(pixels);
 
   // Busyness drives the verdict, because it is the thing nothing downstream can fix. The
   // sprites carry an outline rim precisely so they separate from a backdrop of similar
@@ -265,24 +287,21 @@ for (const z of ZONES) {
   let note = `  busyness ${busyness.toFixed(1).padStart(4)}`;
   if (compare.length) {
     const closest = compare
-      .map(sheet => ({id: sheet.id, contrast: Math.abs(sheet.median - median)}))
+      .map(sheet => ({id: sheet.id, contrast: apart(sheet.colour, zoneColour)}))
       .sort((a, b) => a.contrast - b.contrast)
       .slice(0, 3)
-      .map(c => `${c.id} ${c.contrast.toFixed(0)}`);
+      .map(c => `${c.id} ${c.contrast}`);
     note += `  least separation: ${closest.join(', ')}`;
   }
   console.log(`  ${verdict.padEnd(5)} ${z.label.padEnd(18)} lum ${median.toFixed(0).padStart(3)}` +
     `  90th ${p90.toFixed(0).padStart(3)}${note}`);
 }
 if (heroSheets.length) {
-  const darkest = [...heroSheets].sort((a, b) => a.median - b.median)[0];
-  const brightest = [...heroSheets].sort((a, b) => b.median - a.median)[0];
-  console.log(`  (measured from the real sheets: ${heroSheets.length} heroes, `
-    + `${darkest.id} darkest at ${darkest.median.toFixed(0)}, `
-    + `${brightest.id} brightest at ${brightest.median.toFixed(0)}.`);
-  console.log('   Verdict is busyness, which no outline rim can compensate for. Luminance'
-    + ' separation is reported, not judged: the roster spans the whole range, so every');
-  console.log('   backdrop level sits close to someone.)');
+  console.log(`  (separation is colour distance across ${heroSheets.length} real hero sheets `
+    + '-- lightness plus two chroma axes, not lightness alone.');
+  console.log('   Verdict is busyness, which no outline rim can compensate for. Separation is');
+  console.log('   reported, not judged: the roster spans the whole range, so every backdrop');
+  console.log('   sits close to someone.)');
 }
 
 writeFileSync(out, encodePng(outW, outH, dest));
