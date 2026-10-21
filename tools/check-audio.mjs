@@ -43,7 +43,7 @@ function probe(file) {
     }
   }
   const kbps = seconds > 0 ? (bytes.length * 8) / seconds / 1000 : null;
-  return {kb, seconds, kbps};
+  return {rate, kb, seconds, kbps};
 }
 const rows = [];
 
@@ -58,7 +58,7 @@ for (const sound of requiredSounds()) {
 }
 
 console.log('\nAUDIO ASSETS\n');
-console.log('       file                               size      length   bitrate');
+console.log('       file                               size      length   bitrate     rate');
 let oversize = 0;
 let total = 0;
 for (const row of rows) {
@@ -71,7 +71,12 @@ for (const row of rows) {
   console.log(`  ${status} ${row.file.padEnd(34)} ` +
     `${row.kb === null ? '' : `${row.kb.toFixed(0).padStart(5)} KiB`}` +
     `${row.seconds ? `  ${row.seconds.toFixed(2).padStart(6)}s` : '         '}` +
-    `${row.kbps ? `  ${row.kbps.toFixed(0).padStart(4)} kbps` : ''}`);
+    `${row.kbps ? `  ${row.kbps.toFixed(0).padStart(4)} kbps` : ''}` +
+    // Reported, not enforced. 44.1 kHz is the default, but 32 kHz is the rate the SNES
+    // S-DSP actually ran at, so a lower ceiling can be the point rather than a mistake --
+    // heal.ogg is deliberately 32 kHz for that reason. What matters is that a rate is
+    // never silently different from what someone intended, so it is on screen.
+    `${row.rate ? `  ${(row.rate / 1000).toFixed(row.rate % 1000 ? 1 : 0).padStart(5)} kHz` : ''}`);
 }
 const musicRows = rows.filter(r => r.kind === 'music');
 const sfxRows = rows.filter(r => r.kind === 'sfx');

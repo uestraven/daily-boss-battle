@@ -187,8 +187,13 @@ payload is well under 1 MB. Revisit only if live remixing becomes a feature.
 - **An intro that plays once, then a loop**, is supported: set `loopStart` and `loopEnd`
   on the buffer source, in seconds. Render it as a single file with the intro at the
   front and tell us the loop point. Very much the SNES convention.
-- 44.1 kHz, stereo. Normalise to about −14 LUFS and leave headroom; the game mixes SFX
-  on top.
+- 44.1 kHz stereo by default. Normalise to about −14 LUFS and leave headroom; the game
+  mixes SFX on top.
+- **32 kHz is also fine, and sometimes better.** That is the rate the SNES S-DSP actually
+  ran at, so the 16 kHz ceiling it imposes is part of how a 16-bit effect sounds rather
+  than a loss — `heal.ogg` ships at 32 kHz for exactly that reason. Browsers resample on
+  decode, so there is no playback cost. `npm run audio:check` prints the rate of every
+  file so a choice like that stays visible instead of looking like an export mistake.
 
 ### Files needed
 
