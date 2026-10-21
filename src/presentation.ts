@@ -83,8 +83,13 @@ export const TIMING = {
   // damage arrived during the swing, which is why nothing had an apparent order.
   /** Acting character slides from its slot to striking distance. */
   approach: 500,
-  /** The attack, cast or item clip plays, held at full extension. Contact lands inside. */
-  strike: 500,
+  /** The attack, cast or item clip plays, held at full extension. Contact lands inside.
+   *
+   * Longer than the phases either side of it on purpose: this is the beat carrying the
+   * animation the player wants to watch, where approach and retreat are just travel. At
+   * 750 an eight-frame clip runs at 94ms a frame instead of 62, which is close to a
+   * hand-animated cadence rather than a flick. */
+  strike: 750,
   /** Slides back to its slot. */
   retreat: 500,
   /** Only now do the damage numbers rise and the health bars drain. */

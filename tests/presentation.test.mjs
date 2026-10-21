@@ -237,8 +237,13 @@ test('clip frame rates are slow enough to read', () => {
   // ...but not so slow that a turn drags.
   // Bounded against the pace dial rather than an absolute: the point is that the tuning
   // has not drifted, and the global pace is a deliberate, separate decision.
-  assert.ok(TIMING.strike <= 500 * PACE,
-    `an attack beat should not exceed ${500 * PACE}ms at PACE ${PACE}`);
+  assert.ok(TIMING.strike <= 900 * PACE,
+    `an attack beat should not exceed ${900 * PACE}ms at PACE ${PACE}`);
+  // The strike is the only phase allowed to be long. If travel grows to match it the
+  // action stops reading as a strike with approach and retreat around it, and starts
+  // reading as three equally slow steps.
+  assert.ok(TIMING.approach <= TIMING.strike && TIMING.retreat <= TIMING.strike,
+    'travel should never outlast the strike it serves');
   assert.ok(TIMING.hurtReact <= TIMING.damageNumberHold, 'the recoil should not outlast its number');
   assert.ok(TIMING.impact < TIMING.hurtReact, 'the flash is sharp; the reaction is not');
 });

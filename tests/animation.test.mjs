@@ -318,15 +318,21 @@ test('an eight-frame clip is readable in its strike phase', () => {
   assert.ok(TIMING.strike >= 400, 'the strike should outlast a glance');
 });
 
-test('the action is four equal phases that sum to its span', () => {
+test('the action is four countable phases, with the strike the longest', () => {
   // The sequence a player should be able to count: walk out, strike, walk back, then the
-  // damage lands. Equal lengths are the point -- it is what makes the order followable
-  // rather than a blur, and it was specified as four 500ms steps.
+  // damage lands. They began as four equal 500ms steps, which is what made the order
+  // followable rather than a blur. The strike is now longer than the rest, deliberately:
+  // it carries the animation worth watching, where approach and retreat are only travel.
+  // The invariant that matters is the *order being countable*, not the phases matching.
   assert.equal(TIMING.approach, 500);
-  assert.equal(TIMING.strike, 500);
+  assert.equal(TIMING.strike, 750);
   assert.equal(TIMING.retreat, 500);
   assert.equal(TIMING.indicator, 500);
-  assert.equal(ACTION_MS, 2000, 'one action spans two seconds');
+  assert.ok(TIMING.strike > TIMING.approach && TIMING.strike > TIMING.retreat,
+    'the strike should be the phase that reads longest, not a step among equals');
+  // Travel out and back stay equal to each other, or the motion looks lopsided.
+  assert.equal(TIMING.approach, TIMING.retreat, 'walking out and back take the same time');
+  assert.equal(ACTION_MS, 2250, 'one action spans two and a quarter seconds');
   assert.equal(ACTION_MS,
     TIMING.approach + TIMING.strike + TIMING.retreat + TIMING.indicator);
   // PACE is now 1, so this table is in real milliseconds rather than half of them.

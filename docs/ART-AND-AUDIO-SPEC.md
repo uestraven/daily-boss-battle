@@ -41,9 +41,9 @@ by whole numbers. So sprites are small and must read as silhouettes.
 | Row | Clip | Loops | Frames | Fitted to | Per frame at 8 |
 | --- | --- | --- | --- | --- | --- |
 | 0 | `idle` | yes | 2–8 | its own cadence | 160 ms |
-| 1 | `attack` | no | 3–8 | the 500 ms strike | 62 ms |
-| 2 | `cast` | no | 3–8 | the 500 ms strike, or a 1120 ms channel | 62 ms |
-| 3 | `item` | no | 2–8 | the 500 ms strike | 62 ms |
+| 1 | `attack` | no | 3–8 | the 750 ms strike | 94 ms |
+| 2 | `cast` | no | 3–8 | the 750 ms strike, or a 1120 ms channel | 94 ms |
+| 3 | `item` | no | 2–8 | the 750 ms strike | 94 ms |
 | 4 | `hurt` | no | 2–8 | a 400 ms beat | 50 ms |
 | 5 | `ko` | no | 3–8 | a 1440 ms beat, holds last frame | 180 ms |
 | 6 | `victory` | yes | 2–8 | its own cadence | 150 ms |
@@ -109,10 +109,14 @@ simply left undeclared and falls back to `idle`. **`walk` and `victory` are the 
 clips a sheet may omit** — both degrade to standing still, which is tolerable for a walk-in
 and for a won battle and wrong for anything else. `tests/animation.test.mjs` enforces that.
 
-Current coverage across the nine real hero sheets: `item` on all nine, `victory` on eight,
-`walk` on three (Machinist, Warden, Nullifier). An action plays as four 500 ms phases —
-walk out, strike, walk back, then the damage lands — and a sheet without `walk` slides while
-playing `idle` through the two walking phases. That reads acceptably, and the renderer picks
+Current coverage across the ten real hero sheets: `item` and `victory` on all ten, `walk`
+on six (Warden, Oracle, Blademage, Nullifier, Machinist, Vanguard).
+
+An action plays as four phases a player can count — 500 ms walking out, a **750 ms
+strike**, 500 ms walking back, then a 500 ms indicator while the damage lands. The strike
+is the long one on purpose: it carries the clip worth watching, where approach and retreat
+are only travel. A sheet without `walk` slides while playing `idle` through the two
+walking phases. That reads acceptably, and the renderer picks
 up real walk frames the instant a sheet provides them, with no code change. A short
 two-to-four frame side-view cycle is all it needs.
 
