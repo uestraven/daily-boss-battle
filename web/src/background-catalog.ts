@@ -35,7 +35,7 @@ export const battleBackgrounds = {
   spell_weaver: {
     scene:'Gate Platform', style:'Painted backdrop', place:'Rail platform at a border gate, night',
     file:'spell_weaver.png', imageRendering:'auto' as const,
-    hint:'A long platform with a waiting train and lamp-lit gatehouse beyond. Night palette with warm lamps so elemental spell flashes pop.',
+    hint:'A long platform with a waiting train and lamp-lit gatehouse beyond. Night palette with warm lamps so elemental spell flashes pop. Painted and installed; the boss zone measures luminance 15 and cool, so the Spell Weaver\'s own sheet needs pale robes or its own elemental light to clear it -- a dark robed figure lands 12 apart and would be lost.',
   },
   mad_harlequin: {
     scene:'Carnival Row', style:'16-bit pixel art', place:'Shuttered fairground after closing',
@@ -68,6 +68,6 @@ export const bundledBackgroundUrl = (id:BackgroundId) => mediaUrl('battle-backgr
  * and leaves the flat backdrop in place rather than flashing an empty frame. Drop the art
  * in, add the id here, and run `npm run art:check` -- it fails when this list and the
  * directory disagree, so it cannot drift. Same arrangement as effect art. */
-export const shippedBackgrounds: readonly BackgroundId[] = ['blade_tyrant','clockwork_emperor','crush_wall','ink_lurker','mad_harlequin','storm_keeper','tide_maw'];
+export const shippedBackgrounds: readonly BackgroundId[] = ['blade_tyrant','clockwork_emperor','crush_wall','ink_lurker','mad_harlequin','spell_weaver','storm_keeper','tide_maw'];
 
 export const hasBackgroundArt = (id:BackgroundId):boolean => shippedBackgrounds.includes(id);
