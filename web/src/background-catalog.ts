@@ -68,6 +68,6 @@ export const bundledBackgroundUrl = (id:BackgroundId) => mediaUrl('battle-backgr
  * and leaves the flat backdrop in place rather than flashing an empty frame. Drop the art
  * in, add the id here, and run `npm run art:check` -- it fails when this list and the
  * directory disagree, so it cannot drift. Same arrangement as effect art. */
-export const shippedBackgrounds: readonly BackgroundId[] = ['blade_tyrant','clockwork_emperor','mad_harlequin','storm_keeper','tide_maw'];
+export const shippedBackgrounds: readonly BackgroundId[] = ['blade_tyrant','clockwork_emperor','crush_wall','mad_harlequin','storm_keeper','tide_maw'];
 
 export const hasBackgroundArt = (id:BackgroundId):boolean => shippedBackgrounds.includes(id);
