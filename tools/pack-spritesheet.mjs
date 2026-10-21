@@ -409,6 +409,45 @@ const splitMerged = (list, expected) => {
   return splits ? out : list;
 };
 if (figures.length < cols * rows) figures = splitMerged(figures, cols * rows);
+
+/** Drops surplus frames from any row that has more than the grid allows.
+ *
+ * A generator asked for eight frames a row can give nine. The Lancer's last row does: its
+ * ninth pose is the loop's closing frame, a 97% silhouette match for the first, where two
+ * genuinely adjacent poses in that row match only 63%. So the extra is a duplicate and
+ * dropping it loses nothing -- but the packer refused the sheet outright rather than
+ * saying so.
+ *
+ * Rows are banded by vertical centre and the leftmost `cols` kept in each, because frames
+ * read left to right; a surplus frame is therefore the rightmost, which is where a closing
+ * duplicate sits. Every drop is named, since this is a guess about intent and the operator
+ * is the one who can check it. Only runs when there is a surplus, so a correct sheet takes
+ * exactly the path it always did. */
+const trimExtraPerRow = list => {
+  if (list.length <= cols * rows) return list;
+  const bandOf = f => Math.min(rows - 1, Math.floor(((f.miny + f.maxy) / 2) / (H / rows)));
+  const bands = new Map();
+  for (const f of list) {
+    const b = bandOf(f);
+    if (!bands.has(b)) bands.set(b, []);
+    bands.get(b).push(f);
+  }
+  const kept = [];
+  const dropped = [];
+  for (const [band, members] of [...bands.entries()].sort((a, b) => a[0] - b[0])) {
+    members.sort((a, b) => (a.minx + a.maxx) - (b.minx + b.maxx));
+    kept.push(...members.slice(0, cols));
+    for (const extra of members.slice(cols)) dropped.push(`row ${band + 1} at x=${extra.minx}`);
+  }
+  if (dropped.length) {
+    console.log(`  extra frames  dropped ${dropped.length} beyond ${cols} per row: `
+      + `${dropped.join(', ')}`);
+    console.log('                check these are surplus; the rightmost of a row is usually');
+    console.log('                a closing duplicate of its first frame');
+  }
+  return kept;
+};
+figures = trimExtraPerRow(figures);
 console.log(`\n${input}`);
 console.log(`  source        ${W}x${H}${flipX ? '  (mirrored by --flip-x)' : ''}`);
 console.log(`  figures found ${figures.length} (expected ${cols * rows})`);
