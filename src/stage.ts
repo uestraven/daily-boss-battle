@@ -428,14 +428,19 @@ export function composeFrame(input: ComposeInput): Frame {
   // Centred under the health bar rather than floating on the actor: the text is a
   // sentence, and at 320px wide there is nowhere near an actor to put one.
   //
-  // `telegraph` and `revive` carry a sentence too and were dropped here for the same
-  // reason, which made three of the new sound effects unlearnable: a cue is only
+  // `telegraph`, `revive` and `phase` carry a sentence too and were dropped here for the
+  // same reason. `phase` is the clearest case that this was an oversight rather than a
+  // decision: `choreograph` *lengthens* a phase beat to `messageDuration(beat.text)` so its
+  // line can be read, and then nothing drew the line. The flash and the sting carried the
+  // moment, so "Blade Tyrant changes form" was simply never seen.
+  //
+  // Dropping them also made three of the new sound effects unlearnable: a cue is only
   // intuitive if something visible happens with it, and the telegraph sting fired against
   // a completely static screen. The original hit and heal sounds never had this problem
   // because a floating number lands with them.
   for (const beat of active) {
     const sentence = beat.kind === 'message' || beat.kind === 'telegraph'
-      || beat.kind === 'revive';
+      || beat.kind === 'revive' || beat.kind === 'phase';
     if (!sentence || !beat.text) continue;
     // The telegraph line names the boss's next ability, which is the single thing Normal
     // mode most deliberately withholds.

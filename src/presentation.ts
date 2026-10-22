@@ -399,6 +399,29 @@ export function choreograph(events: readonly BattleEvent[], options: Choreograph
         cursor += TIMING.statusPopup;
         break;
       }
+      // Two outcomes that had no presentation at all, so the turn they happened on looked
+      // like nothing happened. Both are results, so both announce in either mode.
+      case 'steal_success': {
+        consecutiveHits = 0;
+        // The item is in `details`; without this the Thief's whole reason for existing
+        // resolved in silence, with only an inventory count moving to show for it.
+        push({duration: TIMING.statusPopup, kind: 'message',
+          text: `${nameOf(actor, opts)} steals ${event.details ?? 'an item'}`,
+          source: event.type});
+        cursor += TIMING.statusPopup;
+        break;
+      }
+      case 'boss_fallback': {
+        consecutiveHits = 0;
+        // The boss could not afford what it had planned and substituted something else. A
+        // player who had read the telegraph watched a different attack arrive with no
+        // explanation; in Normal, where no telegraph was read, the boss merely did something
+        // weaker for no visible reason.
+        push({duration: TIMING.statusPopup, kind: 'message',
+          text: `${nameOf(actor, opts)} cannot muster its attack`, source: event.type});
+        cursor += TIMING.statusPopup;
+        break;
+      }
       default:
         // Bookkeeping events (ready, momentum, counter queues) carry no presentation of
         // their own; their consequences arrive as their own events. `channel_resolved`

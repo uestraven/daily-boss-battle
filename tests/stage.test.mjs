@@ -1156,3 +1156,105 @@ test('a revive announces itself in text as well as in sound', () => {
   const at = script.beats.find(b => b.kind === 'revive').at;
   assert.ok(textsIn(composeFrame({state, script, timeMs: at})).some(t => t.includes('revives')));
 });
+
+// --- turns that looked like nothing happened --------------------------------------------
+//
+// Reported as "some turns seem like nothing happened". An audit of every engine event a
+// player can witness, against both modes, found three outcomes with no presentation at all.
+// Two had no beat; the third had a beat carrying text that nothing drew.
+
+test('a phase change says so in words, not only with a flash', () => {
+  // The clearest case that this was an oversight: `choreograph` lengthens a phase beat to
+  // `messageDuration(beat.text)` so its line can be read, and then nothing drew the line.
+  const state = freshState();
+  const script = choreograph([
+    ev('phase_change', {actorId: state.bossId, details: 'Phase 2'}),
+  ], {names: {[state.bossId]: 'Tide Maw'}});
+  const beat = script.beats.find(b => b.kind === 'phase');
+  assert.ok(beat?.text, 'the phase beat carries no text to draw');
+  for (const mode of ['easy', 'normal']) {
+    const texts = textsIn(composeFrame({state, script, timeMs: beat.at + 10,
+      disclosure: disclosureFor(mode)}));
+    assert.ok(texts.some(t => t.includes('changes form')),
+      `${mode} shows no phase-change line`);
+  }
+});
+
+test('a successful steal announces itself', () => {
+  // Without this the Thief's whole reason for existing resolved in silence, with only an
+  // inventory count moving to show for it.
+  const state = freshState();
+  const thief = state.party[0];
+  const script = choreograph([
+    ev('steal_success', {actorId: thief, targetId: state.bossId, amount: 1, details: 'potion'}),
+  ], {names: {[thief]: 'Thief'}});
+  const texts = textsIn(composeFrame({state, script, timeMs: 10}));
+  assert.ok(texts.some(t => /steals/.test(t)), `expected a steal line, got ${JSON.stringify(texts)}`);
+  assert.ok(texts.some(t => /potion/.test(t)), 'the line should name what was taken');
+});
+
+test('a boss that cannot afford its plan says so', () => {
+  // A player who had read the telegraph watched a different attack arrive with no
+  // explanation; in Normal, the boss merely did something weaker for no visible reason.
+  const state = freshState();
+  const script = choreograph([
+    ev('boss_fallback', {actorId: state.bossId, details: 'Insufficient MP for planned ability'}),
+  ], {names: {[state.bossId]: 'Tide Maw'}});
+  const texts = textsIn(composeFrame({state, script, timeMs: 10}));
+  assert.ok(texts.length > 0, 'a fallback still produces no presentation at all');
+});
+
+test('every witnessable outcome produces some feedback in both modes', () => {
+  // The audit, kept. Anything a player can witness must be visible, audible, or carried by
+  // an animation; nothing may resolve into silence. Entries are excused only with a reason.
+  const state = freshState();
+  const boss = state.bossId;
+  const [h1, h2] = state.party;
+  const excused = {
+    // Predictions, which Normal exists to withhold. Easy shows both through the telegraph
+    // panel in the DOM rather than on the canvas.
+    boss_intent: 'the telegraph itself; hidden in Normal by design',
+    boss_intent_changed: 'only meaningful to someone who can see the telegraph',
+    // Carried by the actor's own animation rather than by text.
+    action_committed: 'the approach and strike animation is the feedback',
+  };
+  const cases = [
+    ['damage', ev('damage', {actorId: boss, targetId: h1, abilityId: 'attack', amount: 40, hpAfter: 300})],
+    ['heal', ev('heal', {actorId: h1, targetId: h2, abilityId: 'cure', amount: 60, hpAfter: 300})],
+    ['status_applied', ev('status_applied', {actorId: boss, status: 'protect', details: 'protect'})],
+    ['status_expired', ev('status_expired', {actorId: boss, status: 'protect', details: 'protect'})],
+    ['mp_restored', ev('mp_restored', {actorId: h1, targetId: h1, amount: 8, mpAfter: 20})],
+    ['ko', ev('ko', {actorId: h2})],
+    ['revived', ev('revived', {actorId: h1, targetId: h2})],
+    ['phase_change', ev('phase_change', {actorId: boss, details: 'Phase 2'})],
+    ['fizzle', ev('fizzle', {actorId: h1, abilityId: 'attack', details: 'no valid target'})],
+    ['steal_success', ev('steal_success', {actorId: h1, targetId: boss, amount: 1, details: 'potion'})],
+    ['boss_fallback', ev('boss_fallback', {actorId: boss, details: 'Insufficient MP'})],
+    ['boss_intent', ev('boss_intent', {actorId: boss, abilityId: 'attack', details: 'targets=' + h1})],
+    ['boss_intent_changed', ev('boss_intent_changed', {actorId: boss, abilityId: 'attack', details: 'x'})],
+    ['action_committed', ev('action_committed', {actorId: h1, abilityId: 'attack', details: 'targets=' + boss})],
+  ];
+  for (const [label, event] of cases) {
+    const script = choreograph([event], {names: {[boss]: 'Boss', [h1]: 'One', [h2]: 'Two'},
+      maxHp: {[boss]: 1000, [h1]: 400, [h2]: 315}});
+    for (const mode of ['easy', 'normal']) {
+      const d = disclosureFor(mode);
+      let feedback = false;
+      for (const beat of script.beats) {
+        const frame = composeFrame({state, script, timeMs: beat.at + 10, disclosure: d});
+        if (frame.commands.some(c => c.kind === 'text' || c.kind === 'flash' || c.kind === 'shake')) {
+          feedback = true;
+        }
+        // An animation beat counts: a sprite stepping in and swinging is feedback. So does a
+        // bar tween -- but it has to be detected as the *beat*, because a `bar` command is
+        // drawn every frame for every actor and counting those would pass everything.
+        if (['approach', 'strike', 'cast', 'hurt', 'ko', 'revive', 'hp_change', 'mp_change']
+          .includes(beat.kind)) feedback = true;
+      }
+      if (!feedback && label in excused) continue;
+      assert.ok(feedback,
+        `${label} produces no feedback in ${mode}. Either give it a beat in presentation.ts, `
+        + 'or add it to `excused` above with the reason it needs none.');
+    }
+  }
+});
