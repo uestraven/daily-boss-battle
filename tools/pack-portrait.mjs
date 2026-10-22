@@ -34,6 +34,12 @@ const size = Number(flag('size', '64'));
 // Higher than an effect's twelve: a face needs skin, hair, cloth and a background, and a
 // dozen steps posterises a cheek into bands. Low enough to stay in period.
 const colourLimit = Number(flag('colours', '28')) || 0;
+/** Stretch the tonal range before quantising. Off unless asked for. */
+const levels = args.includes('--levels');
+/** Where the brightest real tone should land after a stretch. */
+const levelsTarget = Number(flag('levels-target', '215'));
+/** Ship a portrait with almost no tonal range anyway. */
+const allowDark = args.includes('--allow-dark');
 
 if (!input || input.startsWith('--') || !out) {
   console.error('usage: pack-portrait.mjs <input.png> --out <out.png> [--size 64] '
@@ -76,6 +82,45 @@ for (let dy = 0; dy < size; dy++) {
     dest[d + 1] = Math.round(g / n);
     dest[d + 2] = Math.round(b / n);
     dest[d + 3] = 255;
+  }
+}
+
+// --- tonal range -----------------------------------------------------------------------
+//
+// A large area average destroys small specular detail, and for a dark subject that detail
+// is the only light there is. The Warden's source reaches 0-255, but its 95th percentile is
+// 69 and its 99th is 120: the brightness lives in isolated eye glints, a buckle and a few
+// strands of fur sheen. At a 19.6x reduction a single bright pixel is averaged with 383 dark
+// neighbours and ceases to exist, so the packed face topped out at luminance 73 and read as
+// a silhouette.
+//
+// No linear filter can preserve a one-pixel highlight at that coverage -- the information
+// genuinely does not fit in the output. What *is* recoverable is the structure already
+// there: 73 levels of fur form, compressed into the bottom quarter of the range. A levels
+// stretch is exactly the remedy for that, and the only honest one.
+//
+// Anchored on percentiles, not the absolute min and max, so one stray pixel at either end
+// cannot set the whole mapping.
+if (levels) {
+  const lumOf = i => (dest[i * 4] * 299 + dest[i * 4 + 1] * 587 + dest[i * 4 + 2] * 114) / 1000;
+  const sorted = [];
+  for (let i = 0; i < size * size; i++) sorted.push(lumOf(i));
+  sorted.sort((a, b) => a - b);
+  const at = q => sorted[Math.min(sorted.length - 1, Math.floor(q * (sorted.length - 1)))];
+  const black = at(0.005);
+  const white = at(0.995);
+  const span = Math.max(1, white - black);
+  const gain = levelsTarget / span;
+  console.log(`  levels        ${black.toFixed(0)}-${white.toFixed(0)} -> 0-${levelsTarget} `
+    + `(gain ${gain.toFixed(2)}x)`);
+  for (let i = 0; i < size * size; i++) {
+    // Scale the channels together by one luminance-derived gain rather than stretching each
+    // channel independently: per-channel stretching shifts hue, and a black panther turning
+    // blue is a worse outcome than a dark one.
+    for (const c of [0, 1, 2]) {
+      const v = (dest[i * 4 + c] - black) * gain;
+      dest[i * 4 + c] = Math.max(0, Math.min(255, Math.round(v)));
+    }
   }
 }
 
