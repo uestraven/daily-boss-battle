@@ -1,8 +1,11 @@
 /** Attack effects as their own layer, resolved from impact beats. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DEFAULT_BINDINGS, DEFAULT_EFFECT_MS, activeEffects, effectIdFor, effectRect, requiredEffects,
-  validateEffectSheet} from '../dist/src/effects.js';
+import {abilityInfoFor} from '../dist/src/animation.js';
+import {bossIds, buildEncounter} from '../dist/src/generate.js';
+import {balancedParties} from '../dist/src/draft.js';
+import {DEFAULT_BINDINGS, DEFAULT_EFFECT_MS, activeEffects, effectIdFor, effectRect,
+  readsAsMagical, requiredEffects, validateEffectSheet} from '../dist/src/effects.js';
 import {TIMING, choreograph} from '../dist/src/presentation.js';
 
 const ev = (type, extra = {}) => ({tick: 1, type, ...extra});
@@ -168,4 +171,53 @@ test('the effect manifest is complete and documented', () => {
   ].filter(Boolean);
   for (const id of reachable) assert.ok(declared.has(id), `${id} is bindable but not in requiredEffects()`);
   for (const effect of effects) assert.ok(effect.purpose.length > 8, `${effect.id} needs a description`);
+});
+
+// --- elements actually reaching their sheets --------------------------------------------
+//
+// `effectIdFor` was correct and tested in isolation the whole time. The bug was in the
+// table handed to it: the screen built `{kind: a.kind}` for each ability and dropped the
+// element, so `byElement` was never consulted and every spell in the game -- Fire, Fire II,
+// Blizzard, Thunder, Tri-Bolt, Force Cannon, Cruel Jest, Razor Confetti -- drew
+// flare_neutral. Unit-testing the resolver could not catch that, so these assert against
+// the real ability definitions and the real builder instead.
+
+test('abilityInfoFor keeps the element, not just the kind', () => {
+  const info = abilityInfoFor({
+    channeler_fire: {id: 'channeler_fire', kind: 'magical', element: 'fire'},
+    hero_attack: {id: 'hero_attack', kind: 'physical'},
+  });
+  assert.deepEqual(info.channeler_fire, {kind: 'magical', element: 'fire'});
+  assert.deepEqual(info.hero_attack, {kind: 'physical', element: undefined});
+});
+
+test('every elemental ability in every encounter resolves to its own sheet', () => {
+  const expected = {fire: 'flare_fire', ice: 'flare_ice', lightning: 'flare_lightning',
+    holy: 'flare_holy', dark: 'flare_dark'};
+  let checked = 0;
+  for (const bossId of bossIds) {
+    const def = buildEncounter(bossId, balancedParties()[0]);
+    const info = abilityInfoFor(def.abilities);
+    for (const ability of Object.values(def.abilities)) {
+      const resolved = effectIdFor(DEFAULT_BINDINGS, {
+        abilityId: ability.id,
+        element: info[ability.id]?.element,
+        kind: readsAsMagical(info[ability.id]?.kind) ? 'magical' : 'physical',
+      });
+      if (!ability.element || ability.element === 'neutral') continue;
+      assert.equal(resolved, expected[ability.element],
+        `${ability.id} (${ability.element}) resolved to ${resolved}`);
+      checked++;
+    }
+  }
+  // Guards the guard: a table that stopped carrying elements would make the loop above
+  // vacuous and still pass, which is the shape of the original bug.
+  assert.ok(checked >= 6, `expected several elemental abilities, checked ${checked}`);
+});
+
+test('a non-elemental spell still falls back to the generic flare', () => {
+  const info = abilityInfoFor({magus_bolt: {id: 'magus_bolt', kind: 'magical'}});
+  assert.equal(effectIdFor(DEFAULT_BINDINGS, {
+    abilityId: 'magus_bolt', element: info.magus_bolt?.element, kind: 'magical',
+  }), 'flare_neutral');
 });

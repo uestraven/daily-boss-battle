@@ -10,7 +10,7 @@
  * which means an attack animation can never finish early or overrun the hit it belongs
  * to. Looping animations (idle) use their own frame duration instead.
  */
-import type {AbilityKind, ActorId, BattleState} from './types.js';
+import type {AbilityKind, ActorId, BattleState, Element} from './types.js';
 import type {Beat, BeatScript} from './presentation.js';
 import {beatsAt} from './presentation.js';
 
@@ -106,9 +106,28 @@ export const CLIP_FALLBACK: Record<AnimationName, readonly AnimationName[]> = {
   victory: ['victory', 'idle'],
 };
 
-/** Ability kinds, keyed by ability id. Only `kind` is read, so a caller can pass the same
- * ability table the audio layer uses. */
-export type AbilityInfo = Record<string, {kind?: AbilityKind} | undefined>;
+/** Ability metadata, keyed by ability id: the one table clip selection, the mixer and the
+ * effect layer all read.
+ *
+ * This file only reads `kind`, and the type said so -- which let the screen build a table
+ * of `{kind}` alone that typechecked everywhere while leaving the effect layer unable to
+ * resolve an element, so every spell in the game drew the generic flare. Declaring
+ * `element` here states the full contract once, where a caller can see what consumers
+ * need rather than what the nearest consumer happens to use. */
+export type AbilityInfo = Record<string,
+  {kind?: AbilityKind; element?: Element} | undefined>;
+
+/** Builds the table from an encounter's abilities.
+ *
+ * Here rather than in the screen because the screen's hand-rolled version is what broke:
+ * it mapped each ability to `{kind: a.kind}` and dropped the element, so every spell drew
+ * the generic flare and no test could see it -- the construction sat in a .tsx the test
+ * suite cannot import. One function, used by the screen and asserted by the tests, means
+ * a consumer that needs another field gets it everywhere at once. */
+export const abilityInfoFor = (
+  abilities: Record<string, {id: string; kind?: AbilityKind; element?: Element}>,
+): AbilityInfo => Object.fromEntries(Object.values(abilities)
+  .map(a => [a.id, {kind: a.kind, element: a.element}]));
 
 /** The clip for an action beat. Falls back to `attack` when the ability is unknown, which
  * is how it behaved before kinds were threaded through, so a missing table degrades to the

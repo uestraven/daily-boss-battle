@@ -34,6 +34,7 @@ import {backgroundForBoss, battleBackgrounds, hasBackgroundArt} from './backgrou
 import {BackgroundStudio} from './BackgroundStudio.js';
 import {STATUS_DISPLAY, visibleStatuses} from './status-display.js';
 import {disclosureFor} from '../../dist/src/disclosure.js';
+import {abilityInfoFor} from '../../dist/src/animation.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {ActorId, BattleMode, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
 import type {DailyCatalog, DailyLedger} from '../../src/daily.js';
@@ -363,11 +364,16 @@ function Battle({def, catalog, tier, day, unranked}:
   /** Real ability kinds, shared by the mixer and clip selection: it is what lets a spell
    * sound and look different from a sword swing, and a potion from both. Previously
    * flattened to magical-or-physical, which was enough for two sound families but erased
-   * every distinction an animation needs. */
-  const abilityInfo = useMemo(
-    () => Object.fromEntries(Object.values(def.abilities).map(a => [a.id, {kind: a.kind}])),
-    [def],
-  );
+   * every distinction an animation needs.
+   *
+   * `element` has to travel with it. Without it every spell in the game drew
+   * `flare_neutral`: `effectIdFor` tries `byElement` before falling back to the generic
+   * magical flare, so an undefined element silently skipped the entire elemental table and
+   * flare_fire, flare_ice, flare_lightning and flare_holy could never be reached. The
+   * mixer was unaffected, which is why this looked wrong but sounded right -- it keys on
+   * `kind` alone. Built by `abilityInfoFor` rather than inline here, so the shape is
+   * asserted by the test suite instead of living in a .tsx no test can import. */
+  const abilityInfo = useMemo(() => abilityInfoFor(def.abilities), [def]);
   /** Hit effects that have art. Empty until the sheets are commissioned, in which case
    * composeFrame emits no effect commands at all. */
   const effects = useMemo(() => effectLibrary(), []);
