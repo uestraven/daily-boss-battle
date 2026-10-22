@@ -9,6 +9,7 @@
  */
 import type {Beat, BeatScript} from './presentation.js';
 import type {AbilityInfo} from './animation.js';
+import type {Disclosure} from './disclosure.js';
 import {readsAsMagical} from './effects.js';
 
 export type SoundId =
@@ -74,6 +75,36 @@ export type AudioOptions = {
    * every hit sounds physical, which is wrong for a caster. Accepts the full
    * `AbilityKind` so one table can serve both the mixer and clip selection. */
   abilityInfo?: AbilityInfo;
+  /** What the player is allowed to know, so audio withholds what the screen withholds.
+   *
+   * Omitted, every cue plays. That default keeps the authoring tools and the mixing
+   * session unfiltered, and it is safe only because `CUE_DISCLOSURE` below names exactly
+   * which cues are affected -- a reader can see the full extent of the leak in one table
+   * instead of auditing every case in `cueFor`. */
+  disclosure?: Disclosure;
+};
+
+/** Cues that disclose something the interface may be deliberately hiding.
+ *
+ * Audio is a disclosure channel and was not treated as one. `disclosure.ts` says to add a
+ * field there "when a new piece of information appears on screen" -- and audio is not on
+ * screen, so it slipped the net entirely: Normal mode hides status badges and the boss's
+ * announced action, then played a status chime and a 0.7-gain telegraph sting anyway. A
+ * player could hear the boss commit to something and count ticks from it, which is the
+ * exact information the mode exists to withhold.
+ *
+ * Keyed by beat kind and mapped to the field that governs it, so adding a disclosing
+ * sound means adding a row here rather than remembering a rule. */
+const CUE_DISCLOSURE: Partial<Record<Beat['kind'], keyof Disclosure>> = {
+  telegraph: 'telegraph',
+  status_on: 'statuses',
+  status_off: 'statuses',
+};
+
+/** Whether a beat's cue may be heard under this disclosure. */
+const audible = (beat: Beat, disclosure: Disclosure | undefined): boolean => {
+  const field = CUE_DISCLOSURE[beat.kind];
+  return !field || !disclosure || disclosure[field];
 };
 
 const gainFor = (intensity: number | undefined, floor = 0.45): number => {
@@ -137,6 +168,7 @@ export function audioCues(script: BeatScript, options: AudioOptions = {}): Audio
 
   const cues: AudioCue[] = [];
   for (const beat of merged) {
+    if (!audible(beat, options.disclosure)) continue;
     const cue = cueFor(beat, options);
     if (cue) cues.push(cue);
   }
@@ -145,6 +177,10 @@ export function audioCues(script: BeatScript, options: AudioOptions = {}): Audio
     const interval = options.blipIntervalMs ?? 55;
     for (const beat of script.beats) {
       if (!beat.text) continue;
+      // A blip is the sound of text being typed, so it must follow the text: blipping
+      // through a telegraph the mode never prints would announce the hidden line's
+      // existence and its length.
+      if (!audible(beat, options.disclosure)) continue;
       if (beat.kind !== 'message' && beat.kind !== 'telegraph' && beat.kind !== 'phase') continue;
       for (let offset = 0; offset < beat.duration; offset += interval) {
         cues.push({at: beat.at + offset, sound: 'text_blip', gain: 0.25});

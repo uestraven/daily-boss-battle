@@ -17,6 +17,7 @@ import type {AbilityInfo} from './animation.js';
 import {activeEffects, effectRect} from './effects.js';
 import type {EffectBindings, EffectLibrary} from './effects.js';
 import type {AnimationName, SpriteSheet} from './animation.js';
+import type {Disclosure} from './disclosure.js';
 
 /** Internal stage resolution. 16:9 so it letterboxes cleanly on any phone. */
 export const STAGE = {width: 320, height: 180} as const;
@@ -124,6 +125,9 @@ export type ComposeInput = {
   /** How long each effect runs. Impact beats are near-instant, so an effect outlives the
    * beat that spawned it. */
   effectDurationMs?: number;
+  /** What the player may be shown. Omitted, everything draws, which is what the authoring
+   * tools and the stage tests want. The live client passes the real mode's policy. */
+  disclosure?: Disclosure;
 };
 
 /** Deterministic pseudo-random in [-1, 1] from an integer. Shake must be reproducible
@@ -423,11 +427,46 @@ export function composeFrame(input: ComposeInput): Frame {
   //
   // Centred under the health bar rather than floating on the actor: the text is a
   // sentence, and at 320px wide there is nowhere near an actor to put one.
+  //
+  // `telegraph` and `revive` carry a sentence too and were dropped here for the same
+  // reason, which made three of the new sound effects unlearnable: a cue is only
+  // intuitive if something visible happens with it, and the telegraph sting fired against
+  // a completely static screen. The original hit and heal sounds never had this problem
+  // because a floating number lands with them.
   for (const beat of active) {
-    if (beat.kind !== 'message' || !beat.text) continue;
+    const sentence = beat.kind === 'message' || beat.kind === 'telegraph'
+      || beat.kind === 'revive';
+    if (!sentence || !beat.text) continue;
+    // The telegraph line names the boss's next ability, which is the single thing Normal
+    // mode most deliberately withholds.
+    if (beat.kind === 'telegraph' && input.disclosure && !input.disclosure.telegraph) continue;
     commands.push({
       kind: 'text', x: Math.round(STAGE.width / 2), y: 32, align: 'center',
       text: beat.text, palette: 'warning',
+    });
+  }
+
+  // --- status popups ---
+  // Floating on the actor rather than centred, because unlike the sentences above these
+  // are one word and belong to one character.
+  //
+  // Drawn from `beat.status`, never `beat.text`: the text on a status beat is the engine's
+  // `details` string -- "poison; expires at 64" -- which is a debug line that happens to
+  // be human-readable, not player-facing copy.
+  for (const beat of active) {
+    if (beat.kind !== 'status_on' && beat.kind !== 'status_off') continue;
+    if (!beat.status) continue;
+    if (input.disclosure && !input.disclosure.statuses) continue;
+    const anchor = anchorFor(beat.actorId ?? beat.targetId);
+    const height = (beat.actorId ?? beat.targetId) === state.bossId
+      ? SPRITE.boss.height : SPRITE.hero.height;
+    const rise = Math.round(18 * floatProgress(beat, timeMs));
+    commands.push({
+      kind: 'text', x: anchor.x, y: anchor.y - height - 4 - rise, align: 'center',
+      text: beat.kind === 'status_on'
+        ? beat.status.toUpperCase()
+        : `${beat.status.toUpperCase()} ENDS`,
+      palette: 'warning',
     });
   }
 

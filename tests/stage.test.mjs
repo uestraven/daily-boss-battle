@@ -10,6 +10,7 @@ import {advanceToDecision, applyPlayerAction, createEncounter} from '../dist/src
 import {bossIds, buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
 import {validateSheet} from '../dist/src/animation.js';
+import {disclosureFor} from '../dist/src/disclosure.js';
 import {requiredEffects, validateEffectSheet} from '../dist/src/effects.js';
 import {existsSync, readFileSync} from 'node:fs';
 import {decodePng} from '../tools/png.mjs';
@@ -1077,4 +1078,66 @@ test('the boss holds its ground while it acts', () => {
   assert.equal(at(0).animation, 'idle');
   assert.equal(at(strike.at + 10).animation, 'attack',
     'the boss should still play its attack clip while planted');
+});
+
+// --- text that used to be discarded ----------------------------------------------------
+//
+// Only `message` beats were drawn, so `telegraph`, `status_on`, `status_off` and `revive`
+// each carried a text field the stage silently dropped. That is what made three of the new
+// sound effects unlearnable: a cue is only intuitive if something visible happens with it,
+// and the telegraph sting fired against a static screen. The hit and heal sounds never had
+// the problem because a floating number lands with them.
+
+const textsIn = frame => frame.commands.filter(c => c.kind === 'text').map(c => c.text);
+
+test('a telegraph line is drawn in Easy and withheld in Normal', () => {
+  const state = freshState();
+  const script = choreograph([ev('boss_intent', {actorId: state.bossId, abilityId: 'cleave'})],
+    {names: {[state.bossId]: 'Tide Maw'}, abilityNames: {cleave: 'Cleave'}});
+  const at = script.beats.find(b => b.kind === 'telegraph').at;
+  const easy = textsIn(composeFrame({state, script, timeMs: at, disclosure: disclosureFor('easy')}));
+  assert.ok(easy.some(t => t.includes('Cleave')), 'Easy shows what the sting refers to');
+  const normal = textsIn(composeFrame({state, script, timeMs: at, disclosure: disclosureFor('normal')}));
+  assert.ok(!normal.some(t => t.includes('Cleave')), 'Normal withholds the announced ability');
+});
+
+test('a status popup names the status, not the engine detail string', () => {
+  const state = freshState();
+  const target = state.party[0];
+  const script = choreograph([
+    ev('status_applied', {actorId: target, status: 'poison', details: 'poison; expires at 9'}),
+  ], {names: {[target]: 'Monk'}});
+  const at = script.beats.find(b => b.kind === 'status_on').at;
+  const texts = textsIn(composeFrame({state, script, timeMs: at, disclosure: disclosureFor('easy')}));
+  assert.ok(texts.includes('POISON'), `expected POISON, got ${JSON.stringify(texts)}`);
+  // "poison; expires at 9" is a debug line that happens to be readable, not player copy.
+  assert.ok(!texts.some(t => t.includes('expires at')), 'the details string must not reach the screen');
+});
+
+test('status popups are hidden in Normal, where the badges are too', () => {
+  const state = freshState();
+  const target = state.party[0];
+  const script = choreograph([
+    ev('status_applied', {actorId: target, status: 'poison', details: 'poison; expires at 9'}),
+  ], {names: {[target]: 'Monk'}});
+  const at = script.beats.find(b => b.kind === 'status_on').at;
+  const texts = textsIn(composeFrame({state, script, timeMs: at, disclosure: disclosureFor('normal')}));
+  assert.ok(!texts.includes('POISON'));
+});
+
+test('omitting disclosure draws everything, so the stage tests and tools are unfiltered', () => {
+  const state = freshState();
+  const script = choreograph([ev('boss_intent', {actorId: state.bossId, abilityId: 'cleave'})],
+    {names: {[state.bossId]: 'Tide Maw'}, abilityNames: {cleave: 'Cleave'}});
+  const at = script.beats.find(b => b.kind === 'telegraph').at;
+  assert.ok(textsIn(composeFrame({state, script, timeMs: at})).some(t => t.includes('Cleave')));
+});
+
+test('a revive announces itself in text as well as in sound', () => {
+  const state = freshState();
+  const target = state.party[0];
+  const script = choreograph([ev('revived', {actorId: target, targetId: target})],
+    {names: {[target]: 'Monk'}});
+  const at = script.beats.find(b => b.kind === 'revive').at;
+  assert.ok(textsIn(composeFrame({state, script, timeMs: at})).some(t => t.includes('revives')));
 });

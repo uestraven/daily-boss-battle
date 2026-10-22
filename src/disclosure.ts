@@ -14,7 +14,15 @@
  * adding a field forces a decision for every mode and the test below fails until both are
  * filled in.
  *
- * So: when a new piece of information appears on screen, add a field here first.
+ * So: when a new piece of information reaches the player, add a field here first.
+ *
+ * "Reaches the player", not "appears on screen" -- which is what this said, and the
+ * wording cost us. Audio is a disclosure channel too, and because it is not on screen it
+ * was never checked against this table: Normal mode hid the status badges and the boss's
+ * announced action, then played a status chime and a 0.7-gain telegraph sting anyway, so a
+ * player could hear the boss commit to something and count ticks from it. `CUE_DISCLOSURE`
+ * in src/audio.ts now maps the affected cues onto the fields below, and an audio test
+ * fails when a new sound plays in both modes without a decision being recorded.
  */
 import type {BattleMode} from './types.js';
 

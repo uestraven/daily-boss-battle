@@ -14,6 +14,7 @@ import type {BeatScript} from '../../src/presentation.js';
 import type {BattleState} from '../../src/types.js';
 import type {AbilityInfo, SpriteSheet} from '../../src/animation.js';
 import type {EffectLibrary} from '../../src/effects.js';
+import type {Disclosure} from '../../src/disclosure.js';
 
 const PALETTE = {
   backdrop: '#0b0d16',
@@ -49,6 +50,9 @@ export type BattleStageProps = {
   /** Backdrop image filename for this arena, when its art exists. Omitted, the stage
    * draws its flat backdrop and ground band. */
   backgroundFile?: string;
+  /** What this mode may show. Governs the telegraph line and the status popups, which
+   * Normal mode hides. */
+  disclosure?: Disclosure;
 };
 
 /** Images, loaded once and cached by URL. One cache for sprite sheets, effect sheets and
@@ -109,7 +113,7 @@ const backdropImage = (file: string): HTMLImageElement | null =>
   imageAt(mediaUrl('battle-backgrounds', file));
 
 export function BattleStage({state, script, timeMs, idleMs, roles, sheets, abilityInfo,
-  effects, backgroundFile}: BattleStageProps) {
+  effects, backgroundFile, disclosure}: BattleStageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
@@ -146,10 +150,10 @@ export function BattleStage({state, script, timeMs, idleMs, roles, sheets, abili
     const context = canvasRef.current?.getContext('2d');
     if (!context) return;
     paint(context, composeFrame({state, script, timeMs, idleMs, sheets, roles, abilityInfo,
-      effects, backgroundFile}), state, roles,
+      effects, backgroundFile, disclosure}), state, roles,
       {sprite: sheetImage, effect: effectImage, backdrop: backdropImage});
   }, [state, script, timeMs, idleMs, roles, sheets, abilityInfo, effects, backgroundFile,
-    scale, loadTick]);
+    disclosure, scale, loadTick]);
 
   return (
     <div className="stage-wrap" ref={wrapRef}>

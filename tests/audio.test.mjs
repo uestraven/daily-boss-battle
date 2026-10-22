@@ -6,6 +6,7 @@ import {HEAVY_HIT_INTENSITY, PHASE_SILENCE_MS, TRACK_FALLBACK, TRACK_PLAYBACK, a
   musicChanges, requiredSounds, requiredTracks} from '../dist/src/audio.js';
 import {TIMING, choreograph} from '../dist/src/presentation.js';
 import {existsSync, readdirSync} from 'node:fs';
+import {disclosureFor} from '../dist/src/disclosure.js';
 
 const musicDir = new URL('../web/public/battle-music/', import.meta.url);
 
@@ -333,4 +334,75 @@ test('the sound manifest no longer commissions the result stings', () => {
   assert.ok(!ids.includes('defeat_sting'), 'defeat_sting is the music track now');
   // phase_sting stays: it punctuates a transition the music plays through.
   assert.ok(ids.includes('phase_sting'));
+});
+
+// --- disclosure ------------------------------------------------------------------------
+//
+// Audio is a disclosure channel. It was not treated as one: Normal mode hides the boss's
+// announced action and every status badge, then played a telegraph sting at 0.7 and a
+// status chime anyway, so a player could hear the boss commit and count ticks off it.
+// These lock the fix, and `every disclosing cue is covered` is the one that matters --
+// it fails when a new sound starts leaking rather than when this file goes stale.
+
+const disclosingEvents = [
+  ev('boss_intent', {actorId: 'b', abilityId: 'cleave'}),
+  ev('status_applied', {actorId: 'm', status: 'poison', details: 'poison; expires at 9'}),
+  ev('status_expired', {actorId: 'm', status: 'poison', details: 'poison'}),
+];
+
+test('Normal mode hears no telegraph and no status cues', () => {
+  const s = script(disclosingEvents);
+  const normal = audioCues(s, {disclosure: disclosureFor('normal')}).map(c => c.sound);
+  for (const sound of ['telegraph', 'status_on', 'status_off']) {
+    assert.ok(!normal.includes(sound), `${sound} must be silent when its display is hidden`);
+  }
+});
+
+test('Easy mode hears all three, since it shows all three', () => {
+  const s = script(disclosingEvents);
+  const easy = audioCues(s, {disclosure: disclosureFor('easy')}).map(c => c.sound);
+  for (const sound of ['telegraph', 'status_on', 'status_off']) {
+    assert.ok(easy.includes(sound), `${sound} should play when the screen shows it`);
+  }
+});
+
+test('omitting disclosure plays everything, for the authoring tools', () => {
+  const s = script(disclosingEvents);
+  const all = audioCues(s).map(c => c.sound);
+  assert.ok(all.includes('telegraph') && all.includes('status_on') && all.includes('status_off'));
+});
+
+test('text blips do not type out a line the mode never prints', () => {
+  // A blip per character announces both that a hidden line exists and how long it is.
+  const s = script([ev('boss_intent', {actorId: 'b', abilityId: 'cleave'})]);
+  const normal = audioCues(s, {disclosure: disclosureFor('normal'), textBlips: true});
+  assert.equal(normal.filter(c => c.sound === 'text_blip').length, 0);
+  const easy = audioCues(s, {disclosure: disclosureFor('easy'), textBlips: true});
+  assert.ok(easy.filter(c => c.sound === 'text_blip').length > 0, 'Easy still types it');
+});
+
+test('every disclosing cue is covered by the disclosure table', () => {
+  // The guard against the original bug recurring. Any beat kind that produces a cue is
+  // compared between the two modes: if Easy hears it and Normal hears it too, it either
+  // discloses nothing or is missing from CUE_DISCLOSURE. Only this known-safe set is
+  // allowed to be mode-blind, so a new disclosing sound fails here until it is decided.
+  const modeBlind = new Set(['hit_physical', 'hit_magical', 'hit_heavy', 'heal', 'ko',
+    'revive', 'mp_restore', 'cast_start', 'interrupt', 'nullify', 'phase_sting']);
+  const events = [
+    ...disclosingEvents,
+    ev('damage', {actorId: 'b', targetId: 'm', amount: 10, hpAfter: 100}),
+    ev('heal', {actorId: 'm', targetId: 'm', amount: 10, hpAfter: 110}),
+    ev('ko', {actorId: 'm'}),
+    ev('revived', {actorId: 'm', targetId: 'm'}),
+    ev('phase_change', {actorId: 'b', details: 'Phase 2'}),
+  ];
+  const s = script(events, {maxHp: {m: 360, b: 1000}});
+  const heard = mode => new Set(audioCues(s, {disclosure: disclosureFor(mode)}).map(c => c.sound));
+  const easy = heard('easy');
+  const normal = heard('normal');
+  for (const sound of easy) {
+    if (!normal.has(sound)) continue;            // correctly gated
+    assert.ok(modeBlind.has(sound),
+      `${sound} plays in both modes: either add it to CUE_DISCLOSURE or declare it safe here`);
+  }
 });

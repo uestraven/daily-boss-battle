@@ -494,9 +494,10 @@ function Battle({def, catalog, tier, day, unranked}:
     setScript(nextScript);
 
     // Audio is driven by the same choreography the visuals use, so a hit sound cannot
-    // drift from the hit it belongs to.
+    // drift from the hit it belongs to -- and by the same disclosure, so it cannot
+    // announce what the screen is withholding.
     startAudio();
-    playCues(audioCues(nextScript, {abilityInfo}));
+    playCues(audioCues(nextScript, {abilityInfo, disclosure: show}));
     for (const change of musicChanges(nextScript, 'battle_main')) {
       window.setTimeout(() => void playMusic(change.track), Math.max(0, change.at));
     }
@@ -773,7 +774,7 @@ function Battle({def, catalog, tier, day, unranked}:
 
       <BattleStage state={state} script={script} timeMs={timeMs} idleMs={idleMs}
         roles={ROLE_BY_ID} sheets={sheets} abilityInfo={abilityInfo} effects={effects}
-        backgroundFile={backgroundFile} />
+        backgroundFile={backgroundFile} disclosure={show} />
 
       <section className="dbb-party">
         {state.party.map(id => {
