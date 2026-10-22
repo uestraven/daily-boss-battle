@@ -33,6 +33,7 @@ import {effectLibrary} from './effect-catalog.js';
 import {backgroundForBoss, battleBackgrounds, hasBackgroundArt} from './background-catalog.js';
 import {BackgroundStudio} from './BackgroundStudio.js';
 import {Codex} from './Codex.js';
+import {BANNER_HEIGHT, BANNER_SHIPPED, BANNER_WIDTH, bannerUrl} from './title-banner.js';
 import {STATUS_DISPLAY, visibleStatuses} from '../../dist/src/status-display.js';
 import {logLines} from '../../dist/src/battle-log.js';
 import {focusFirstItemIfNavigating, handleMenuKey} from './menu-keys.js';
@@ -702,9 +703,20 @@ function Battle({def, catalog, tier, day, unranked}:
   if (showLanding) {
     return (
       <main className="dbb-shell dbb-landing">
-        <header className="dbb-header">
-          <span className="dbb-brand">✦ DAILY BOSS BATTLE</span>
-        </header>
+        {/* The banner replaces the text header rather than sitting above it: two titles is
+          * one too many. Until the art exists the header stands alone, which is why this is
+          * a flag rather than an <img> with an onError -- a 404 on every landing visit is
+          * noise, and the fallback is the current screen rather than a broken image. */}
+        {BANNER_SHIPPED ? (
+          <h1 className="dbb-landing-banner">
+            <img src={bannerUrl()} width={BANNER_WIDTH} height={BANNER_HEIGHT}
+              alt="Daily Boss Battle" />
+          </h1>
+        ) : (
+          <header className="dbb-header">
+            <span className="dbb-brand">✦ DAILY BOSS BATTLE</span>
+          </header>
+        )}
 
         <section className="dbb-landing-card rpg-window">
           <p className="dbb-landing-day">{day}</p>

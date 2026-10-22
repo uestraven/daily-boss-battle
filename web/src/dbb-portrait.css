@@ -648,3 +648,24 @@
 .dbb-codex-tag.is-resist  { color: #f6d79c; border-color: #927749; background: #483a2a; }
 .dbb-codex-tag.is-immune  { color: #f2b2ac; border-color: #8a4d54; background: #3b2634; }
 .dbb-codex-tag.is-neutral { color: #b9c4d6; }
+
+/* ---------------------------------------------------------------- title banner
+ * Pinned to whole-number scales. 320 is the authoring size and the stage's width; 640 is
+ * exactly x2 and the width of the landing shell on desktop. Letting it scale fluidly
+ * between the two would put lettering on a fractional nearest-neighbour grid, where some
+ * pixels come out wider than their neighbours. */
+.dbb-landing-banner {
+  margin: 0 auto;
+  width: 320px;
+  max-width: 100%;
+  line-height: 0;
+}
+.dbb-landing-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+@media (min-width: 680px) {
+  .dbb-landing-banner { width: 640px; }
+}
