@@ -141,3 +141,16 @@ test('the hold leaves real still time after the motion', () => {
     assert.ok(Number(m[1]) >= 500, `a ${m[1]}ms entrance is too fast to follow`);
   }
 });
+
+test('the matchup screen is scored by the sting, and the theme follows it', () => {
+  // The sting does not loop, so something has to start the battle theme when the screen
+  // gives way. Tying that to the audio's own length would drift out of step with the
+  // screen, which is what the player actually sees -- so it hangs off the dismissal.
+  const body = code(screen);
+  assert.ok(/startAudio\('versus'\)/.test(body),
+    'beginBattle does not open on the matchup sting');
+  const dismiss = body.slice(body.indexOf('const dismissVersus'));
+  assert.ok(/playMusic\('battle_main'\)/.test(dismiss.slice(0, 600)),
+    'nothing starts the battle theme when the matchup screen ends, so a non-looping sting '
+    + 'would leave the fight silent');
+});

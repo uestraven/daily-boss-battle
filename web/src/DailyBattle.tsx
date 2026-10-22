@@ -48,6 +48,7 @@ import {disclosureFor} from '../../dist/src/disclosure.js';
 import {abilityInfoFor} from '../../dist/src/animation.js';
 import type {BeatScript} from '../../src/presentation.js';
 import type {ActorId, BattleMode, BattleState, BattleStep, EncounterDefinition} from '../../src/types.js';
+import type {MusicTrack} from '../../src/audio.js';
 import type {DailyCatalog, DailyLedger} from '../../src/daily.js';
 import type {AbilityGroup, OfferedAction} from '../../src/play-ui.js';
 
@@ -261,7 +262,13 @@ function Battle({def, catalog, tier, day, unranked}:
   const [showVersus, setShowVersus] = useState(false);
   /** Stable, so the matchup screen's timer is not restarted by this component re-rendering
    * -- which it does twenty times a second while the idle clock runs. */
-  const dismissVersus = useCallback(() => setShowVersus(false), []);
+  const dismissVersus = useCallback(() => {
+    setShowVersus(false);
+    // The sting does not loop, so the battle theme takes over as the screen gives way. Not
+    // scheduled against the sting's own length: the screen's duration is what the player
+    // sees, and a timer tied to the audio would drift out of step with it if either changed.
+    if (!isMuted()) void playMusic('battle_main');
+  }, []);
 
   /** The command panel, for arrow-key navigation and for moving focus as menus change. */
   const commandRef = useRef<HTMLElement | null>(null);
@@ -354,7 +361,7 @@ function Battle({def, catalog, tier, day, unranked}:
 
   /** Unlock on the first gesture anywhere and start the theme. Called from the command
    * menu, the mute button and the commit path, so whichever happens first wins. */
-  const startAudio = useCallback(() => {
+  const startAudio = useCallback((opening: MusicTrack = 'battle_main') => {
     unlockAudio();
     // Now that a context exists the prefetched bytes can be decoded, so no cue has to race
     // its own download. Cheap and idempotent: anything already decoded is a cache hit.
@@ -362,7 +369,10 @@ function Battle({def, catalog, tier, day, unranked}:
     // Muted means the mute button owns starting the music, so it is not wasted at gain 0.
     if (audioStarted.current || isMuted()) return;
     audioStarted.current = true;
-    void playMusic('battle_main');
+    // `opening` is the matchup sting when the battle is being begun, and the battle theme
+    // for every other entry point -- the mute button, or a day already in progress, where
+    // there is no matchup screen to score and starting one would be a sting with no picture.
+    void playMusic(opening);
     // The fight is under way, so start pulling the phase-two theme now rather than at the
     // transition. It is another megabyte, and the switch is the one moment it must not
     // still be downloading.
@@ -495,8 +505,9 @@ function Battle({def, catalog, tier, day, unranked}:
     // loading cover for the sheets and the backdrop.
     setShowVersus(true);
     // The tap that starts the battle is a user gesture, which is exactly what autoplay
-    // needs, so the theme can begin here rather than waiting for the first action.
-    startAudio();
+    // needs, so the music can begin here rather than waiting for the first action. It opens
+    // on the matchup sting; the battle theme follows when that screen gives way.
+    startAudio('versus');
   }, [day, startAudio, unranked]);
 
   /** Status badges for one actor, resolved against playback rather than the state the

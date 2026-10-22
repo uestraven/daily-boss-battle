@@ -29,7 +29,9 @@ export type SoundId =
   | 'phase_sting'
   | 'text_blip';
 
-export type MusicTrack = 'battle_main' | 'battle_phase_two' | 'victory' | 'defeat' | 'silence';
+export type MusicTrack =
+  | 'versus'
+  | 'battle_main' | 'battle_phase_two' | 'victory' | 'defeat' | 'silence';
 
 export type AudioCue = {
   /** Milliseconds from the start of the batch, matching the beat timeline. */
@@ -245,6 +247,10 @@ export function requiredSounds(): {id: SoundId; purpose: string}[] {
 /** Default playback for each track. Loop points are filled in once the real files exist;
  * with none set, the whole file loops. */
 export const TRACK_PLAYBACK: Record<Exclude<MusicTrack, 'silence'>, TrackPlayback> = {
+  // The matchup screen's own sting, played once. Louder than the battle bed on purpose: it
+  // is a two-and-a-half second announcement with nothing competing with it, where the
+  // battle theme has to sit under hits, chimes and spoken-length text.
+  versus: {file: 'versus.ogg', gain: 0.85, loop: false},
   battle_main: {file: 'battle_theme.ogg', gain: 0.7},
   // Named for the pair it belongs to rather than the track id, matching battle_theme.ogg.
   battle_phase_two: {file: 'battle_theme_phase_2.ogg', gain: 0.75},
@@ -260,6 +266,11 @@ export const TRACK_PLAYBACK: Record<Exclude<MusicTrack, 'silence'>, TrackPlaybac
  * for victory or defeat restarts the combat loop over a finished battle, which is worse
  * than silence — so those fall silent until their own music exists. */
 export const TRACK_FALLBACK: Record<Exclude<MusicTrack, 'silence'>, MusicTrack> = {
+  // Falls through to the battle theme rather than to silence. If the sting is missing the
+  // worst outcome is the battle music starting two and a half seconds early, which is
+  // exactly what happened before the matchup screen existed -- where silence would make a
+  // commissioned screen feel broken.
+  versus: 'battle_main',
   battle_main: 'silence',
   battle_phase_two: 'battle_main',
   victory: 'silence',
@@ -269,6 +280,7 @@ export const TRACK_FALLBACK: Record<Exclude<MusicTrack, 'silence'>, MusicTrack> 
 /** The music manifest. */
 export function requiredTracks(): {id: MusicTrack; purpose: string}[] {
   return [
+    {id: 'versus', purpose: 'Matchup screen sting; plays once, ~2.4s'},
     {id: 'battle_main', purpose: 'Phase one battle theme; loops'},
     {id: 'battle_phase_two', purpose: 'Phase two battle theme; loops, more urgent'},
     {id: 'victory', purpose: 'Victory theme'},

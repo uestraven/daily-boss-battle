@@ -97,8 +97,15 @@ function fetchBytes(url: string): Promise<ArrayBuffer | null> {
  * so spending a mobile visitor's data on it would be rude. */
 export function prefetchMusic(): void {
   if (muted) return;
-  const playback = TRACK_PLAYBACK.battle_main;
-  if (playback) void fetchBytes(musicUrl(playback.file));
+  // The matchup sting first, and not only for size. It plays the instant Begin is pressed,
+  // with no screen in front of it to cover a download -- so an unfetched sting is a silent
+  // matchup screen, which is the same failure that made the hit effects invisible until
+  // they were prefetched. The landing screen is its loading window, and at a couple of
+  // seconds of audio it is a fraction of the theme it precedes.
+  for (const track of ['versus', 'battle_main'] as const) {
+    const playback = TRACK_PLAYBACK[track];
+    if (playback) void fetchBytes(musicUrl(playback.file));
+  }
 }
 
 /** Starts downloading the phase-two theme, for when the fight gets there.

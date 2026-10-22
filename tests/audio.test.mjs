@@ -423,3 +423,42 @@ test('every disclosing cue is covered by the disclosure table', () => {
       `${sound} plays in both modes: either add it to CUE_DISCLOSURE or declare it safe here`);
   }
 });
+
+// --- the matchup sting -----------------------------------------------------------------
+
+test('the versus sting plays once and does not loop', () => {
+  // A looping sting under a 2600ms screen would restart partway through and then be cut
+  // off, which is worse than no sting at all.
+  assert.equal(TRACK_PLAYBACK.versus.loop, false);
+});
+
+test('a missing versus sting falls through to the battle theme, not silence', () => {
+  // The worst outcome of a missing file should be the battle music starting two and a half
+  // seconds early -- which is exactly what happened before the matchup screen existed.
+  // Silence would make a commissioned screen feel broken.
+  assert.equal(TRACK_FALLBACK.versus, 'battle_main');
+});
+
+test('every track has both a playback entry and a fallback', () => {
+  // Total over the union minus silence, so a new track cannot ship without someone deciding
+  // what it sounds like and what happens when its file is absent.
+  for (const {id} of requiredTracks()) {
+    if (id === 'silence') continue;
+    assert.ok(TRACK_PLAYBACK[id], `${id} has no playback entry`);
+    assert.ok(TRACK_FALLBACK[id], `${id} has no fallback`);
+  }
+});
+
+test('no fallback chain can loop forever', () => {
+  // `versus -> battle_main -> silence` is fine; a cycle would hang the resolver.
+  for (const {id} of requiredTracks()) {
+    if (id === 'silence') continue;
+    const seen = new Set([id]);
+    let current = TRACK_FALLBACK[id];
+    while (current && current !== 'silence') {
+      assert.ok(!seen.has(current), `fallback cycle reached from ${id} via ${current}`);
+      seen.add(current);
+      current = TRACK_FALLBACK[current];
+    }
+  }
+});
