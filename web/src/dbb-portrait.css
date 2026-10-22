@@ -359,9 +359,27 @@
 /* ---------------------------------------------------------------- desktop
  * Wide viewports get a two-column layout: the stage and boss on the left at a larger
  * integer scale, status and commands on the right. The stage keeps its fixed internal
- * resolution either way, so nothing about the rendering changes -- only the frame. */
+ * resolution either way, so nothing about the rendering changes -- only the frame.
+ *
+ * Scoped to `.dbb-shell-battle`, not every shell. Four screens share `.dbb-shell` -- the
+ * battle, the landing card, the error window and Background Studio -- and only the battle
+ * has children carrying `grid-area`. Applied to all of them, the two-column grid
+ * auto-placed each of the others' single window into one column, so they sat off-centre
+ * and narrow on desktop while being perfectly centred on a phone. `.dbb-landing`'s own
+ * `justify-content: center` could not save it either: that was written for the flex
+ * column, and on a grid whose tracks already fill the container there is no free space
+ * for it to distribute.
+ *
+ * So each screen now states its own width, and a new screen gets the centred default
+ * rather than silently inheriting a layout built for the battle. */
 @media (min-width: 900px) {
-  .dbb-shell {
+  /* Single-window screens: centred by the base rule's `margin: 0 auto`, and capped so a
+   * lone window does not stretch to the full width of a monitor. */
+  .dbb-shell { max-width: 640px; }
+  /* Background Studio needs the room: `.art-studio` is width min(100%, 1000px). */
+  .dbb-shell-wide { max-width: 1100px; }
+
+  .dbb-shell-battle {
     max-width: 1100px;
     display: grid;
     grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr);
@@ -373,22 +391,23 @@
     align-content: start;
     gap: 12px;
   }
-  .dbb-header   { grid-area: header; }
-  .dbb-boss     { grid-area: boss; }
-  .dbb-party    { grid-area: party; }
-  .stage-wrap   { grid-area: stage; align-self: start; }
-  .dbb-commands { grid-area: commands; }
-  .dbb-log      { grid-area: log; }
-  .dbb-dev      { grid-column: 1 / -1; }
-  .dbb-party    { flex-direction: column; }
+  .dbb-shell-battle .dbb-header   { grid-area: header; }
+  .dbb-shell-battle .dbb-boss     { grid-area: boss; }
+  .dbb-shell-battle .dbb-party    { grid-area: party; }
+  .dbb-shell-battle .stage-wrap   { grid-area: stage; align-self: start; }
+  .dbb-shell-battle .dbb-commands { grid-area: commands; }
+  .dbb-shell-battle .dbb-log      { grid-area: log; }
+  .dbb-shell-battle .dbb-dev      { grid-column: 1 / -1; }
+  .dbb-shell-battle .dbb-party    { flex-direction: column; }
   .dbb-share-canvas { max-width: 380px; }
   /* A mouse does not need 44px targets, but they do no harm; keep the menu readable. */
   .rpg-menu-item, .rpg-menu-back { font-size: 14px; }
 }
 
-/* A very wide monitor should not stretch the text column to absurdity. */
+/* A very wide monitor should not stretch the text column to absurdity. Only the screens
+ * that actually use the width; a landing card stays the size of a card. */
 @media (min-width: 1400px) {
-  .dbb-shell { max-width: 1280px; }
+  .dbb-shell-battle, .dbb-shell-wide { max-width: 1280px; }
 }
 
 /* Sound toggle, in the header beside the date. */

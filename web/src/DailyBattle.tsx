@@ -658,7 +658,7 @@ function Battle({def, catalog, tier, day, unranked}:
 
   if (STUDIO) {
     return (
-      <main className="dbb-shell">
+      <main className="dbb-shell dbb-shell-wide">
         <BackgroundStudio
           initialId={backgroundForBoss(def.bossId)}
           onClose={() => { window.location.search = ''; }}
@@ -720,7 +720,7 @@ function Battle({def, catalog, tier, day, unranked}:
   return (
     // Capture phase, so the theme starts on the first touch even if a child stops the
     // event. Firing repeatedly is harmless: startAudio is idempotent.
-    <main className="dbb-shell" onPointerDownCapture={startAudio}>
+    <main className="dbb-shell dbb-shell-battle" onPointerDownCapture={startAudio}>
       {unranked && (
         // Says so on screen, because an unverified pairing may well be unwinnable: the
         // pool covers 263 of the 1760 boss-and-party combinations, and the rest carry no
