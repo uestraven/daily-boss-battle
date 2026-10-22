@@ -17,7 +17,7 @@ export const BANNER_WIDTH = 320;
 export const BANNER_HEIGHT = 112;
 export const BANNER_FILE = 'banner.png';
 
-/** Set to true once web/public/title/banner.png exists. */
-export const BANNER_SHIPPED = false;
+/** The art is in place as of 2026-10-22. */
+export const BANNER_SHIPPED = true;
 
 export const bannerUrl = (): string => mediaUrl('title', BANNER_FILE);

@@ -30,7 +30,11 @@ const flag = (name, fallback) => {
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
 const out = flag('out');
-const size = Number(flag('size', '64'));
+// `--size 64` stays shorthand for a square, because that is what twenty of the twenty-one
+// images this packs are. `--size 320x112` is the title banner, which is the same job --
+// reduce a large original and quantise it -- with a different aspect.
+const [size, sizeH] = flag('size', '64').split('x').map(Number);
+const outH = sizeH || size;
 // Higher than an effect's twelve: a face needs skin, hair, cloth and a background, and a
 // dozen steps posterises a cheek into bands. Low enough to stay in period.
 const colourLimit = Number(flag('colours', '28')) || 0;
@@ -50,26 +54,31 @@ if (!input || input.startsWith('--') || !out) {
 const img = decodePng(readFileSync(input));
 const {width: W, height: H, rgba} = img;
 
-// Square sources only. A rectangular one would have to be cropped, and choosing *where* to
-// crop a face is an art decision this tool has no business making silently.
-if (W !== H) {
-  console.error(`\n  PROBLEM  ${input} is ${W}x${H}, not square.`);
-  console.error('  Crop it to a square before packing: cropping a face is an art decision,');
-  console.error('  and a tool guessing at it will cut off the top of someone\'s head.');
+// The source's aspect has to match the target's. Not "must be square": the banner is
+// 320x112 and legitimately rectangular. What the tool must never do is *crop* to fit, since
+// choosing where to crop is an art decision and a tool guessing at it will cut off the top
+// of someone's head. So a mismatch is refused rather than resolved.
+const sourceAspect = W / H;
+const targetAspect = size / outH;
+if (Math.abs(sourceAspect - targetAspect) > 0.01) {
+  console.error(`\n  PROBLEM  ${input} is ${W}x${H} (${sourceAspect.toFixed(3)}:1), which does `
+    + `not match the ${size}x${outH} target (${targetAspect.toFixed(3)}:1).`);
+  console.error('  Crop or regenerate the source to the right aspect first. This tool will not');
+  console.error('  crop for you: where to cut a composition is an art decision.');
   process.exit(1);
 }
 
-const dest = Buffer.alloc(size * size * 4);
+const dest = Buffer.alloc(size * outH * 4);
 
 /** Area average of the source block behind one destination pixel.
  *
  * Every pixel is opaque, so unlike the sprite and effect packers there is no coverage test
  * and no transparency to preserve -- which is why a portrait never develops the half-
  * transparent rim that reads as blur at this scale. */
-for (let dy = 0; dy < size; dy++) {
+for (let dy = 0; dy < outH; dy++) {
   for (let dx = 0; dx < size; dx++) {
     const x0 = Math.floor((dx * W) / size), x1 = Math.max(x0 + 1, Math.floor(((dx + 1) * W) / size));
-    const y0 = Math.floor((dy * H) / size), y1 = Math.max(y0 + 1, Math.floor(((dy + 1) * H) / size));
+    const y0 = Math.floor((dy * H) / outH), y1 = Math.max(y0 + 1, Math.floor(((dy + 1) * H) / outH));
     let r = 0, g = 0, b = 0, n = 0;
     for (let y = y0; y < y1; y++) {
       for (let x = x0; x < x1; x++) {
@@ -104,7 +113,7 @@ for (let dy = 0; dy < size; dy++) {
 if (levels) {
   const lumOf = i => (dest[i * 4] * 299 + dest[i * 4 + 1] * 587 + dest[i * 4 + 2] * 114) / 1000;
   const sorted = [];
-  for (let i = 0; i < size * size; i++) sorted.push(lumOf(i));
+  for (let i = 0; i < size * outH; i++) sorted.push(lumOf(i));
   sorted.sort((a, b) => a - b);
   const at = q => sorted[Math.min(sorted.length - 1, Math.floor(q * (sorted.length - 1)))];
   const black = at(0.005);
@@ -113,7 +122,7 @@ if (levels) {
   const gain = levelsTarget / span;
   console.log(`  levels        ${black.toFixed(0)}-${white.toFixed(0)} -> 0-${levelsTarget} `
     + `(gain ${gain.toFixed(2)}x)`);
-  for (let i = 0; i < size * size; i++) {
+  for (let i = 0; i < size * outH; i++) {
     // Scale the channels together by one luminance-derived gain rather than stretching each
     // channel independently: per-channel stretching shifts hue, and a black panther turning
     // blue is a worse outcome than a dark one.
@@ -126,7 +135,7 @@ if (levels) {
 
 const distinctBefore = (() => {
   const s = new Set();
-  for (let i = 0; i < size * size; i++) {
+  for (let i = 0; i < size * outH; i++) {
     s.add((dest[i * 4] << 16) | (dest[i * 4 + 1] << 8) | dest[i * 4 + 2]);
   }
   return s.size;
@@ -137,7 +146,7 @@ const distinctBefore = (() => {
 // pixel array into Math.max overflows the stack, which is how this first failed.
 if (colourLimit > 0) {
   const pixels = [];
-  for (let i = 0; i < size * size; i++) {
+  for (let i = 0; i < size * outH; i++) {
     pixels.push([dest[i * 4], dest[i * 4 + 1], dest[i * 4 + 2]]);
   }
   let boxes = [pixels];
@@ -159,7 +168,7 @@ if (colourLimit > 0) {
     const sum = box.reduce((a, p) => [a[0] + p[0], a[1] + p[1], a[2] + p[2]], [0, 0, 0]);
     return sum.map(v => Math.round(v / box.length));
   });
-  for (let i = 0; i < size * size; i++) {
+  for (let i = 0; i < size * outH; i++) {
     const [r, g, b] = [dest[i * 4], dest[i * 4 + 1], dest[i * 4 + 2]];
     let best = 0, bestD = Infinity;
     for (let p = 0; p < palette.length; p++) {
@@ -174,7 +183,7 @@ if (colourLimit > 0) {
 
 const colours = new Set();
 let lumSum = 0, lumMin = 255, lumMax = 0;
-for (let i = 0; i < size * size; i++) {
+for (let i = 0; i < size * outH; i++) {
   colours.add((dest[i * 4] << 16) | (dest[i * 4 + 1] << 8) | dest[i * 4 + 2]);
   const lum = (dest[i * 4] * 299 + dest[i * 4 + 1] * 587 + dest[i * 4 + 2] * 114) / 1000;
   lumSum += lum;
@@ -184,7 +193,7 @@ for (let i = 0; i < size * size; i++) {
 const mean = lumSum / (size * size);
 
 console.log(`\n${input}`);
-console.log(`  source        ${W}x${H} -> ${size}x${size} (${(W / size).toFixed(1)}x area average)`);
+console.log(`  source        ${W}x${H} -> ${size}x${outH} (${(W / size).toFixed(2)}x area average)`);
 console.log(`  colours       ${distinctBefore} after scaling -> ${colours.size} after the palette pass`);
 console.log(`  luminance     mean ${mean.toFixed(0)}, range ${lumMin.toFixed(0)}-${lumMax.toFixed(0)}`);
 
@@ -203,5 +212,5 @@ if (range < 110 && !allowDark) {
   process.exit(1);
 }
 
-writeFileSync(out, encodePng(size, size, dest));
+writeFileSync(out, encodePng(size, outH, dest));
 console.log(`  wrote         ${out}`);
