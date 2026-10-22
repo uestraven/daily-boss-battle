@@ -87,3 +87,32 @@ test('a roster too small or too narrow to form a viable party fails loudly', () 
   assert.throws(() => draftParty('x', ['lancer', 'vanguard']), /No viable party/);
   assert.throws(() => draftParty('x', ['lancer', 'vanguard', 'brawler']), /No viable party/);
 });
+
+// --- the role rule ---------------------------------------------------------------------
+
+test('the shared-role rule currently gates no party on its own', () => {
+  // A record of fact, not a requirement. `role` is the one hand-assigned label in a file
+  // whose header promises capabilities are derived from ability data, and it has rotted:
+  // six of twelve heroes are Strikers, so the rule only fires on an all-Striker trio and
+  // every such trio already fails for having no sustain.
+  //
+  // The rule is kept because redistributing the roles would make it meaningful again. This
+  // asserts it is inert *today*, so if it ever starts rejecting a party, that is a
+  // deliberate change somebody has to come here and acknowledge rather than a silent shift
+  // in which parties the verifier will consider.
+  const ids = heroes.map(h => h.id).sort();
+  let soleGate = 0;
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      for (let k = j + 1; k < ids.length; k++) {
+        const {ok, reasons} = inspectParty([ids[i], ids[j], ids[k]]);
+        if (ok) continue;
+        if (reasons.length === 1 && reasons[0].includes('share the')) soleGate++;
+      }
+    }
+  }
+  assert.equal(soleGate, 0,
+    `the shared-role rule is now the only reason ${soleGate} trios are rejected. If that is `
+    + 'intended, update this test and the comment in draft.ts; if not, the roles have '
+    + 'changed in a way that silently shrinks the verified pool.');
+});

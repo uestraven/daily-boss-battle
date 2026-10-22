@@ -229,7 +229,57 @@ layer and need not be baked into a sprite.
 
 ---
 
-## 7. Waiting on a domain
+## 7. Give the six Strikers a tempo axis
+
+**Raised 2026-10-22.** Noticed as "way too many Striker characters". The labelling half is
+fixed; this entry is the part that needs a design decision.
+
+Role distribution was Striker 6, Caster 2, Controller 2, Guardian 1, Healer 1 -- half the
+roster under one label. The Codex now shows **capability tags** instead, derived from ability
+data, which splits those six into three groups and says something a player can act on:
+
+| Capability set | Heroes |
+| --- | --- |
+| physical | lancer, vanguard, brawler |
+| physical + pierce | blademage, machinist |
+| magical + physical + pierce | monk |
+
+What remains is that **Lancer, Vanguard and Brawler are capability-identical**, so no derived
+label will ever separate them. They are genuinely different to play, along an axis that
+exists nowhere in the code:
+
+- **Lancer** -- delayed burst. `jump` has `delayTicks: 8` and `airborneDuringDelay`, so it
+  trades tempo for a large hit and dodges anything ground-targeted while airborne.
+- **Brawler** -- a ramp. `combo_rush` spends momentum, which accrues over the fight, so its
+  output is back-loaded.
+- **Vanguard** -- immediate. The highest raw attack in the roster (96) with no setup and no
+  delay.
+
+That is Burst / Ramp / Sustained, and it is a real taxonomy. The question is whether it
+should be *surfaced* as a label, or whether the three should be pushed further apart
+mechanically so the distinction is felt rather than read.
+
+### What it costs
+
+Surfacing it as a label is cheap but invalidates the pool: `role` is hashed by
+`contentHash` (`generate.ts:137`), so changing any role string forces a rebuild and
+re-verification of all 319 entries. That rebuild carries **zero balance risk** -- measured,
+the role rule gates 0 of 220 trios on its own, and removing it entirely leaves the same 158
+viable parties -- so the rebuild reproduces identical entries under a new hash. Pure compute.
+
+Changing the characters *mechanically* is the real work, and it is the usual loop: edit,
+rebuild the pool, compare against the 2026-10-22 baseline in item 1.
+
+### Related
+
+The shared-role rule in `inspectParty` is now documented as inert and kept rather than
+deleted, because redistributing roles would make it meaningful again. `tests/draft.test.mjs`
+asserts it gates nothing today, so if it starts rejecting a party that is a deliberate change
+somebody has to acknowledge rather than a silent shrinking of the verified pool.
+
+---
+
+## 8. Waiting on a domain
 
 `Content-Security-Policy` headers and an absolute `og:image` URL. Neither can be finished
 until the production domain is settled.

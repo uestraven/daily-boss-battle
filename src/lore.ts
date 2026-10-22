@@ -15,6 +15,7 @@
  * the same device `disclosure.ts` uses to stop a field defaulting its way into a mode.
  */
 import type {HeroId} from './roster.js';
+import type {Capability} from './draft.js';
 
 export type Lore = {
   /** Two or three sentences. Long enough to place the character, short enough for a card
@@ -127,3 +128,55 @@ export const HERO_LORE: Record<HeroId, Lore> = {
 };
 
 export const loreFor = (id: HeroId): Lore => HERO_LORE[id]!;
+
+/** Player-facing names for the capabilities a hero actually has.
+ *
+ * These replace the role label in the Codex. `role` is hand-assigned, carries no mechanical
+ * weight -- the one rule keyed on it in `draft.ts` gates no party at all -- and had
+ * collapsed to the point where six of twelve heroes read "Striker", which tells a player
+ * nothing they can act on. Capabilities are *derived from ability data*, which is the
+ * property `draft.ts` was built around and the reason they stayed honest while the roles
+ * rotted: "Pierces armour" is useful against a high-defence boss in a way "Striker" is not.
+ *
+ * Total over `Capability`, so a new one has to be given a name here before it compiles --
+ * the device `disclosure.ts` uses to stop a field slipping in undeclared.
+ *
+ * `hint` is the one-line explanation, for a tooltip or a detail view. Written for someone
+ * who has never seen the ability list, so it says what the capability *does*, not which
+ * ability grants it. */
+export const CAPABILITY_LABEL: Record<Capability, {label: string; hint: string}> = {
+  sustain: {
+    label: 'Heals',
+    hint: 'Can restore a wounded ally. No party without one is considered viable.',
+  },
+  physical: {
+    label: 'Weapon damage',
+    hint: 'Deals damage with steel or fists, reduced by the target\'s defence.',
+  },
+  magical: {
+    label: 'Spell damage',
+    hint: 'Deals damage with magic, which ignores physical defence entirely.',
+  },
+  pierce: {
+    label: 'Pierces armour',
+    hint: 'Ignores part of the target\'s defence, which is how a physical party answers '
+      + 'a heavily armoured boss.',
+  },
+  support: {
+    label: 'Buffs allies',
+    hint: 'Applies a lasting effect to an ally, such as Protect, Shell or Haste.',
+  },
+  control: {
+    label: 'Disrupts',
+    hint: 'Steals, dispels, absorbs or redirects, rather than dealing damage.',
+  },
+};
+
+/** Capability names for one hero, in the order `CAPABILITY_LABEL` declares them.
+ *
+ * Declaration order rather than alphabetical, so every card lists its tags in the same
+ * sequence and the eye can compare two heroes without re-reading. */
+export const capabilityLabels = (caps: readonly Capability[]): string[] =>
+  (Object.keys(CAPABILITY_LABEL) as Capability[])
+    .filter(c => caps.includes(c))
+    .map(c => CAPABILITY_LABEL[c].label);

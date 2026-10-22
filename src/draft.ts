@@ -55,6 +55,17 @@ export function inspectParty(party: readonly ActorId[]): {ok: boolean; reasons: 
   // High-defense bosses need either magic or armour penetration to be beatable.
   if (!has(party, 'magical') && !has(party, 'pierce')) reasons.push('no answer to high physical defense');
 
+  // Currently inert, and kept deliberately rather than deleted.
+  //
+  // `role` is the one hand-assigned label in a file whose header promises capabilities are
+  // "derived from ability data, never hand-tagged" -- and it has rotted exactly as that
+  // warns: six of twelve heroes are Strikers, so this rule only ever fires on an all-Striker
+  // trio, and every such trio is already rejected above for having no sustain. Measured: it
+  // gates 0 of 220 trios on its own, and removing it leaves the same 158 viable parties.
+  //
+  // It stays because it costs nothing and would become meaningful again the moment roles are
+  // redistributed, which is on the backlog. `tests/draft.test.mjs` asserts it is inert, so
+  // if it ever starts gating a party that is a deliberate change somebody has to notice.
   const roles = party.map(id => heroes.find(h => h.id === id)!.role);
   if (new Set(roles).size === 1) reasons.push(`all three heroes share the ${roles[0]} role`);
 

@@ -11,20 +11,27 @@
  * portrait exists.
  */
 import {useState} from 'react';
-import {heroIds, heroAbilities, heroes} from '../../dist/src/roster.js';
-import {HERO_LORE} from '../../dist/src/lore.js';
+import {heroIds, heroes} from '../../dist/src/roster.js';
+import {HERO_LORE, CAPABILITY_LABEL, capabilityLabels} from '../../dist/src/lore.js';
+import {heroCapabilities, signatureAbilities} from '../../dist/src/draft.js';
 import type {HeroId} from '../../src/roster.js';
+import type {Capability} from '../../src/draft.js';
 import {PORTRAIT_SIZE, hasPortrait, portraitUrl} from './portrait-catalog.js';
 import {spriteSheet} from './sprite-catalog.js';
 import {mediaUrl} from './media-url.js';
 
 /** Abilities belonging to one hero, by name.
  *
- * The three original heroes -- Warden, Brawler, Magus -- carry no entries in
- * `heroAbilities`; theirs live in the shared reference set, because they predate it. So an
- * empty list here is normal and must read as "basics only" rather than as a gap. */
+ * From `signatureAbilities`, not `heroAbilities`. The latter holds only the v0.9 roster, so
+ * the three original heroes -- Warden, Brawler, Magus -- appeared to have no abilities at
+ * all and the card claimed "basics only" for a Warden that has Cover, Cure and Protect.
+ * `signatureAbilities` merges the roster with the reference encounter, which is the same
+ * union `draft.ts` derives capabilities from, so the ability list and the tags above it
+ * can no longer disagree. */
 const abilitiesOf = (id: HeroId): string[] =>
-  heroAbilities.filter(a => a.owner === id).map(a => a.name);
+  signatureAbilities.filter(a => a.owner === id).map(a => a.name);
+
+const capsOf = (id: HeroId): Capability[] => (heroCapabilities[id] ?? []) as Capability[];
 
 const STAT_BARS = [
   {key: 'hp', label: 'HP', max: 400},
@@ -81,8 +88,21 @@ function Card({id}: {id: HeroId}) {
           : <SpriteFace id={id} />}
         <div className="dbb-codex-title">
           <h2>{hero.name}</h2>
-          <p className="dbb-codex-role">
-            {hero.role}{hero.secondary ? ` · ${hero.secondary}` : ''}
+          {/* Capability tags rather than the role. Six of twelve heroes read "Striker",
+            * which separates nobody; these are derived from ability data and say something
+            * a player can act on. `title` carries the explanation without spending card
+            * space on it. */}
+          <p className="dbb-codex-tags">
+            {capsOf(id).length === 0
+              ? <span className="dbb-codex-tag">Basics only</span>
+              : capabilityLabels(capsOf(id)).map(label => {
+                  const cap = (Object.keys(CAPABILITY_LABEL) as Capability[])
+                    .find(c => CAPABILITY_LABEL[c].label === label)!;
+                  return (
+                    <span className="dbb-codex-tag" key={label}
+                      title={CAPABILITY_LABEL[cap].hint}>{label}</span>
+                  );
+                })}
           </p>
         </div>
       </div>
@@ -117,10 +137,16 @@ function Card({id}: {id: HeroId}) {
 }
 
 export function Codex({onClose}: {onClose: () => void}) {
-  const [role, setRole] = useState<string>('All');
-  const roles = ['All', ...new Set(heroes.map(h => h.role))];
+  /** Filtering by capability rather than role, for the reason the tags replaced it: a
+   * "Striker" filter would return half the roster, where "Pierces armour" returns the two
+   * heroes who answer an armoured boss. Each option also carries the count, so an empty
+   * result is never a surprise. */
+  const [filter, setFilter] = useState<Capability | 'All'>('All');
+  const options = (Object.keys(CAPABILITY_LABEL) as Capability[]);
+  const countFor = (c: Capability) =>
+    (heroIds as readonly HeroId[]).filter(id => capsOf(id).includes(c)).length;
   const shown = (heroIds as readonly HeroId[])
-    .filter(id => role === 'All' || heroes.find(h => h.id === id)?.role === role);
+    .filter(id => filter === 'All' || capsOf(id).includes(filter));
 
   return (
     <main className="dbb-shell dbb-shell-codex">
@@ -129,10 +155,13 @@ export function Codex({onClose}: {onClose: () => void}) {
         <button type="button" className="rpg-menu-back" onClick={onClose}>Back</button>
       </header>
 
-      <nav className="dbb-codex-filter" aria-label="Filter by role">
-        {roles.map(r => (
-          <button type="button" key={r} className={r === role ? 'is-active' : ''}
-            onClick={() => setRole(r)}>{r}</button>
+      <nav className="dbb-codex-filter" aria-label="Filter by capability">
+        <button type="button" className={filter === 'All' ? 'is-active' : ''}
+          onClick={() => setFilter('All')}>All {heroIds.length}</button>
+        {options.map(c => (
+          <button type="button" key={c} className={c === filter ? 'is-active' : ''}
+            title={CAPABILITY_LABEL[c].hint}
+            onClick={() => setFilter(c)}>{CAPABILITY_LABEL[c].label} {countFor(c)}</button>
         ))}
       </nav>
 
