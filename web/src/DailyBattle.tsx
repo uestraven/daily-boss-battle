@@ -379,7 +379,7 @@ function Battle({def, catalog, tier, day, unranked}:
   const effects = useMemo(() => effectLibrary(), []);
   /** Warm the effect sheets before anything needs one.
    *
-   * Same reason as the sounds above, and more urgent: an effect lives for 260ms, far less
+   * Same reason as the sounds above, and more urgent: an effect lives for 400ms, far less
    * than it takes to fetch and decode a PNG, so requesting one on demand guarantees its
    * first occurrence draws nothing at all. See `prefetchEffects`. */
   useEffect(() => { prefetchEffects(effects); }, [effects]);

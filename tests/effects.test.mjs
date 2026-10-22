@@ -4,11 +4,18 @@ import assert from 'node:assert/strict';
 import {abilityInfoFor} from '../dist/src/animation.js';
 import {bossIds, buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
+import {readFileSync} from 'node:fs';
 import {DEFAULT_BINDINGS, DEFAULT_EFFECT_MS, activeEffects, effectIdFor, effectRect,
   readsAsMagical, requiredEffects, validateEffectSheet} from '../dist/src/effects.js';
 import {TIMING, choreograph} from '../dist/src/presentation.js';
 
 const ev = (type, extra = {}) => ({tick: 1, type, ...extra});
+
+/** Frame counts from the real manifest, so the readability floor is checked against the
+ * art that actually ships rather than a number repeated in the test. */
+const shippedManifest = JSON.parse(readFileSync(
+  new URL('../web/src/effect-manifest.json', import.meta.url), 'utf8'));
+const declaredFrames = id => shippedManifest.effects[id]?.frames ?? 1;
 const sheetOf = (overrides = {}) => ({
   file: 'effects/slash.png', frameWidth: 64, frameHeight: 48, frames: 4,
   anchorX: 32, anchorY: 40, ...overrides,
@@ -220,4 +227,27 @@ test('a non-elemental spell still falls back to the generic flare', () => {
   assert.equal(effectIdFor(DEFAULT_BINDINGS, {
     abilityId: 'magus_bolt', element: info.magus_bolt?.element, kind: 'magical',
   }), 'flare_neutral');
+});
+
+// --- how long an effect is on screen ---------------------------------------------------
+
+test('an effect lasts long enough to read, and still fits its strike', () => {
+  // 260ms gave a five-frame flare 52ms a frame, which is too brief to follow a shape meant
+  // to appear, peak and dissipate. 80ms is about the floor for a frame to register.
+  const slowestFrames = Math.max(...requiredEffects().map(e => declaredFrames(e.id)));
+  assert.ok(DEFAULT_EFFECT_MS / slowestFrames >= 70,
+    `${DEFAULT_EFFECT_MS}ms over ${slowestFrames} frames is `
+    + `${(DEFAULT_EFFECT_MS / slowestFrames).toFixed(0)}ms a frame, too quick to read`);
+  // And it must not outlive the strike that spawned it, or the effect is still playing
+  // while the attacker walks away.
+  assert.ok(DEFAULT_EFFECT_MS <= TIMING.strike,
+    `an effect of ${DEFAULT_EFFECT_MS}ms outlives the ${TIMING.strike}ms strike`);
+});
+
+test('a multi-hit volley still overlaps into a flurry', () => {
+  // The original reason this is PACE-scaled: a four-hit volley must read as one flurry,
+  // not four separate hits, so the effect has to outlast the stagger several times over.
+  assert.ok(DEFAULT_EFFECT_MS > TIMING.multiHitStagger * 4,
+    `${DEFAULT_EFFECT_MS}ms only covers ${Math.floor(DEFAULT_EFFECT_MS / TIMING.multiHitStagger)} `
+    + `staggered hits at ${TIMING.multiHitStagger}ms apart`);
 });

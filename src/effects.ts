@@ -18,8 +18,14 @@ import {PACE, beatsAt} from './presentation.js';
  * Scaled by PACE like every other watched duration. It has to be: an impact beat is
  * near-instant, so this is what gives an effect its screen time, and leaving it fixed
  * while the rest of the game slowed down made multi-hit effects stop overlapping -- a
- * four-hit volley read as four separate hits instead of a flurry. */
-export const DEFAULT_EFFECT_MS = 260 * PACE;
+ * four-hit volley read as four separate hits instead of a flurry.
+ *
+ * 400ms rather than the original 260. At 260 a five-frame flare got 52ms a frame, which is
+ * too brief to read a shape that is meant to appear, peak and dissipate -- and it was set
+ * before the strike phase grew from 500ms to 750ms precisely so that actions could be
+ * followed. 400 still finishes well inside the strike it belongs to, and a multi-hit
+ * volley staggered by `multiHitStagger` now overlaps by five hits rather than three. */
+export const DEFAULT_EFFECT_MS = 400 * PACE;
 
 export type EffectSheet = {
   file: string;

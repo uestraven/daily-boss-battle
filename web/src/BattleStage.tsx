@@ -115,7 +115,7 @@ const effectImage = (file: string): HTMLImageElement | null =>
  * Effects are the only thing on this stage with a lifetime shorter than a network request.
  * A sprite or a backdrop is on screen continuously, so `imageAt` returning null on the
  * first ask costs nothing -- the art simply appears a moment later. An effect lives for
- * `DEFAULT_EFFECT_MS`, 260ms, which expires long before a PNG is fetched and decoded. So
+ * `DEFAULT_EFFECT_MS`, 400ms, which expires long before a PNG is fetched and decoded. So
  * the first occurrence of each effect drew nothing at all, and the repaint that fires when
  * the image lands had no effect left to draw.
  *
