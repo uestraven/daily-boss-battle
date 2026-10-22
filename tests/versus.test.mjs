@@ -84,3 +84,60 @@ test('it announces itself as a status, not an alert', () => {
   assert.ok(!/role="alert"/.test(versus), 'alert would interrupt the screen reader');
   assert.ok(/aria-label=/.test(versus), 'the matchup is not announced as a whole');
 });
+
+// --- the bug that locked the game ------------------------------------------------------
+//
+// The timer effect originally depended on `onDone`, which the parent passed as an inline
+// arrow: a new function identity on every render. `DailyBattle` re-renders every 70ms from
+// the interval driving idle animation, so the effect re-ran twenty times a second, each run
+// clearing its own timer and starting a fresh one. It never fired, and the matchup screen
+// trapped the player with no way past it.
+//
+// None of the six tests above caught that. They checked what the screen *shows*; this
+// checks that it ever stops showing it.
+
+test('the dismissal timer is set once and cannot be restarted by a re-render', () => {
+  const effect = code(versus).match(/useEffect\(\(\)\s*=>\s*\{[\s\S]*?\},\s*\[([^\]]*)\]\)/);
+  assert.ok(effect, 'could not find the timer effect');
+  assert.equal(effect[1].trim(), '',
+    `the timer effect depends on [${effect[1].trim()}]. Anything in that list restarts the `
+    + 'timer when it changes, and a parent re-rendering twenty times a second then means it '
+    + 'never fires at all -- which locked the game on this screen.');
+});
+
+test('the callback is held in a ref, so the component is correct whatever it is handed', () => {
+  // Making the parent's callback stable also fixes it, and that is done -- but a screen that
+  // traps the player if its parent re-renders is too sharp an edge to leave pointing
+  // outward.
+  const body = code(versus);
+  assert.ok(/useRef\(onDone\)/.test(body),
+    'onDone is not kept in a ref, so the empty dependency list above would capture a stale '
+    + 'callback instead');
+  assert.ok(/done\.current/.test(body), 'the timer does not call through the ref');
+});
+
+test('the parent passes a stable callback, not an inline arrow', () => {
+  // Belt and braces, and the thing that was actually wrong at the call site.
+  const usage = code(screen).match(/<VersusScreen[\s\S]*?\/>/)?.[0] ?? '';
+  assert.ok(usage, 'could not find the VersusScreen call site');
+  assert.ok(!/onDone=\{\(\)\s*=>/.test(usage),
+    'onDone is an inline arrow, which is a new identity on every render of a component that '
+    + 're-renders twenty times a second');
+  assert.ok(/onDone=\{\w+\}/.test(usage), 'onDone should be a named, stable callback');
+});
+
+test('the hold leaves real still time after the motion', () => {
+  // "Flew in too fast" was the other half of the report. The motion should occupy well under
+  // half the screen, so what is left is a held matchup rather than a blur.
+  const hold = Number(versus.match(/VERSUS_MS\s*=\s*(\d+)/)?.[1]);
+  let latest = 0;
+  for (const m of css.matchAll(/animation:\s*dbb-versus-[\w-]+\s+(\d+)ms[^;]*?(?:\s(\d+)ms)?\s*both/g)) {
+    latest = Math.max(latest, Number(m[1]) + Number(m[2] ?? 0));
+  }
+  assert.ok(latest <= hold * 0.6,
+    `motion runs to ${latest}ms of a ${hold}ms screen, leaving only ${hold - latest}ms held`);
+  // And no single move should be so quick it reads as a snap.
+  for (const m of css.matchAll(/animation:\s*dbb-versus-in-\w+\s+(\d+)ms/g)) {
+    assert.ok(Number(m[1]) >= 500, `a ${m[1]}ms entrance is too fast to follow`);
+  }
+});

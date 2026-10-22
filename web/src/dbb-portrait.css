@@ -746,13 +746,16 @@
   to   { transform: scale(1); opacity: 1; }
 }
 .dbb-versus .is-boss {
-  animation: dbb-versus-in-right 420ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  animation: dbb-versus-in-right 700ms cubic-bezier(0.16, 0.84, 0.28, 1) both;
 }
+/* The party arrives after the boss rather than alongside it, so the screen reads as a
+ * sentence -- this is what you are facing, and these are the three of you -- instead of as
+ * two things happening at once. */
 .dbb-versus .is-party {
-  animation: dbb-versus-in-left 420ms cubic-bezier(0.2, 0.9, 0.3, 1) 120ms both;
+  animation: dbb-versus-in-left 700ms cubic-bezier(0.16, 0.84, 0.28, 1) 260ms both;
 }
 .dbb-versus-vs {
-  animation: dbb-versus-stamp 320ms cubic-bezier(0.2, 1.2, 0.4, 1) 420ms both;
+  animation: dbb-versus-stamp 380ms cubic-bezier(0.2, 1.2, 0.4, 1) 1000ms both;
 }
 
 /* Wide viewports put them side by side, which is what the sides of a versus screen means

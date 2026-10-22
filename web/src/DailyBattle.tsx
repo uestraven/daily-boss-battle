@@ -259,6 +259,9 @@ function Battle({def, catalog, tier, day, unranked}:
    * again, and neither must a reload of a day already in progress. Nobody wants the same
    * two seconds twice. */
   const [showVersus, setShowVersus] = useState(false);
+  /** Stable, so the matchup screen's timer is not restarted by this component re-rendering
+   * -- which it does twenty times a second while the idle clock runs. */
+  const dismissVersus = useCallback(() => setShowVersus(false), []);
 
   /** The command panel, for arrow-key navigation and for moving focus as menus change. */
   const commandRef = useRef<HTMLElement | null>(null);
@@ -745,7 +748,7 @@ function Battle({def, catalog, tier, day, unranked}:
       <VersusScreen
         boss={{id: def.bossId, name: names[def.bossId] ?? def.bossId}}
         party={state.party.map(id => ({id, name: names[id] ?? id}))}
-        onDone={() => setShowVersus(false)}
+        onDone={dismissVersus}
       />
     );
   }

@@ -20,10 +20,10 @@
  * right -- the same problem `prefetchEffects` exists to solve, approached from the other
  * end.
  */
-import {useEffect} from 'react';
+import {useEffect, useRef} from 'react';
 import {hasPortrait, portraitUrl, PORTRAIT_SIZE} from './portrait-catalog.js';
 
-export const VERSUS_MS = 2000;
+export const VERSUS_MS = 2600;
 
 export type VersusCombatant = {id: string; name: string};
 
@@ -32,12 +32,29 @@ export function VersusScreen({boss, party, onDone}: {
   party: readonly VersusCombatant[];
   onDone: () => void;
 }) {
+  /** The latest `onDone`, so the timer below can depend on nothing.
+   *
+   * This is the whole fix for a screen that locked the game. The timer effect originally
+   * depended on `onDone`, which the parent passes as an inline arrow -- a new function
+   * identity on every render. `DailyBattle` re-renders every 70ms from the interval that
+   * drives idle animation, so the effect re-ran twenty times a second, each run clearing its
+   * own timer and starting a fresh 2600ms one. It could never fire, and the matchup screen
+   * stayed up forever with no way past it.
+   *
+   * Making the parent's callback stable with `useCallback` would also have fixed it, and it
+   * is done there too -- but a screen that traps the player if its parent re-renders is too
+   * sharp an edge to leave pointing outward. The ref makes this component correct whatever
+   * it is handed. */
+  const done = useRef(onDone);
+  done.current = onDone;
+
   useEffect(() => {
-    const timer = window.setTimeout(onDone, VERSUS_MS);
-    // Cleared on unmount, so a remount -- the screen re-renders at local midnight -- cannot
-    // leave a timer behind that fires into a battle already in progress.
+    // Empty deps deliberately: the timer is set once, on mount, and nothing about a
+    // re-render should restart it. Cleared on unmount so a remount -- the screen rebuilds at
+    // local midnight -- cannot leave a timer to fire into a battle already in progress.
+    const timer = window.setTimeout(() => done.current?.(), VERSUS_MS);
     return () => window.clearTimeout(timer);
-  }, [onDone]);
+  }, []);
 
   const face = (c: VersusCombatant, className: string) => (
     hasPortrait(c.id)
