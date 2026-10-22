@@ -7,6 +7,12 @@ it. Measurements are dated because content changes invalidate them.
 Items are not in priority order. Where an entry says a number, it was read off the code or
 a tool, not estimated.
 
+**Done and removed from this list**, from the five improvements raised on 2026-10-22: the
+battle log now covers every event type and is the accessible account of a `<canvas>` stage;
+the Codex says what every ability does; the menus take arrow keys; the bestiary records what
+has been learned about each boss, and hero profiles unlock by being fielded. Item 8 below is
+the fifth, left open on a design question.
+
 ---
 
 ## 1. Make phase two actually harder
@@ -279,7 +285,92 @@ somebody has to acknowledge rather than a silent shrinking of the verified pool.
 
 ---
 
-## 8. Waiting on a domain
+## 8. First-run onboarding
+
+**Raised 2026-10-22.** The last of five improvements raised together; the other four are
+done. Not started, because the one open question is a design call rather than an
+implementation detail.
+
+This is the whole of what a first-time player is currently told, from the landing card:
+
+> **Today's battle** — One fight, the same for everyone, decided by choices rather than
+> reflexes. Difficulty: *standard*.
+>
+> **Choose how much the interface tells you**
+> **Easy** — Shows status effects, the boss's elemental weaknesses, its next attack, and what
+> each action will do before you commit.
+> **Normal** — No status badges, no warning, no elemental hints, no damage figures. Read the
+> fight yourself.
+
+Good copy, and entirely about the mode choice. It never explains the game.
+
+### What a new player is never told
+
+- **ATB decides turn order.** Speed governs how often an actor acts, so the Thief at 130
+  acts roughly twice per Magus turn. The central tactical fact of the game, and nothing
+  names it.
+- **It is turn-based, not timed.** Thinking time is unlimited -- `drive()` stops dead the
+  moment a hero is ready and no wall clock is consulted anywhere. A player who assumes a
+  clock is running will rush, which is the opposite of how this plays.
+- **Statuses change the numbers.** Protect is x0.75, Defend x0.5, Haste buys real extra
+  turns. All verified working, none introduced.
+- **Criticals are 1-in-32 for double damage.** Currently discovered by seeing a number twice
+  the size of the last one.
+- **One fight per day, and the result is recorded.** The copy implies it without saying the
+  attempt is one-shot, which changes how carefully someone plays their opening turn.
+- **The Codex exists and is the manual.** "Meet the heroes" is a button; nothing says it is
+  where abilities are explained -- and since `disclosure.actionPreview` is off in Normal, it
+  is the *only* place a Normal player can learn what Nullify does.
+
+### Why it is worth more than it looks
+
+For a daily game, retention lives almost entirely in the first session. Right now a new
+player's first encounter with the rules *is* the fight, in a mode they chose before knowing
+what either mode withholds. The information already exists -- `src/ability-reference.ts`,
+the hints in `status-display.ts`, the Codex itself -- it is simply never introduced.
+
+### Shape
+
+A dismissable first-run panel on the landing screen with four or five short lines: turn
+order is by Speed, there is no clock, statuses change the numbers, one fight a day, the
+Codex explains everything. Shown once, stored under its own key like the bestiary and the
+roster progress, and reachable again from a "How this works" button so it is not lost on
+first dismissal.
+
+Explicitly **not** a tutorial battle or a forced step sequence. Both are a lot of machinery
+and most players skip them, and this game's first turn is already a safe place to learn --
+nothing is lost by playing badly except the day.
+
+### The open question
+
+Where the panel sits relative to the mode choice. Choosing between Easy and Normal is
+genuinely hard before knowing what a status badge or a telegraph *is*, which argues for the
+explainer above the choice. The counter-argument is that it delays the button everyone came
+to press. Worth deciding before building, because it determines whether the panel is a
+blocking step or a collapsible section.
+
+---
+
+## 9. Boss biographies
+
+**Raised 2026-10-22.** Eight needed; the twelve hero biographies are written and in
+`src/lore.ts`.
+
+The bestiary entries currently carry only derived facts -- fights, wins, the arena name, the
+elements tried and the attacks witnessed. The hero cards read considerably better for having
+prose, and the boss portraits are installed and expressive enough to carry it.
+
+`HERO_LORE` is a total record over `HeroId`, so the pattern to copy exists. A `BOSS_LORE`
+record over the eight boss ids would be checked the same way: a test asserting every boss has
+an entry, that no biography contains a digit (balance values copied into flavour text rot the
+moment the roster is tuned), and a word count bound matched to what a card can hold.
+
+Unlike the hero entries, a boss biography should probably stay hidden until the boss is
+discovered, alongside the rest of its entry.
+
+---
+
+## 10. Waiting on a domain
 
 `Content-Security-Policy` headers and an absolute `og:image` URL. Neither can be finished
 until the production domain is settled.
