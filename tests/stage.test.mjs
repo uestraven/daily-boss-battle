@@ -1114,15 +1114,30 @@ test('a status popup names the status, not the engine detail string', () => {
   assert.ok(!texts.some(t => t.includes('expires at')), 'the details string must not reach the screen');
 });
 
-test('status popups are hidden in Normal, where the badges are too', () => {
+test('status popups show in Normal too, because a status landing is a result', () => {
+  // Gated with the badges, a boss could buff itself in Normal with nothing on screen, no
+  // sound and no telegraph: the player's damage fell by a quarter with nothing to attribute
+  // it to. Normal withholds predictions -- the badge and its duration -- not results. A
+  // nullified spell and a NO EFFECT hit both announce themselves in Normal for the same
+  // reason, and status events were the sole outcome that did not.
   const state = freshState();
   const target = state.party[0];
   const script = choreograph([
     ev('status_applied', {actorId: target, status: 'poison', details: 'poison; expires at 9'}),
   ], {names: {[target]: 'Monk'}});
   const at = script.beats.find(b => b.kind === 'status_on').at;
-  const texts = textsIn(composeFrame({state, script, timeMs: at, disclosure: disclosureFor('normal')}));
-  assert.ok(!texts.includes('POISON'));
+  for (const mode of ['easy', 'normal']) {
+    const texts = textsIn(composeFrame({state, script, timeMs: at, disclosure: disclosureFor(mode)}));
+    assert.ok(texts.includes('POISON'), `${mode} should announce the status landing`);
+  }
+});
+
+test('the status badge and the status announcement are gated separately', () => {
+  // The whole point of splitting the field. Normal must say "POISON" when it lands and
+  // still refuse to show the standing badge, which is what carries the duration.
+  const normal = disclosureFor('normal');
+  assert.equal(normal.statusEvents, true, 'the announcement is a result');
+  assert.equal(normal.statuses, false, 'the badge is a prediction');
 });
 
 test('omitting disclosure draws everything, so the stage tests and tools are unfiltered', () => {

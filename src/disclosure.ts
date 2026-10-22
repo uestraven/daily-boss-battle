@@ -27,8 +27,28 @@
 import type {BattleMode} from './types.js';
 
 export type Disclosure = {
-  /** Status badges on actors: poison, buffs, debuffs. */
+  /** The persistent status badges on actors: poison, buffs, debuffs, and how long each
+   * has left. Predictive information -- it is what lets a player plan around a duration. */
   statuses: boolean;
+  /** The announcement that a status was *just applied or has just expired*, as a popup on
+   * the actor and a chime.
+   *
+   * Separate from `statuses` because the two are different kinds of information, and
+   * conflating them made Normal mode inexplicable. A badge tells you Protect is up and has
+   * nine ticks left; this tells you Protect went up at all. Gated together, a boss could
+   * buff itself in Normal with nothing on screen, no sound, and no telegraph -- the
+   * player's damage simply fell by a quarter for no stated reason.
+   *
+   * That is the one outcome in the game that behaved like this. A nullified spell announces
+   * itself in both modes, so does an interrupted cast, and a zero-damage hit prints NO
+   * EFFECT in Normal precisely because it is the only way the player ever learns an element
+   * does nothing here. The rule those follow is: Normal withholds *predictions*, never
+   * *results*. Status events are results.
+   *
+   * True in both modes today. The field exists anyway, because this file's contract is that
+   * a mode must state a position on every piece of information that reaches the player --
+   * and a harder mode is on the backlog that may well want to withhold it. */
+  statusEvents: boolean;
   /** The boss's announced next action, its targets, and the tick countdown. */
   telegraph: boolean;
   /** The boss's elemental resistances and weaknesses. */
@@ -43,13 +63,19 @@ export type Disclosure = {
   actionPreview: boolean;
 };
 
-/** Easy reveals everything the interface knows; Normal withholds all of it.
+/** Easy reveals everything the interface knows; Normal withholds the predictions.
+ *
+ * Not "withholds all of it", which is what this said and what the table used to do. Normal
+ * keeps back what would let a player plan -- the telegraph, the badges with their durations,
+ * affinities, the damage preview -- and still reports what actually happened. See
+ * `statusEvents` for the case that proved the distinction matters.
  *
  * Deliberately total rather than a partial override of a default: a mode has to state a
  * position on every field, so a new field cannot default its way into the harder mode. */
 const DISCLOSURE: Record<BattleMode, Disclosure> = {
   easy: {
     statuses: true,
+    statusEvents: true,
     telegraph: true,
     affinities: true,
     noEffect: true,
@@ -57,6 +83,9 @@ const DISCLOSURE: Record<BattleMode, Disclosure> = {
   },
   normal: {
     statuses: false,
+    // Deliberately on. Hiding the badge keeps the planning information back; hiding the
+    // announcement as well left the player's damage dropping with no stated cause.
+    statusEvents: true,
     telegraph: false,
     affinities: false,
     noEffect: false,

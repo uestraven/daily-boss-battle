@@ -10,10 +10,27 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DISCLOSURE_FIELDS, disclosureFor} from '../dist/src/disclosure.js';
 
-test('Normal withholds every disclosure', () => {
+/** Fields Normal deliberately shows. Every entry needs a reason, written here. */
+const NORMAL_SHOWS = {
+  // A status landing is a *result*, not a prediction. Gated with the badges, a boss could
+  // buff itself in Normal with nothing on screen, no sound and no telegraph, and the
+  // player's damage simply fell by a quarter with no stated cause -- the only outcome in
+  // the game with no feedback at all. The badge, which carries the duration and is what
+  // lets a player plan, stays hidden.
+  statusEvents: 'a result, not a prediction; see src/disclosure.ts',
+};
+
+test('Normal withholds every prediction', () => {
   const normal = disclosureFor('normal');
   for (const field of DISCLOSURE_FIELDS) {
-    assert.equal(normal[field], false, `Normal must not show ${field}`);
+    if (field in NORMAL_SHOWS) {
+      assert.equal(normal[field], true,
+        `${field} is listed as shown in Normal but is withheld`);
+      continue;
+    }
+    assert.equal(normal[field], false,
+      `Normal must not show ${field}. If that is a deliberate change, add it to `
+      + 'NORMAL_SHOWS above with the reason, so the exception is argued rather than assumed.');
   }
 });
 
@@ -38,18 +55,24 @@ test('every disclosure states a position for both modes', () => {
 });
 
 test('the policy names the disclosures the interface actually has', () => {
-  // A reminder in test form: these are the five things the screen gates. If a sixth piece
-  // of fight-derived information appears on screen, this list is where it goes, and this
-  // assertion is what fails to say so.
+  // A reminder in test form: these are the things the screen gates. If another piece of
+  // information reaches the player, this list is where it goes, and this assertion is what
+  // fails to say so.
   assert.deepEqual([...DISCLOSURE_FIELDS].sort(),
-    ['actionPreview', 'affinities', 'noEffect', 'statuses', 'telegraph']);
+    ['actionPreview', 'affinities', 'noEffect', 'statusEvents', 'statuses', 'telegraph']);
 });
 
-test('the two modes differ on everything, so the choice always matters', () => {
+test('the two modes differ on everything except the agreed exceptions', () => {
   const easy = disclosureFor('easy');
   const normal = disclosureFor('normal');
   for (const field of DISCLOSURE_FIELDS) {
+    if (field in NORMAL_SHOWS) continue;
     assert.notEqual(easy[field], normal[field],
-      `${field} is the same in both modes, so it is not a difficulty setting`);
+      `${field} is the same in both modes, so it is not a difficulty setting. If it should `
+      + 'be the same, add it to NORMAL_SHOWS with the reason.');
   }
+  // And the mode choice still has to mean something overall.
+  const differing = DISCLOSURE_FIELDS.filter(f => easy[f] !== normal[f]);
+  assert.ok(differing.length >= 4,
+    `only ${differing.length} fields differ between the modes; the choice is losing meaning`);
 });

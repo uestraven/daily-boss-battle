@@ -7,6 +7,7 @@ import {HEAVY_HIT_INTENSITY, PHASE_SILENCE_MS, TRACK_FALLBACK, TRACK_PLAYBACK, a
 import {TIMING, choreograph} from '../dist/src/presentation.js';
 import {existsSync, readdirSync} from 'node:fs';
 import {disclosureFor} from '../dist/src/disclosure.js';
+import {CUE_DISCLOSURE} from '../dist/src/audio.js';
 
 const musicDir = new URL('../web/public/battle-music/', import.meta.url);
 
@@ -350,11 +351,23 @@ const disclosingEvents = [
   ev('status_expired', {actorId: 'm', status: 'poison', details: 'poison'}),
 ];
 
-test('Normal mode hears no telegraph and no status cues', () => {
+test('Normal mode hears no telegraph, because the telegraph is a prediction', () => {
   const s = script(disclosingEvents);
   const normal = audioCues(s, {disclosure: disclosureFor('normal')}).map(c => c.sound);
-  for (const sound of ['telegraph', 'status_on', 'status_off']) {
-    assert.ok(!normal.includes(sound), `${sound} must be silent when its display is hidden`);
+  assert.ok(!normal.includes('telegraph'),
+    'the sting announced that the boss had committed to something, which is the exact '
+    + 'information Normal exists to withhold');
+});
+
+test('Normal mode still hears a status land, because that is a result', () => {
+  // These were silenced along with the telegraph, keyed on the badge field. The effect was
+  // that a boss could buff itself in Normal with no popup, no chime and no telegraph, and
+  // the player's damage fell by a quarter with nothing to attribute it to -- the only
+  // outcome in the game with no feedback at all.
+  const s = script(disclosingEvents);
+  const normal = audioCues(s, {disclosure: disclosureFor('normal')}).map(c => c.sound);
+  for (const sound of ['status_on', 'status_off']) {
+    assert.ok(normal.includes(sound), `${sound} must still be audible in Normal`);
   }
 });
 
@@ -383,11 +396,15 @@ test('text blips do not type out a line the mode never prints', () => {
 
 test('every disclosing cue is covered by the disclosure table', () => {
   // The guard against the original bug recurring. Any beat kind that produces a cue is
-  // compared between the two modes: if Easy hears it and Normal hears it too, it either
-  // discloses nothing or is missing from CUE_DISCLOSURE. Only this known-safe set is
-  // allowed to be mode-blind, so a new disclosing sound fails here until it is decided.
+  // compared between the two modes: a cue audible in both is acceptable only if somebody
+  // decided it should be -- either by listing it as mode-blind here, or by giving it a
+  // CUE_DISCLOSURE entry, which forces a per-mode position in disclosure.ts. A new
+  // disclosing sound with no decision recorded anywhere fails.
+  const decided = new Set(Object.values(CUE_DISCLOSURE));
   const modeBlind = new Set(['hit_physical', 'hit_magical', 'hit_heavy', 'heal', 'ko',
-    'revive', 'mp_restore', 'cast_start', 'interrupt', 'nullify', 'phase_sting']);
+    'revive', 'mp_restore', 'cast_start', 'interrupt', 'nullify', 'phase_sting',
+    // Audible in both modes by an explicit decision, recorded on `statusEvents`.
+    ...(decided.has('statusEvents') ? ['status_on', 'status_off'] : [])]);
   const events = [
     ...disclosingEvents,
     ev('damage', {actorId: 'b', targetId: 'm', amount: 10, hpAfter: 100}),

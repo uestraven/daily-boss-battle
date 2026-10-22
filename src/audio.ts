@@ -95,10 +95,13 @@ export type AudioOptions = {
  *
  * Keyed by beat kind and mapped to the field that governs it, so adding a disclosing
  * sound means adding a row here rather than remembering a rule. */
-const CUE_DISCLOSURE: Partial<Record<Beat['kind'], keyof Disclosure>> = {
+export const CUE_DISCLOSURE: Partial<Record<Beat['kind'], keyof Disclosure>> = {
   telegraph: 'telegraph',
-  status_on: 'statuses',
-  status_off: 'statuses',
+  // `statusEvents` rather than `statuses`. Keyed on the badge field, these were silenced in
+  // Normal along with the popup, so a status landed with no picture and no sound -- the only
+  // outcome in the game with no feedback at all. A chime is a result, not a prediction.
+  status_on: 'statusEvents',
+  status_off: 'statusEvents',
 };
 
 /** Whether a beat's cue may be heard under this disclosure. */

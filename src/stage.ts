@@ -456,7 +456,10 @@ export function composeFrame(input: ComposeInput): Frame {
   for (const beat of active) {
     if (beat.kind !== 'status_on' && beat.kind !== 'status_off') continue;
     if (!beat.status) continue;
-    if (input.disclosure && !input.disclosure.statuses) continue;
+    // `statusEvents`, not `statuses`: the badge is predictive and Normal hides it, but the
+    // announcement that a status landed is a result, and hiding results left a boss able to
+    // buff itself in Normal with nothing on screen at all.
+    if (input.disclosure && !input.disclosure.statusEvents) continue;
     const anchor = anchorFor(beat.actorId ?? beat.targetId);
     const height = (beat.actorId ?? beat.targetId) === state.bossId
       ? SPRITE.boss.height : SPRITE.hero.height;
