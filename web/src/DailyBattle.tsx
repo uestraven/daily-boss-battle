@@ -38,6 +38,9 @@ import {STATUS_DISPLAY, visibleStatuses} from '../../dist/src/status-display.js'
 import {logLines} from '../../dist/src/battle-log.js';
 import {focusFirstItemIfNavigating, handleMenuKey} from './menu-keys.js';
 import {clearBestiary, loadBestiary, saveBestiary} from './bestiary-store.js';
+import {clearRosterProgress, loadRosterProgress, saveRosterProgress} from './roster-progress-store.js';
+import {metHeroes, observeParty} from '../../dist/src/roster-progress.js';
+import {heroIds} from '../../dist/src/roster.js';
 import {emptyDiscovery, observeBattle} from '../../dist/src/bestiary.js';
 import {bossIds} from '../../dist/src/generate.js';
 import {disclosureFor} from '../../dist/src/disclosure.js';
@@ -258,6 +261,11 @@ function Battle({def, catalog, tier, day, unranked}:
    * the dev panel's "Reset day" clears it, while this accumulates and should survive that,
    * or testing a fight would wipe the only progression the game has. */
   const [bestiary, setBestiary] = useState(() => loadBestiary(bossIds));
+
+  /** Which heroes the player has fought alongside. Counted when a battle concludes, so an
+   * abandoned day unlocks nobody -- but the day's own party is always treated as met, since
+   * they are on screen. See `src/roster-progress.ts`. */
+  const [rosterProgress, setRosterProgress] = useState(() => loadRosterProgress(heroIds));
 
   /** The Codex, over the top of whatever screen opened it.
    *
@@ -587,6 +595,16 @@ function Battle({def, catalog, tier, day, unranked}:
       saveBestiary(merged);
       return merged;
     });
+
+    // The party is recorded only once the battle has concluded: the entry says "fought
+    // alongside", and loading a screen is not that.
+    if (next.terminal) {
+      setRosterProgress(previous => {
+        const merged = observeParty(previous, state.party, next.terminal!);
+        saveRosterProgress(merged);
+        return merged;
+      });
+    }
   }, [state, ledger, day, catalog, def, replay, names, maxHp, abilityNames]);
 
   /** Elemental affinities are decisive information — a fire-immune boss makes a fire-only
@@ -698,7 +716,16 @@ function Battle({def, catalog, tier, day, unranked}:
     );
   }
 
-  if (showCodex) return <Codex onClose={() => setShowCodex(false)} bestiary={bestiary} />;
+  if (showCodex) {
+    return (
+      <Codex
+        onClose={() => setShowCodex(false)}
+        bestiary={bestiary}
+        met={metHeroes(rosterProgress, state.party)}
+        progress={rosterProgress}
+      />
+    );
+  }
 
   if (showLanding) {
     return (
@@ -1015,6 +1042,7 @@ function Battle({def, catalog, tier, day, unranked}:
               * so wiping it has to be a deliberate act rather than a side effect of
               * replaying a fight. */}
             <button onClick={() => { clearBestiary(); window.location.reload(); }}>Forget bestiary</button>
+            <button onClick={() => { clearRosterProgress(); window.location.reload(); }}>Forget heroes</button>
           </div>
           <div className="dbb-dev-hint">
             Phase {state.phase} · transition at {def.bossProgram.transitionPercent}% ·

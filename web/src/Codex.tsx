@@ -27,6 +27,7 @@ import {bossIds} from '../../dist/src/generate.js';
 import {emptyDiscovery, isDiscovered} from '../../dist/src/bestiary.js';
 import {battleBackgrounds} from './background-catalog.js';
 import type {Bestiary, BossDiscovery} from '../../src/bestiary.js';
+import type {HeroDiscovery, RosterProgress} from '../../src/roster-progress.js';
 
 /** Boss and ability display names, from the content rather than written out again. */
 const BOSS_NAMES: Record<string, string> =
@@ -87,7 +88,7 @@ function SpriteFace({id}: {id: HeroId}) {
   );
 }
 
-function Card({id}: {id: HeroId}) {
+function Card({id, known, record}: {id: HeroId; known: boolean; record?: HeroDiscovery}) {
   const hero = heroes.find(h => h.id === id);
   if (!hero) return null;
   const lore = HERO_LORE[id];
@@ -95,18 +96,31 @@ function Card({id}: {id: HeroId}) {
   return (
     <article className="dbb-codex-card rpg-window">
       <div className="dbb-codex-head">
+        {/* Locked heroes are their own portrait flattened to a silhouette, as bosses are:
+          * no second image, and it reads as someone unmet rather than as a gap. */}
         {hasPortrait(id)
-          ? <img className="dbb-codex-portrait" src={portraitUrl(id)} alt={hero.name}
+          ? <img className={`dbb-codex-portrait${known ? '' : ' is-silhouette'}`}
+              src={portraitUrl(id)} alt={known ? hero.name : 'Hero not yet fielded'}
               width={PORTRAIT_SIZE} height={PORTRAIT_SIZE} />
           : <SpriteFace id={id} />}
         <div className="dbb-codex-title">
-          <h2>{hero.name}</h2>
+          <h2>{known ? hero.name : '???'}</h2>
           {/* Capability tags rather than the role. Six of twelve heroes read "Striker",
             * which separates nobody; these are derived from ability data and say something
             * a player can act on. `title` carries the explanation without spending card
             * space on it. */}
           <p className="dbb-codex-tags">
-            {capsOf(id).length === 0
+            {!known
+              ? <span className="dbb-codex-tag">Not yet fielded</span>
+              : record && record.fielded > 0
+                ? <>
+                    <span className="dbb-codex-tag">{record.fielded} fought</span>
+                    <span className="dbb-codex-tag">{record.victories} won</span>
+                  </>
+                : <span className="dbb-codex-tag">In today&rsquo;s party</span>}
+          </p>
+          <p className="dbb-codex-tags">
+            {!known ? null : capsOf(id).length === 0
               ? <span className="dbb-codex-tag">Basics only</span>
               : capabilityLabels(capsOf(id)).map(label => {
                   const cap = (Object.keys(CAPABILITY_LABEL) as Capability[])
@@ -120,6 +134,12 @@ function Card({id}: {id: HeroId}) {
         </div>
       </div>
 
+      {/* A locked hero shows nothing but the invitation. Not even the stat bars: a hero's
+        * numbers are most of what distinguishes them, and a silhouette with 130 speed beside
+        * it is barely locked at all. */}
+      {!known ? (
+        <p className="dbb-codex-bio">Field this hero to begin their entry.</p>
+      ) : <>
       <p className="dbb-codex-bio">{lore?.biography}</p>
 
       <dl className="dbb-codex-stats">
@@ -165,6 +185,7 @@ function Card({id}: {id: HeroId}) {
               })}
             </dl>}
       </section>
+      </>}
     </article>
   );
 }
@@ -244,7 +265,13 @@ function BossCard({id, discovery}: {id: string; discovery: BossDiscovery}) {
   );
 }
 
-export function Codex({onClose, bestiary}: {onClose: () => void; bestiary: Bestiary}) {
+export function Codex({onClose, bestiary, met, progress}: {
+  onClose: () => void;
+  bestiary: Bestiary;
+  /** Heroes the player has fielded, plus today's party. */
+  met: Set<string>;
+  progress: RosterProgress;
+}) {
   /** Heroes or bosses. Two different questions -- "who can I field" and "what am I
    * fighting" -- so they are tabs rather than one long scroll. */
   const [tab, setTab] = useState<'heroes' | 'bosses'>('heroes');
@@ -254,10 +281,16 @@ export function Codex({onClose, bestiary}: {onClose: () => void; bestiary: Besti
    * result is never a surprise. */
   const [filter, setFilter] = useState<Capability | 'All'>('All');
   const options = (Object.keys(CAPABILITY_LABEL) as Capability[]);
+  /** Counts and filtering run over *met* heroes only.
+   *
+   * Otherwise the filter leaks what it is meant to be locking: a silhouette appearing under
+   * "Pierces armour" announces that it pierces armour, which is the one fact about that hero
+   * worth knowing. Locked heroes stay on the unfiltered list, where they read as someone
+   * still to meet rather than as an answer. */
   const countFor = (c: Capability) =>
-    (heroIds as readonly HeroId[]).filter(id => capsOf(id).includes(c)).length;
+    (heroIds as readonly HeroId[]).filter(id => met.has(id) && capsOf(id).includes(c)).length;
   const shown = (heroIds as readonly HeroId[])
-    .filter(id => filter === 'All' || capsOf(id).includes(filter));
+    .filter(id => filter === 'All' || (met.has(id) && capsOf(id).includes(filter)));
   const filterRef = useRef<HTMLElement | null>(null);
 
   return (
@@ -279,7 +312,9 @@ export function Codex({onClose, bestiary}: {onClose: () => void; bestiary: Besti
 
       <nav className="dbb-codex-filter" aria-label="Section">
         <button type="button" className={tab === 'heroes' ? 'is-active' : ''}
-          onClick={() => setTab('heroes')}>Heroes {heroIds.length}</button>
+          onClick={() => setTab('heroes')}>
+          Heroes {heroIds.filter((id: string) => met.has(id)).length}/{heroIds.length}
+        </button>
         <button type="button" className={tab === 'bosses' ? 'is-active' : ''}
           onClick={() => setTab('bosses')}>
           Bosses {bossIds.filter((id: string) => isDiscovered(bestiary[id])).length}/{bossIds.length}
@@ -330,7 +365,7 @@ export function Codex({onClose, bestiary}: {onClose: () => void; bestiary: Besti
 
       <div className="dbb-codex-list">
         {tab === 'heroes'
-          ? shown.map(id => <Card key={id} id={id} />)
+          ? shown.map(id => <Card key={id} id={id} known={met.has(id)} record={progress[id]} />)
           : bossIds.map((id: string) => (
               <BossCard key={id} id={id} discovery={bestiary[id] ?? emptyDiscovery()} />
             ))}
