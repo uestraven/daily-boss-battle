@@ -36,12 +36,42 @@ erased. White sits only 255 from magenta in the packer's colour distance, and ef
 almost entirely white and pale, so magenta is the worst possible choice here. Green is 510
 from both white and red. Pack with `--key 00ff00`.
 
+### Keying is not enough: despill
+
+Keying answers "is this pixel background", which is binary. It does not answer "how much of
+the key is mixed into this pixel", and for soft art the answer is a lot. The neutral flare's
+expanding ring is a thin white glow laid over green, so every surviving ring pixel is a
+white-green average -- correctly kept as art, over 300 from pure green, and visibly green on
+screen. The palette pass then spent two of its twelve slots preserving the tint.
+
+`pack-effect.mjs` therefore despills by default: in the key's dominant channel, no pixel may
+exceed what the other two channels support, so a white-green blend returns to white while a
+deliberately warm or cool pixel is untouched. Pass `--no-despill` only for art that is
+genuinely the key's hue, such as a green poison cloud keyed on green.
+
 ## Anchors and timing
 
 `anchorY` in `web/src/effect-manifest.json` is measured from the top of the frame **down to
-the point that lands on the target's feet**. So `slash` at 40-of-48 sits just above the
-ground, and the flares at 48-of-64 centre on the body with headroom above. `anchorX` 32 is
-the horizontal centre of both.
+the point that lands on the target's feet**, and `anchorX` 32 is the horizontal centre of
+every sheet. The shipped values were measured from the art rather than guessed, because what
+`anchorY` should be depends entirely on where the animation's own contact point sits:
+
+| Effect | `anchorY` | Measured from |
+| --- | --- | --- |
+| `slash` | 48 | arc core at y=30, which the 48 cap puts 18px up -- mid-torso on a 40px hero |
+| `flare_neutral` | 52 | burst core at y=32, lifted 20px to mid-torso |
+| `flare_ice` | 52 | burst core at y=32, same |
+| `flare_fire` | 63 | flames rise from the frame's bottom edge; that edge is the ground |
+| `flare_lightning` | 53 | widest row of the impact flash (48 of 64 px at y=53) |
+| `flare_holy` | 53 | centre of the ground ring (rows 51-55 are widest at 38px) |
+
+A ground effect and an overhead flare share one code path because the anchor is always the
+target's feet; only these numbers differ. Re-measure after any repack -- a change of scale
+moves the contact point.
+
+At its peak frame a 64x64 flare fully covers a 40px hero, since the layer draws opaque at
+alpha 1. That is intended: it is one frame of five, the frames either side are smaller, and
+full occlusion on impact is what the era did.
 
 Frames are **stretched to fit the effect's duration** (`DEFAULT_EFFECT_MS`, 260 ms), so
 choose a frame count that reads well rather than one matching a timing. At a quarter of a
@@ -49,12 +79,25 @@ second the shape has to be legible immediately: appear, peak, dissipate.
 
 ## Installing one
 
+Generator output does not go in this directory. Keep the raw sheet in
+`art-reference/effects/<id>-source.png` and pack it down to the cell size:
+
+```sh
+node tools/pack-effect.mjs art-reference/effects/slash-source.png \
+  --out web/public/battle-effects/slash.png --frames 4 --cell 64x48
+node tools/pack-effect.mjs art-reference/effects/flare_fire-source.png \
+  --out web/public/battle-effects/flare_fire.png --frames 5 --cell 64x64
+```
+
+`pack-effect.mjs` exists separately from `pack-spritesheet.mjs` because the two want
+opposite things. The sprite packer re-centres every pose onto a common ground line, which is
+right for a figure that must not drift between its idle and its attack and **wrong** for an
+effect, whose internal motion is the content: re-centring each frame would delete the sweep
+of an arc and make the effect jitter in place. So the effect packer finds the union of every
+frame's artwork, scales that union once, and draws each frame at its own position inside it.
+
 Art alone does not enable an effect. Add its id to `shipped` in
 `web/src/effect-manifest.json`, then run `npm run effects:check` -- it fails if that list
 and this directory disagree, so the two cannot drift. Until an id is listed, the renderer
 is never offered the sheet: no draw command, no failed request, no console noise, and the
 stage keeps its hit flash and shake.
-
-`shipped` is currently empty, which means `composeFrame` has never emitted an effect
-command. The first file added here is the first time that code path runs for real, so add
-`slash` alone and look at it before commissioning the rest.
