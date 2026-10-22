@@ -633,9 +633,11 @@
 /* ---------------------------------------------------------------- bestiary
  * An undiscovered boss is its own sprite drawn as a silhouette: no second image, and it
  * reads as "something is there" rather than as a gap in the list. */
-.dbb-codex-face.is-silhouette {
-  filter: brightness(0) contrast(0);
-  opacity: 0.55;
+.dbb-codex-face.is-silhouette,
+.dbb-codex-portrait.is-silhouette {
+  /* Flattened to a shape rather than merely darkened: a dimmed portrait still reveals the
+   * colours and the face, which is the whole thing the entry is withholding. */
+  filter: brightness(0) contrast(0) opacity(0.55);
 }
 .dbb-codex-boss.is-unknown { opacity: 0.72; }
 .dbb-codex-boss.is-unknown h2 { letter-spacing: 0.2em; }

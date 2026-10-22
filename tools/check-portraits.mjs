@@ -17,13 +17,16 @@ const repoPath = p => new URL(`../${p}`, import.meta.url);
 const dir = repoPath('web/public/portraits');
 const catalog = readFileSync(repoPath('web/src/portrait-catalog.ts'), 'utf8');
 const {heroIds} = await import('../dist/src/roster.js');
+const {bossIds} = await import('../dist/src/generate.js');
+// Heroes and bosses both have Codex entries, so both want a portrait.
+const subjects = [...heroIds, ...bossIds];
 
 const EXPECTED = 64;
 
 // Read the shipped list out of the module text rather than importing it: the catalog imports
 // `media-url.js`, which reaches for a Vite `define` that does not exist outside a build.
 const listed = (() => {
-  const m = catalog.match(/shippedPortraits:\s*readonly HeroId\[\]\s*=\s*\[([^\]]*)\]/);
+  const m = catalog.match(/shippedPortraits:\s*readonly PortraitId\[\]\s*=\s*\[([^\]]*)\]/);
   if (!m) {
     console.error('\n  PROBLEM  could not find shippedPortraits in portrait-catalog.ts');
     process.exit(1);
@@ -36,8 +39,8 @@ const problems = [];
 const advice = [];
 
 console.log('\nCODEX PORTRAITS\n');
-console.log('       hero         file              art');
-for (const id of heroIds) {
+console.log('       subject            file                   art');
+for (const id of subjects) {
   const file = `${id}.png`;
   const present = onDisk.has(file);
   const isListed = listed.has(id);
@@ -55,7 +58,7 @@ for (const id of heroIds) {
     }
   }
   console.log(`  ${isListed && present ? 'OK  ' : present || isListed ? '??  ' : '--  '} `
-    + `${id.padEnd(12)} ${file.padEnd(17)} ${note}`);
+    + `${id.padEnd(18)} ${file.padEnd(22)} ${note}`);
   if (present && !isListed) {
     advice.push(`${file} exists but ${id} is not in shippedPortraits, so it is never shown`);
   }
@@ -65,7 +68,7 @@ for (const id of heroIds) {
   }
 }
 
-const known = new Set(heroIds.map(id => `${id}.png`));
+const known = new Set(subjects.map(id => `${id}.png`));
 for (const file of onDisk) {
   if (!known.has(file)) advice.push(`${file} is in portraits/ but matches no hero id`);
 }
@@ -74,9 +77,9 @@ console.log('');
 for (const p of problems) console.log(`  PROBLEM  ${p}`);
 for (const a of advice) console.log(`  ADVICE   ${a}`);
 
-const live = heroIds.filter(id => listed.has(id) && onDisk.has(`${id}.png`)).length;
-console.log(`\n  ${live}/${heroIds.length} portraits live.`);
-if (live < heroIds.length) {
+const live = subjects.filter(id => listed.has(id) && onDisk.has(`${id}.png`)).length;
+console.log(`\n  ${live}/${subjects.length} portraits live.`);
+if (live < subjects.length) {
   console.log('  The rest fall back to the hero\'s battle sprite, which is already loaded.');
   console.log('  Drop a 64x64 PNG in web/public/portraits/<id>.png and add the id to');
   console.log('  shippedPortraits in web/src/portrait-catalog.ts.');

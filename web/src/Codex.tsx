@@ -182,17 +182,23 @@ function BossCard({id, discovery}: {id: string; discovery: BossDiscovery}) {
   return (
     <article className={`dbb-codex-card dbb-codex-boss rpg-window${known ? '' : ' is-unknown'}`}>
       <div className="dbb-codex-head">
-        {/* The same art either way: an undiscovered boss is its own silhouette, which costs
-          * no second image and reads as "something is there" rather than as a gap. */}
-        <div className={`dbb-codex-face${known ? '' : ' is-silhouette'}`}
-          aria-hidden="true"
-          style={sheet ? {
-            backgroundImage: `url(${mediaUrl('battle-sprites', sheet.file)})`,
-            backgroundSize: `auto ${sheet.frameHeight * 8}px`,
-            backgroundPosition: 'left top',
-            backgroundRepeat: 'no-repeat',
-            width: '64px', height: '64px',
-          } : {}} />
+        {/* The same art either way: an undiscovered boss is its own portrait drawn as a
+          * silhouette, which costs no second image and reads as "something is there"
+          * rather than as a gap in the list. Falls back to the battle sprite if a portrait
+          * is ever missing, exactly as a hero card does. */}
+        {hasPortrait(id)
+          ? <img className={`dbb-codex-portrait${known ? '' : ' is-silhouette'}`}
+              src={portraitUrl(id)} alt={known ? (BOSS_NAMES[id] ?? id) : 'Undiscovered boss'}
+              width={PORTRAIT_SIZE} height={PORTRAIT_SIZE} />
+          : <div className={`dbb-codex-face${known ? '' : ' is-silhouette'}`}
+              aria-hidden="true"
+              style={sheet ? {
+                backgroundImage: `url(${mediaUrl('battle-sprites', sheet.file)})`,
+                backgroundSize: `auto ${sheet.frameHeight * 8}px`,
+                backgroundPosition: 'left top',
+                backgroundRepeat: 'no-repeat',
+                width: '64px', height: '64px',
+              } : {}} />}
         <div className="dbb-codex-title">
           <h2>{known ? (BOSS_NAMES[id] ?? id) : '???'}</h2>
           <p className="dbb-codex-tags">

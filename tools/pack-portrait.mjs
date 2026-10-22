@@ -191,9 +191,16 @@ console.log(`  luminance     mean ${mean.toFixed(0)}, range ${lumMin.toFixed(0)}
 // A portrait with almost no tonal range is a silhouette, not a face: either the source is
 // very dark or the reduction has collapsed it. Worth reporting rather than discovering on
 // screen, where twelve cards make one flat face hard to spot.
-if (lumMax - lumMin < 60) {
-  console.log('  ADVICE        under 60 points of tonal range; this will read as a');
-  console.log('                silhouette at 64px rather than as a face');
+// A portrait with little tonal range is a silhouette, not a face. This was advice, and
+// advice is what gets ignored: the Warden was packed at 73 points of range, the warning
+// printed, and it shipped anyway because one line in a twelve-file loop is easy to scroll
+// past. It fails now; `--levels` stretches what range there is, `--allow-dark` accepts it.
+const range = lumMax - lumMin;
+if (range < 110 && !allowDark) {
+  console.error(`\n  PROBLEM  only ${range.toFixed(0)} points of tonal range; at 64px this `
+    + 'reads as a silhouette rather than a face.');
+  console.error('  Try --levels to stretch what range there is, or --allow-dark to accept it.');
+  process.exit(1);
 }
 
 writeFileSync(out, encodePng(size, size, dest));
