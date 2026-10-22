@@ -23,7 +23,7 @@ export type AnimationName =
   | 'walk'      // moving to and from striking distance; optional, falls back to idle
   | 'hurt'      // taking a hit
   | 'ko'        // collapsing, then staying down on its last frame
-  | 'victory';  // looping; winners only
+  | 'victory';  // winners only; loops unless the clip says otherwise
 
 export const ANIMATION_NAMES: AnimationName[] =
   ['idle', 'walk', 'attack', 'cast', 'item', 'hurt', 'ko', 'victory'];
@@ -58,7 +58,9 @@ export type AnimationClip = {
   frames: number;
   /** Looping clips repeat forever; non-looping clips hold their final frame. */
   loop: boolean;
-  /** Milliseconds per frame, used only by looping clips. */
+  /** Milliseconds per frame. Used by looping clips and by non-looping clips with no owning
+   * beat, such as a victory pose; a non-looping clip that *does* own a beat is stretched to
+   * fit that beat instead and ignores this. */
   frameMs?: number;
 };
 
@@ -169,9 +171,18 @@ function drivingBeat(
 /** Frame within a clip, given how far through it we are. */
 export function frameFor(clip: AnimationClip, elapsedMs: number, beatDurationMs: number | null): ActorAnimation['frame'] {
   if (clip.frames <= 1) return 0;
-  if (clip.loop || beatDurationMs === null) {
-    const frameMs = clip.frameMs ?? DEFAULT_LOOP_FRAME_MS;
-    return Math.floor(Math.max(0, elapsedMs) / frameMs) % clip.frames;
+  const frameMs = clip.frameMs ?? DEFAULT_LOOP_FRAME_MS;
+  if (clip.loop) return Math.floor(Math.max(0, elapsedMs) / frameMs) % clip.frames;
+  // Play once off the clock, then hold the last frame.
+  //
+  // Without this, `loop: false` was silently ignored whenever there was no beat to stretch
+  // against -- the old condition was `clip.loop || beatDurationMs === null`, so a clip with
+  // no owning beat wrapped forever no matter what it declared. That is fine for the clips
+  // that have always been beat-driven, and wrong for a victory pose: the Magus's victory is
+  // a vanish into a portal, and on a wrapping clip he reappeared and vanished again on a
+  // loop instead of simply being gone.
+  if (beatDurationMs === null) {
+    return Math.min(clip.frames - 1, Math.floor(Math.max(0, elapsedMs) / frameMs));
   }
   // Stretched to fit: the clip spans exactly the beat it belongs to.
   const span = Math.max(1, beatDurationMs);

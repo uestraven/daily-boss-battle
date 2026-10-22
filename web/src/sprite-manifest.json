@@ -56,10 +56,10 @@
   },
   "lancer": {
    "file": "heroes/lancer.png",
-   "frameWidth": 56,
-   "frameHeight": 40,
-   "anchorX": 28,
-   "anchorY": 40,
+   "frameWidth": 64,
+   "frameHeight": 48,
+   "anchorX": 32,
+   "anchorY": 48,
    "clips": {
     "idle": {
      "row": 0,
@@ -577,9 +577,9 @@
     },
     "victory": {
      "row": 7,
-     "frames": 2,
-     "loop": true,
-     "frameMs": 200
+     "frames": 8,
+     "loop": false,
+     "frameMs": 140
     }
    },
    "name": "The Magus"

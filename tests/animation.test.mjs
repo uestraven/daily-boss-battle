@@ -9,6 +9,10 @@ import {readFileSync} from 'node:fs';
 import {advanceToDecision, createEncounter} from '../dist/src/engine.js';
 import {buildEncounter} from '../dist/src/generate.js';
 import {balancedParties} from '../dist/src/draft.js';
+import {decodePng} from '../tools/png.mjs';
+
+const manifest = JSON.parse(readFileSync(
+  new URL('../web/src/sprite-manifest.json', import.meta.url), 'utf8'));
 
 const ev = (type, extra = {}) => ({tick: 1, type, ...extra});
 
@@ -482,4 +486,65 @@ test('walk is the only clip the hero sheets are short of', () => {
     assert.deepEqual(missing.filter(n => !OPTIONAL.includes(n)), [],
       `${id} is missing ${missing.join(', ')}, which is more than ${OPTIONAL.join(' and ')}`);
   }
+});
+
+// --- play-once clips -------------------------------------------------------------------
+//
+// `loop: false` used to be ignored whenever there was no beat to stretch against: the
+// condition read `clip.loop || beatDurationMs === null`, so a clip with no owning beat
+// wrapped forever regardless. Harmless for the beat-driven clips, wrong for a victory pose
+// -- the Magus's victory is a vanish into a portal, and on a wrapping clip he reappeared
+// and vanished again on a loop instead of staying gone.
+
+test('a non-looping clip with no beat plays once and holds its last frame', () => {
+  const clip = {row: 7, frames: 8, loop: false, frameMs: 140};
+  assert.equal(frameFor(clip, 0, null), 0);
+  assert.equal(frameFor(clip, 140, null), 1);
+  assert.equal(frameFor(clip, 980, null), 7, 'reaches the final frame');
+  assert.equal(frameFor(clip, 5000, null), 7, 'and stays there rather than wrapping');
+  assert.equal(frameFor(clip, 60_000, null), 7);
+});
+
+test('a looping clip with no beat still wraps', () => {
+  const clip = {row: 7, frames: 8, loop: true, frameMs: 100};
+  assert.equal(frameFor(clip, 800, null), 0, 'back to the start');
+  assert.equal(frameFor(clip, 850, null), 0);
+  assert.equal(frameFor(clip, 950, null), 1);
+});
+
+test('a non-looping clip that owns a beat is still stretched to fit it', () => {
+  // The beat-driven path is what attack, cast, item, hurt and ko have always used.
+  const clip = {row: 1, frames: 8, loop: false};
+  assert.equal(frameFor(clip, 0, 800), 0);
+  assert.equal(frameFor(clip, 400, 800), 4);
+  assert.equal(frameFor(clip, 800, 800), 7);
+});
+
+test('the Magus vanishes once and stays gone', () => {
+  const magus = manifest.heroes.magus;
+  const clip = magus.clips.victory;
+  assert.equal(clip.loop, false, 'a looping vanish makes him reappear');
+  assert.equal(clip.frames, 8, 'the whole disappearance, not the first poses of it');
+  // Long after the clip has run, he must still be on its final frame.
+  const held = frameFor(clip, 30_000, null);
+  assert.equal(held, clip.frames - 1);
+  // And that final frame must be nearly empty, or "gone" is a figure standing still.
+  const img = decodePng(readFileSync(new URL(
+    `../web/public/battle-sprites/${magus.file}`, import.meta.url)));
+  const {frameWidth: fw, frameHeight: fh} = magus;
+  let opaque = 0;
+  for (let y = clip.row * fh; y < (clip.row + 1) * fh; y++) {
+    for (let x = held * fw; x < (held + 1) * fw; x++) {
+      if (img.rgba[(y * img.width + x) * 4 + 3] > 8) opaque++;
+    }
+  }
+  const first = (() => {
+    let n = 0;
+    for (let y = clip.row * fh; y < (clip.row + 1) * fh; y++) {
+      for (let x = 0; x < fw; x++) if (img.rgba[(y * img.width + x) * 4 + 3] > 8) n++;
+    }
+    return n;
+  })();
+  assert.ok(opaque < first * 0.35,
+    `the held frame has ${opaque}px against ${first}px standing: he has not left`);
 });
