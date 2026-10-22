@@ -23,9 +23,11 @@ export const portraitFile = (id: HeroId): string => `${id}.png`;
 
 /** Heroes whose portrait PNG is actually in `web/public/portraits/`.
  *
- * Empty until the art arrives. Every card falls back to the battle sprite until then, which
- * is why shipping the Codex does not have to wait for twelve images. */
-export const shippedPortraits: readonly HeroId[] = [];
+ * All twelve, as of 2026-10-22. The sprite fallback in `Codex.tsx` stays: it is what let the
+ * Codex ship complete before any portrait existed, and it is the right behaviour for a
+ * thirteenth hero added before their portrait is drawn. */
+export const shippedPortraits: readonly HeroId[] = ['warden','lancer','oracle','blademage',
+  'channeler','nullifier','monk','machinist','vanguard','brawler','magus','thief'];
 
 export const hasPortrait = (id: HeroId): boolean => shippedPortraits.includes(id);
 
