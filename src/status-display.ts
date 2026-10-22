@@ -1,5 +1,11 @@
 /** How each status reads to the player.
  *
+ * In `src/` rather than with the web code because two things need it and only one of them
+ * is a renderer: the badges on the stage, and `ability-reference.ts`, which explains what
+ * an ability's status actually *does*. "Applies surge for 24 ticks" is opaque without the
+ * hint beside it, and duplicating these strings to avoid the move would have guaranteed the
+ * two copies disagreed. Nothing in here touches the DOM.
+ *
  * Typed as a complete `Record<StatusId, ...>`, so adding a status to the engine fails to
  * compile until someone decides what the player sees. Twelve statuses were fully
  * implemented and none were displayed at all, which is the kind of gap a total record
@@ -15,7 +21,7 @@
  * pair rather than a status, so it needs its own badge and its own timeline handling. Not
  * done; it would be the next thing worth adding.
  */
-import type {StatusId} from '../../src/types.js';
+import type {StatusId} from './types.js';
 
 export type StatusTone = 'buff' | 'debuff' | 'charge' | 'hidden';
 

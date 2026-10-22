@@ -551,19 +551,38 @@
   font-size: 11px;
 }
 
-.dbb-codex-skills {
-  margin: 12px 0 0;
-  font-size: 11px;
-  line-height: 1.6;
-  opacity: 0.85;
-}
-.dbb-codex-skills span {
-  display: block;
+.dbb-codex-skills { margin: 12px 0 0; }
+.dbb-codex-skills h3 {
+  margin: 0 0 6px;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.6;
-  margin-bottom: 2px;
+  font-weight: normal;
+}
+.dbb-codex-skill-none { margin: 0; font-size: 11px; opacity: 0.7; }
+.dbb-codex-skill-list { margin: 0; display: grid; gap: 7px; }
+/* Name above its facts rather than beside them: a fact line runs to eight words and a
+ * two-column layout would wrap it to three lines at a phone width. */
+.dbb-codex-skill dt {
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+}
+.dbb-codex-skill dd { margin: 1px 0 0; }
+.dbb-codex-skill-facts {
+  display: block;
+  font-size: 10px;
+  line-height: 1.55;
+  opacity: 0.78;
+}
+/* A mechanic no field could express, so it reads as prose rather than as another fact. */
+.dbb-codex-skill-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.55;
+  color: #9cbfe0;
 }
 
 .dbb-codex-open {
@@ -588,4 +607,14 @@
     gap: 12px;
     align-items: start;
   }
+}
+
+/* The shared "every hero can" panel sits above the grid rather than inside it. */
+.dbb-codex-shared { margin-bottom: var(--dbb-gap); }
+.dbb-codex-shared h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.8;
 }

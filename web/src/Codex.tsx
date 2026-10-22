@@ -14,6 +14,8 @@ import {useState} from 'react';
 import {heroIds, heroes} from '../../dist/src/roster.js';
 import {HERO_LORE, CAPABILITY_LABEL, capabilityLabels} from '../../dist/src/lore.js';
 import {heroCapabilities, signatureAbilities} from '../../dist/src/draft.js';
+import {describeAbility} from '../../dist/src/ability-reference.js';
+import {universalAbilities} from './ability-reference-shared.js';
 import type {HeroId} from '../../src/roster.js';
 import type {Capability} from '../../src/draft.js';
 import {PORTRAIT_SIZE, hasPortrait, portraitUrl} from './portrait-catalog.js';
@@ -28,8 +30,7 @@ import {mediaUrl} from './media-url.js';
  * `signatureAbilities` merges the roster with the reference encounter, which is the same
  * union `draft.ts` derives capabilities from, so the ability list and the tags above it
  * can no longer disagree. */
-const abilitiesOf = (id: HeroId): string[] =>
-  signatureAbilities.filter(a => a.owner === id).map(a => a.name);
+const abilitiesOf = (id: HeroId) => signatureAbilities.filter(a => a.owner === id);
 
 const capsOf = (id: HeroId): Capability[] => (heroCapabilities[id] ?? []) as Capability[];
 
@@ -127,11 +128,31 @@ function Card({id}: {id: HeroId}) {
         })}
       </dl>
 
-      <p className="dbb-codex-skills">
-        <span>Abilities</span>
-        {/* Basics only is a real answer, not a missing one -- see `abilitiesOf`. */}
-        {abilities.length ? abilities.join(' · ') : 'Attack, Guard and items only'}
-      </p>
+      {/* What each ability *does*, not just its name.
+        * `play-ui.ts` already describes abilities well, but those lines live in the action
+        * preview, which Normal turns off -- so a Normal player could never learn what
+        * Tri-Bolt or Nullify does, in a battle or out of one. These are derived from the
+        * ability record, so a tuned power value cannot leave the text behind. */}
+      <section className="dbb-codex-skills">
+        <h3>Abilities</h3>
+        {abilities.length === 0
+          // Basics only is a real answer, not a missing one -- see `abilitiesOf`.
+          ? <p className="dbb-codex-skill-none">Attack, Guard and items only</p>
+          : <dl className="dbb-codex-skill-list">
+              {abilities.map(ability => {
+                const {facts, note} = describeAbility(ability);
+                return (
+                  <div className="dbb-codex-skill" key={ability.id}>
+                    <dt>{ability.name}</dt>
+                    <dd>
+                      <span className="dbb-codex-skill-facts">{facts.join(' · ')}</span>
+                      {note && <span className="dbb-codex-skill-note">{note}</span>}
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>}
+      </section>
     </article>
   );
 }
@@ -164,6 +185,28 @@ export function Codex({onClose}: {onClose: () => void}) {
             onClick={() => setFilter(c)}>{CAPABILITY_LABEL[c].label} {countFor(c)}</button>
         ))}
       </nav>
+
+      {/* Shown only on the unfiltered view: it belongs to the roster as a whole, and
+        * repeating it above a filtered list of two heroes would read as a result. */}
+      {filter === 'All' && (
+        <section className="dbb-codex-card dbb-codex-shared rpg-window">
+          <h2>Every hero can</h2>
+          <dl className="dbb-codex-skill-list">
+            {universalAbilities.map(ability => {
+              const {facts, note} = describeAbility(ability);
+              return (
+                <div className="dbb-codex-skill" key={ability.id}>
+                  <dt>{ability.name}</dt>
+                  <dd>
+                    <span className="dbb-codex-skill-facts">{facts.join(' · ')}</span>
+                    {note && <span className="dbb-codex-skill-note">{note}</span>}
+                  </dd>
+                </div>
+              );
+            })}
+          </dl>
+        </section>
+      )}
 
       <div className="dbb-codex-list">
         {shown.map(id => <Card key={id} id={id} />)}

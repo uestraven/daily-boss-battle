@@ -33,7 +33,7 @@ import {effectLibrary} from './effect-catalog.js';
 import {backgroundForBoss, battleBackgrounds, hasBackgroundArt} from './background-catalog.js';
 import {BackgroundStudio} from './BackgroundStudio.js';
 import {Codex} from './Codex.js';
-import {STATUS_DISPLAY, visibleStatuses} from './status-display.js';
+import {STATUS_DISPLAY, visibleStatuses} from '../../dist/src/status-display.js';
 import {logLines} from '../../dist/src/battle-log.js';
 import {disclosureFor} from '../../dist/src/disclosure.js';
 import {abilityInfoFor} from '../../dist/src/animation.js';
