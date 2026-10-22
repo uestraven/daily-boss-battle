@@ -618,3 +618,14 @@
   text-transform: uppercase;
   opacity: 0.8;
 }
+
+/* Keyboard focus has to be obvious in a menu navigated by arrows: the ring is the cursor.
+ * Stronger than the global :focus-visible outline, because a command entry is a large dark
+ * panel and a 2px outline on its border is easy to lose. */
+.rpg-menu-item:focus-visible,
+.rpg-menu-back:focus-visible,
+.dbb-codex-filter button:focus-visible {
+  outline: 2px solid var(--dbb-accent, #e8c886);
+  outline-offset: -4px;
+  background: #2f3a57;
+}

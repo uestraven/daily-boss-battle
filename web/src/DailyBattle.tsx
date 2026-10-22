@@ -35,6 +35,7 @@ import {BackgroundStudio} from './BackgroundStudio.js';
 import {Codex} from './Codex.js';
 import {STATUS_DISPLAY, visibleStatuses} from '../../dist/src/status-display.js';
 import {logLines} from '../../dist/src/battle-log.js';
+import {focusFirstItemIfNavigating, handleMenuKey} from './menu-keys.js';
 import {disclosureFor} from '../../dist/src/disclosure.js';
 import {abilityInfoFor} from '../../dist/src/animation.js';
 import type {BeatScript} from '../../src/presentation.js';
@@ -244,6 +245,9 @@ function Battle({def, catalog, tier, day, unranked}:
     const existing = ledger.records[day];
     return !existing || (existing.inputs.length === 0 && !existing.completed);
   });
+  /** The command panel, for arrow-key navigation and for moving focus as menus change. */
+  const commandRef = useRef<HTMLElement | null>(null);
+
   /** The Codex, over the top of whatever screen opened it.
    *
    * Local state so it can never touch ranking -- see the button that sets it. */
@@ -255,6 +259,16 @@ function Battle({def, catalog, tier, day, unranked}:
   /** Which submenu is open, or null at the root. Reset whenever the turn passes, so a new
    * character always starts at the top of its own menu. */
   const [openGroup, setOpenGroup] = useState<AbilityGroup | null>(null);
+
+  /** When a submenu opens or closes, carry a keyboard player's focus into the new panel.
+   *
+   * Guarded so it only acts when focus is already inside the menu: focusing on every panel
+   * change would hijack a mouse user mid-click and scroll a phone to the command window.
+   * Keyed on the depth rather than on the panel contents, so re-rendering for an unrelated
+   * reason does not move the cursor out from under someone. */
+  useEffect(() => {
+    focusFirstItemIfNavigating(commandRef.current);
+  }, [openGroup, selected?.ability.id]);
   const [log, setLog] = useState<string[]>([]);
   /** Playback position for the current batch. Shared by the canvas and the DOM meters,
    * so a health bar can never disagree with the stage about how far a tween has run. */
@@ -800,7 +814,23 @@ function Battle({def, catalog, tier, day, unranked}:
         })}
       </section>
 
-      <section className="dbb-commands rpg-window">
+      {/* Arrow keys to move, Enter to choose, Escape to back out -- the keyboard this genre
+        * trained people to expect. Every entry is already a real <button>, so Tab and Enter
+        * worked; what was missing was not having to press Tab nine times to reach the ninth
+        * ability. Escape unwinds one level at a time, matching the on-screen Back. */}
+      <section
+        className="dbb-commands rpg-window"
+        ref={commandRef}
+        onKeyDown={event => {
+          const consumed = handleMenuKey(event, commandRef.current, {
+            onBack: selected ? () => setSelected(null)
+              : openGroup ? () => setOpenGroup(null)
+              : undefined,
+          });
+          // Only swallow what was acted on, so Tab, Enter and typing are untouched.
+          if (consumed) event.preventDefault();
+        }}
+      >
         {phase.kind === 'playing' && <div className="dbb-busy">…</div>}
 
         {showResult && (
@@ -847,6 +877,7 @@ function Battle({def, catalog, tier, day, unranked}:
                   <li key={group}>
                     <button
                       className={`rpg-menu-item${usable ? '' : ' is-unavailable'}`}
+                      data-menu-item=""
                       disabled={!usable}
                       onClick={() => (only ? setSelected(only) : setOpenGroup(group))}
                     >
@@ -874,6 +905,7 @@ function Battle({def, catalog, tier, day, unranked}:
                     className={`rpg-menu-item${option.noEffect ? ' is-no-effect' : ''}` +
                       `${option.enabled ? '' : ' is-unavailable'}`}
                     disabled={!option.enabled}
+                    data-menu-item=""
                     onClick={() => setSelected(option)}
                   >
                     <span>{option.ability.name}</span>
@@ -886,7 +918,7 @@ function Battle({def, catalog, tier, day, unranked}:
                 </li>
               ))}
               <li>
-                <button className="rpg-menu-item is-back" onClick={() => setOpenGroup(null)}>
+                <button className="rpg-menu-item is-back" data-menu-item="" onClick={() => setOpenGroup(null)}>
                   <span>◂ Back</span>
                 </button>
               </li>
@@ -907,12 +939,13 @@ function Battle({def, catalog, tier, day, unranked}:
                 <button
                   key={targetId}
                   className="rpg-menu-item"
+                  data-menu-item=""
                   onClick={() => commit(actionInput(state, actorId, selected.ability, targetId))}
                 >
                   {selected.ability.target.startsWith('all_') ? 'Confirm' : names[targetId!]}
                 </button>
               ))}
-              <button className="rpg-menu-back" onClick={() => setSelected(null)}>Back</button>
+              <button className="rpg-menu-back" data-menu-item="" onClick={() => setSelected(null)}>Back</button>
             </div>
           </>
         )}

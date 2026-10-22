@@ -10,7 +10,7 @@
  * real likeness and is already in the image cache, so the screen is complete before any
  * portrait exists.
  */
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import {heroIds, heroes} from '../../dist/src/roster.js';
 import {HERO_LORE, CAPABILITY_LABEL, capabilityLabels} from '../../dist/src/lore.js';
 import {heroCapabilities, signatureAbilities} from '../../dist/src/draft.js';
@@ -21,6 +21,7 @@ import type {Capability} from '../../src/draft.js';
 import {PORTRAIT_SIZE, hasPortrait, portraitUrl} from './portrait-catalog.js';
 import {spriteSheet} from './sprite-catalog.js';
 import {mediaUrl} from './media-url.js';
+import {handleMenuKey} from './menu-keys.js';
 
 /** Abilities belonging to one hero, by name.
  *
@@ -168,19 +169,38 @@ export function Codex({onClose}: {onClose: () => void}) {
     (heroIds as readonly HeroId[]).filter(id => capsOf(id).includes(c)).length;
   const shown = (heroIds as readonly HeroId[])
     .filter(id => filter === 'All' || capsOf(id).includes(filter));
+  const filterRef = useRef<HTMLElement | null>(null);
 
   return (
-    <main className="dbb-shell dbb-shell-codex">
+    // Escape closes the Codex from anywhere inside it, which is what a reader reaches for
+    // after scrolling to the bottom of twelve cards.
+    <main
+      className="dbb-shell dbb-shell-codex"
+      onKeyDown={event => {
+        if (event.key === 'Escape' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+          onClose();
+          event.preventDefault();
+        }
+      }}
+    >
       <header className="dbb-header">
         <span className="dbb-brand">✦ CODEX</span>
         <button type="button" className="rpg-menu-back" onClick={onClose}>Back</button>
       </header>
 
-      <nav className="dbb-codex-filter" aria-label="Filter by capability">
-        <button type="button" className={filter === 'All' ? 'is-active' : ''}
+      {/* Horizontal, so Left and Right move along the filters as well as Up and Down. */}
+      <nav
+        className="dbb-codex-filter"
+        aria-label="Filter by capability"
+        ref={filterRef}
+        onKeyDown={event => {
+          if (handleMenuKey(event, filterRef.current, {horizontal: true})) event.preventDefault();
+        }}
+      >
+        <button type="button" data-menu-item="" className={filter === 'All' ? 'is-active' : ''}
           onClick={() => setFilter('All')}>All {heroIds.length}</button>
         {options.map(c => (
-          <button type="button" key={c} className={c === filter ? 'is-active' : ''}
+          <button type="button" key={c} data-menu-item="" className={c === filter ? 'is-active' : ''}
             title={CAPABILITY_LABEL[c].hint}
             onClick={() => setFilter(c)}>{CAPABILITY_LABEL[c].label} {countFor(c)}</button>
         ))}
