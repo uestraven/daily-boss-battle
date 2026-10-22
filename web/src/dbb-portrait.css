@@ -629,3 +629,20 @@
   outline-offset: -4px;
   background: #2f3a57;
 }
+
+/* ---------------------------------------------------------------- bestiary
+ * An undiscovered boss is its own sprite drawn as a silhouette: no second image, and it
+ * reads as "something is there" rather than as a gap in the list. */
+.dbb-codex-face.is-silhouette {
+  filter: brightness(0) contrast(0);
+  opacity: 0.55;
+}
+.dbb-codex-boss.is-unknown { opacity: 0.72; }
+.dbb-codex-boss.is-unknown h2 { letter-spacing: 0.2em; }
+
+/* Affinity readings earned by being hit for. Colour carries the sense, the word carries
+ * the meaning -- the word is always present, so colour is never the only channel. */
+.dbb-codex-tag.is-weak    { color: #a6e7bb; border-color: #3d846d; background: #193830; }
+.dbb-codex-tag.is-resist  { color: #f6d79c; border-color: #927749; background: #483a2a; }
+.dbb-codex-tag.is-immune  { color: #f2b2ac; border-color: #8a4d54; background: #3b2634; }
+.dbb-codex-tag.is-neutral { color: #b9c4d6; }

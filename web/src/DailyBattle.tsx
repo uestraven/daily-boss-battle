@@ -36,6 +36,9 @@ import {Codex} from './Codex.js';
 import {STATUS_DISPLAY, visibleStatuses} from '../../dist/src/status-display.js';
 import {logLines} from '../../dist/src/battle-log.js';
 import {focusFirstItemIfNavigating, handleMenuKey} from './menu-keys.js';
+import {clearBestiary, loadBestiary, saveBestiary} from './bestiary-store.js';
+import {emptyDiscovery, observeBattle} from '../../dist/src/bestiary.js';
+import {bossIds} from '../../dist/src/generate.js';
 import {disclosureFor} from '../../dist/src/disclosure.js';
 import {abilityInfoFor} from '../../dist/src/animation.js';
 import type {BeatScript} from '../../src/presentation.js';
@@ -247,6 +250,13 @@ function Battle({def, catalog, tier, day, unranked}:
   });
   /** The command panel, for arrow-key navigation and for moving focus as menus change. */
   const commandRef = useRef<HTMLElement | null>(null);
+
+  /** What the player has learned about each boss, across every day they have played.
+   *
+   * Kept separate from the ledger and under its own key: the ledger is today's record and
+   * the dev panel's "Reset day" clears it, while this accumulates and should survive that,
+   * or testing a fight would wipe the only progression the game has. */
+  const [bestiary, setBestiary] = useState(() => loadBestiary(bossIds));
 
   /** The Codex, over the top of whatever screen opened it.
    *
@@ -547,6 +557,35 @@ function Battle({def, catalog, tier, day, unranked}:
       ...logLines(batch, {actors: names, abilities: abilityNames}),
       ...previous,
     ].slice(0, 24));
+
+    // Fold what was just witnessed into the bestiary.
+    //
+    // `expectedFor` recomputes the damage with the ability's element stripped, which is what
+    // makes an affinity a *measurement* rather than a lookup: the player learns the Blade
+    // Tyrant resists fire because the number they watched was half what it should have been.
+    // Nothing here reads `def.affinities`, and that is the point -- reading it would hand
+    // Normal mode exactly what `disclosure.affinities` exists to withhold.
+    setBestiary(previous => {
+      const bossId = def.bossId;
+      const updated = observeBattle(previous[bossId] ?? emptyDiscovery(), batch, {
+        bossId,
+        elementOf: abilityId => def.abilities[abilityId]?.element,
+        expectedFor: (abilityId, targetId) => {
+          const ability = def.abilities[abilityId];
+          const source = next.state.actors[input.actorId];
+          const target = next.state.actors[targetId];
+          if (!ability || !source || !target) return 0;
+          if (ability.kind !== 'physical' && ability.kind !== 'magical') return 0;
+          const {element: _dropped, ...withoutElement} = ability;
+          try { return calculateDamage(def, source, target, withoutElement); }
+          catch { return 0; }
+        },
+        ...(next.terminal ? {result: next.terminal} : {}),
+      });
+      const merged = {...previous, [bossId]: updated};
+      saveBestiary(merged);
+      return merged;
+    });
   }, [state, ledger, day, catalog, def, replay, names, maxHp, abilityNames]);
 
   /** Elemental affinities are decisive information — a fire-immune boss makes a fire-only
@@ -658,7 +697,7 @@ function Battle({def, catalog, tier, day, unranked}:
     );
   }
 
-  if (showCodex) return <Codex onClose={() => setShowCodex(false)} />;
+  if (showCodex) return <Codex onClose={() => setShowCodex(false)} bestiary={bestiary} />;
 
   if (showLanding) {
     return (
@@ -960,6 +999,10 @@ function Battle({def, catalog, tier, day, unranked}:
             <button onClick={() => setStep(nudgeBoss(step, def, 0.04))}>Boss → 4%</button>
             <button onClick={() => setStep(hurtParty(step, 0.25))}>Party → 25%</button>
             <button onClick={() => { clearLedger(); window.location.reload(); }}>Reset day</button>
+            {/* Separate from "Reset day" on purpose: the bestiary accumulates across days,
+              * so wiping it has to be a deliberate act rather than a side effect of
+              * replaying a fight. */}
+            <button onClick={() => { clearBestiary(); window.location.reload(); }}>Forget bestiary</button>
           </div>
           <div className="dbb-dev-hint">
             Phase {state.phase} · transition at {def.bossProgram.transitionPercent}% ·
