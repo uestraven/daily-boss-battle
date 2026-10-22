@@ -9,7 +9,7 @@
  * rather than stale — see the README note.
  */
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {BattleStage} from './BattleStage.js';
+import {BattleStage, prefetchEffects} from './BattleStage.js';
 import {advanceToDecision, applyPlayerAction, calculateDamage, createEncounter,
   nextBossCountdown, previewAction, starsForResult} from '../../dist/src/engine.js';
 import {ABILITY_GROUPS, SUBMENU_GROUPS, availableActions, eligibleTargets, previewDisplay, actionInput} from '../../dist/src/play-ui.js';
@@ -377,6 +377,12 @@ function Battle({def, catalog, tier, day, unranked}:
   /** Hit effects that have art. Empty until the sheets are commissioned, in which case
    * composeFrame emits no effect commands at all. */
   const effects = useMemo(() => effectLibrary(), []);
+  /** Warm the effect sheets before anything needs one.
+   *
+   * Same reason as the sounds above, and more urgent: an effect lives for 260ms, far less
+   * than it takes to fetch and decode a PNG, so requesting one on demand guarantees its
+   * first occurrence draws nothing at all. See `prefetchEffects`. */
+  useEffect(() => { prefetchEffects(effects); }, [effects]);
   /** This arena's backdrop, if its art exists. Undefined leaves the flat stage, which is
    * what ships until the backgrounds are drawn. */
   const backgroundFile = useMemo(() => {

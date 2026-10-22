@@ -86,6 +86,23 @@ for (const file of onDisk) {
   if (!knownFiles.has(file)) advice.push(`${file} is in battle-effects/ but no effect declares it`);
 }
 
+// Art that is shipped but never prefetched is art that never draws.
+//
+// An effect lives for DEFAULT_EFFECT_MS, 260ms, which is far less than it takes to fetch
+// and decode a PNG -- so `imageAt`, which starts the request on first ask and returns null
+// until it is decoded, guarantees the first occurrence of every effect draws nothing. That
+// was survivable while one generic flare served every spell, because only the opening cast
+// was lost. Once each element had its own sheet it meant a missed cast per element, and the
+// effects stopped appearing at all. This is a grep rather than a test because the cache
+// lives in the browser, which the suite cannot reach -- same reason `pwa:check` greps for
+// the service worker registration.
+const screen = readFileSync(new URL('../web/src/DailyBattle.tsx', import.meta.url), 'utf8');
+if (shipped.size && !/prefetchEffects\s*\(/.test(screen)) {
+  problems.push('web/src/DailyBattle.tsx never calls prefetchEffects, so each effect will '
+    + 'miss its own first occurrence: the sheet is still being fetched while the 260ms the '
+    + 'effect exists for elapses');
+}
+
 console.log('');
 for (const problem of problems) console.log(`  PROBLEM  ${problem}`);
 for (const item of advice) console.log(`  ADVICE   ${item}`);

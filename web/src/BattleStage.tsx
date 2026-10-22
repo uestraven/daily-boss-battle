@@ -109,6 +109,27 @@ const sheetImage = (file: string): HTMLImageElement | null =>
   imageAt(mediaUrl('battle-sprites', file));
 const effectImage = (file: string): HTMLImageElement | null =>
   imageAt(mediaUrl('battle-effects', file));
+
+/** Starts loading every effect sheet before anything needs to draw one.
+ *
+ * Effects are the only thing on this stage with a lifetime shorter than a network request.
+ * A sprite or a backdrop is on screen continuously, so `imageAt` returning null on the
+ * first ask costs nothing -- the art simply appears a moment later. An effect lives for
+ * `DEFAULT_EFFECT_MS`, 260ms, which expires long before a PNG is fetched and decoded. So
+ * the first occurrence of each effect drew nothing at all, and the repaint that fires when
+ * the image lands had no effect left to draw.
+ *
+ * That was invisible while one generic flare served every spell: the opening cast was lost
+ * and every later one looked right. Giving each element its own sheet turned a single
+ * missed cast into a missed cast per element, and since a given element may only be cast
+ * once or twice in a battle, the effects stopped appearing at all.
+ *
+ * Exactly the shape of the heal sound that never played, for exactly the same reason, so it
+ * takes the same fix: warm the cache at load from the library rather than on demand. Driven
+ * off the library, not a hand-written list, so adding an effect cannot forget this. */
+export function prefetchEffects(library: EffectLibrary): void {
+  for (const sheet of Object.values(library)) effectImage(sheet.file);
+}
 const backdropImage = (file: string): HTMLImageElement | null =>
   imageAt(mediaUrl('battle-backgrounds', file));
 
