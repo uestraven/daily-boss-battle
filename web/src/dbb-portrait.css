@@ -423,3 +423,156 @@
   cursor: pointer;
 }
 .dbb-mute:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- codex
+ * Twelve hero cards. A document rather than a stage: it scrolls, it has no clock, and it
+ * is readable at a phone width before any portrait art exists. */
+.dbb-codex-filter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.dbb-codex-filter button {
+  background: var(--dbb-window-mid, #1d2b4a);
+  border: 2px solid var(--dbb-border-outer, #8e9bb3);
+  color: var(--dbb-text-primary, #f4f2ea);
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  /* 44px is the one-thumb target the rest of this screen is built to. */
+  min-height: 44px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+.dbb-codex-filter button.is-active {
+  background: var(--dbb-accent, #e8c886);
+  color: #16182a;
+  border-color: #fff;
+}
+
+.dbb-codex-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbb-gap);
+}
+
+.dbb-codex-card { padding: 10px 12px 12px; }
+
+.dbb-codex-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* A fixed box whether the child is a 64px portrait or a scaled sprite frame, so twelve
+ * cards keep one left edge for their text while the art is still arriving. */
+.dbb-codex-portrait,
+.dbb-codex-face {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  image-rendering: pixelated;
+  background-color: #0b0d16;
+  border: 2px solid var(--dbb-border-inner, #4a5876);
+  /* The sprite fallback is wider than tall; centre it in the box rather than stretching,
+   * which would distort a figure that is already only 40px of real pixels. */
+  object-fit: contain;
+}
+.dbb-codex-face.is-empty { opacity: 0.4; }
+
+.dbb-codex-title h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 0.03em;
+}
+.dbb-codex-role {
+  margin: 2px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.dbb-codex-bio {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0.92;
+}
+
+.dbb-codex-stats {
+  margin: 12px 0 0;
+  display: grid;
+  gap: 4px;
+}
+.dbb-codex-stat { display: flex; align-items: center; gap: 8px; }
+.dbb-codex-stat dt {
+  flex: 0 0 34px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+.dbb-codex-stat dd {
+  margin: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dbb-codex-bar {
+  flex: 1;
+  height: 6px;
+  background: #2b364c;
+  border: 1px solid #44526e;
+  overflow: hidden;
+}
+.dbb-codex-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--dbb-accent, #e8c886);
+}
+.dbb-codex-stat b {
+  flex: 0 0 34px;
+  text-align: right;
+  font-size: 11px;
+}
+
+.dbb-codex-skills {
+  margin: 12px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+.dbb-codex-skills span {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 2px;
+}
+
+.dbb-codex-open {
+  background: transparent;
+  border: 2px solid var(--dbb-border-outer, #8e9bb3);
+  color: var(--dbb-text-primary, #f4f2ea);
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+/* Two columns once there is room, which is where twelve cards stop being a long scroll.
+ * Not the battle grid: see the note on `.dbb-shell-battle`. */
+@media (min-width: 900px) {
+  .dbb-shell-codex { max-width: 1000px; }
+  .dbb-codex-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-items: start;
+  }
+}

@@ -20,6 +20,18 @@ export const heroes:HeroProfile[]=[
 ];
 export const newHeroIds=['lancer','oracle','blademage','channeler','nullifier','monk','machinist','vanguard','thief'] as const;
 
+/** Every hero id as a literal union, so a record over the roster can be *total*.
+ *
+ * `heroes` types its `id` as `string`, which cannot produce a union, so anything keyed by
+ * hero -- the Codex biographies, for one -- would otherwise be a partial map that silently
+ * tolerates a missing entry. Declared as a tuple and asserted against `heroes` by a test,
+ * which is what keeps the two from drifting.
+ *
+ * Deliberately not part of `contentHash`: that hashes named fields of each hero, so adding
+ * a derived id list changes no content and leaves the verified pool valid. */
+export const heroIds=['warden','lancer','oracle','blademage','channeler','nullifier','monk','machinist','vanguard','brawler','magus','thief'] as const;
+export type HeroId=typeof heroIds[number];
+
 export const heroAbilities:Ability[]=[
  {id:'jump',name:'Jump',owner:'lancer',kind:'physical',target:'single_living_enemy',power:165,delayTicks:8,airborneDuringDelay:true},
  {id:'pray',name:'Pray',owner:'oracle',kind:'heal',target:'all_living_allies',power:55,usesPerBattle:3},

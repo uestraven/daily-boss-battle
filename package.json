@@ -37,7 +37,8 @@
     "play": "npm run build && node tools/play.mjs",
     "tune": "npm run build && node tools/tune-boss.mjs",
     "witnesses:record": "npm run build && node tools/regenerate-witnesses.mjs",
-    "verify": "npm run typecheck && npm test && npm run behavior:check && npm run pool:check && npm run golden && npm run pwa:check"
+    "verify": "npm run typecheck && npm test && npm run behavior:check && npm run pool:check && npm run golden && npm run pwa:check",
+    "portraits:check": "npm run build && node tools/check-portraits.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

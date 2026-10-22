@@ -32,6 +32,7 @@ import {spriteSheet} from './sprite-catalog.js';
 import {effectLibrary} from './effect-catalog.js';
 import {backgroundForBoss, battleBackgrounds, hasBackgroundArt} from './background-catalog.js';
 import {BackgroundStudio} from './BackgroundStudio.js';
+import {Codex} from './Codex.js';
 import {STATUS_DISPLAY, visibleStatuses} from './status-display.js';
 import {disclosureFor} from '../../dist/src/disclosure.js';
 import {abilityInfoFor} from '../../dist/src/animation.js';
@@ -242,6 +243,10 @@ function Battle({def, catalog, tier, day, unranked}:
     const existing = ledger.records[day];
     return !existing || (existing.inputs.length === 0 && !existing.completed);
   });
+  /** The Codex, over the top of whatever screen opened it.
+   *
+   * Local state so it can never touch ranking -- see the button that sets it. */
+  const [showCodex, setShowCodex] = useState(false);
   const [step, setStep] = useState<BattleStep>(() => stepForDay(ledger, day, catalog));
   const [script, setScript] = useState<BeatScript | null>(null);
   const [phase, setPhase] = useState<Phase>({kind: 'choosing'});
@@ -668,6 +673,8 @@ function Battle({def, catalog, tier, day, unranked}:
     );
   }
 
+  if (showCodex) return <Codex onClose={() => setShowCodex(false)} />;
+
   if (showLanding) {
     return (
       <main className="dbb-shell dbb-landing">
@@ -705,6 +712,14 @@ function Battle({def, catalog, tier, day, unranked}:
 
           <button className="dbb-begin" onClick={() => beginBattle(mode)}>
             Begin battle
+          </button>
+
+          {/* Held as state rather than a URL parameter on purpose: `battle-params.ts` makes
+            * any parameter other than `?mode=` mark the attempt unranked, so a `?codex`
+            * would have to be threaded through `isPresentationOnly` to avoid quietly costing
+            * someone their ranked run. A linkable Codex can come later. */}
+          <button type="button" className="dbb-codex-open" onClick={() => setShowCodex(true)}>
+            Meet the heroes
           </button>
 
           {stats.completed > 0 && (
@@ -835,6 +850,9 @@ function Battle({def, catalog, tier, day, unranked}:
             </div>
             <div className="dbb-targets">
               <button className="rpg-menu-item" onClick={startReplay}>Play again (unranked)</button>
+              {/* The other place a player is plausibly curious about the roster: they have
+                * just fought alongside three of them. */}
+              <button className="rpg-menu-item" onClick={() => setShowCodex(true)}>Meet the heroes</button>
             </div>
             {cardInput && <ShareCard input={cardInput} />}
             <EmailSignup />
