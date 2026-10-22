@@ -34,6 +34,7 @@ import {backgroundForBoss, battleBackgrounds, hasBackgroundArt} from './backgrou
 import {BackgroundStudio} from './BackgroundStudio.js';
 import {Codex} from './Codex.js';
 import {STATUS_DISPLAY, visibleStatuses} from './status-display.js';
+import {logLines} from '../../dist/src/battle-log.js';
 import {disclosureFor} from '../../dist/src/disclosure.js';
 import {abilityInfoFor} from '../../dist/src/animation.js';
 import type {BeatScript} from '../../src/presentation.js';
@@ -523,43 +524,13 @@ function Battle({def, catalog, tier, day, unranked}:
     // Outcomes that are not damage were absent from the log entirely, so a turn that
     // achieved nothing left no record of having happened. A fizzle, an absorbed spell and
     // a blocked hit are exactly the results a player needs to read back.
-    const who = (id: string | undefined) => names[id ?? ''] ?? 'Someone';
+    // One line per thing that happened, from `src/battle-log.ts`. The mapping lives there
+    // rather than here because the log is the only textual account of a fight -- what a
+    // player reads back, and the whole accessible representation of a `<canvas>` stage --
+    // and it had drifted to covering ten of twenty-nine event types while buried in this
+    // component where no test could see it.
     setLog(previous => [
-      ...batch.flatMap(event => {
-        switch (event.type) {
-          // Naming the action is what makes a multi-target ability legible. Flywheel
-          // Sweep hits all three heroes, and without this its three damage lines read as
-          // three separate attacks in a row -- which is exactly how it was reported.
-          case 'action_committed':
-            return [`${who(event.actorId)} uses ` +
-              `${abilityNames[event.abilityId ?? ''] ?? event.abilityId ?? 'something'}`];
-          case 'channel_started':
-            return [`${who(event.actorId)} begins ` +
-              `${abilityNames[event.abilityId ?? ''] ?? event.abilityId ?? 'something'}`];
-          case 'damage':
-            return [event.amount === 0
-              ? `· ${who(event.targetId)}: no effect`
-              : event.critical
-                ? `· ${who(event.targetId)}: −${event.amount} CRITICAL`
-                : `· ${who(event.targetId)}: −${event.amount}`];
-          case 'heal':
-            return [`· ${who(event.targetId)}: +${event.amount}`];
-          case 'ko':
-            return [`· ${who(event.actorId)} is down`];
-          case 'fizzle':
-            return ['· no effect'];
-          case 'nullify_absorb':
-            return [`· ${who(event.actorId)} absorbs it (+${event.amount} MP)`];
-          case 'boss_interrupted':
-            return [`· ${who(event.actorId)} interrupts ${who(event.targetId)}`];
-          case 'steal_success':
-            return [`· ${who(event.actorId)} steals from ${who(event.targetId)}`];
-          case 'revived':
-            return [`· ${who(event.targetId)} is back up`];
-          default:
-            return [];
-        }
-      }),
+      ...logLines(batch, {actors: names, abilities: abilityNames}),
       ...previous,
     ].slice(0, 24));
   }, [state, ledger, day, catalog, def, replay, names, maxHp, abilityNames]);
@@ -966,7 +937,11 @@ function Battle({def, catalog, tier, day, unranked}:
         </section>
       )}
 
-      <section className="dbb-log">
+      {/* The stage is a <canvas>, so a screen reader perceives nothing of the fight at all.
+        * This list is the entire accessible account of it, which is why it is a live region
+        * rather than decoration. `polite` because a battle produces several lines at once
+        * and `assertive` would interrupt the reader mid-sentence on every one of them. */}
+      <section className="dbb-log" aria-live="polite" aria-label="Battle log">
         {log.map((line, index) => <div key={index} className="dbb-log-line">{line}</div>)}
       </section>
     </main>
