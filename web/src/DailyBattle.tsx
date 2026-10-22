@@ -34,6 +34,7 @@ import {backgroundForBoss, battleBackgrounds, hasBackgroundArt} from './backgrou
 import {BackgroundStudio} from './BackgroundStudio.js';
 import {Codex} from './Codex.js';
 import {BANNER_HEIGHT, BANNER_SHIPPED, BANNER_WIDTH, bannerUrl} from './title-banner.js';
+import {VersusScreen} from './VersusScreen.js';
 import {STATUS_DISPLAY, visibleStatuses} from '../../dist/src/status-display.js';
 import {logLines} from '../../dist/src/battle-log.js';
 import {focusFirstItemIfNavigating, handleMenuKey} from './menu-keys.js';
@@ -252,6 +253,13 @@ function Battle({def, catalog, tier, day, unranked}:
     const existing = ledger.records[day];
     return !existing || (existing.inputs.length === 0 && !existing.completed);
   });
+  /** The matchup screen, shown once between pressing Begin and the first turn.
+   *
+   * State rather than a route, and only ever set by `beginBattle`: a replay must not play it
+   * again, and neither must a reload of a day already in progress. Nobody wants the same
+   * two seconds twice. */
+  const [showVersus, setShowVersus] = useState(false);
+
   /** The command panel, for arrow-key navigation and for moving focus as menus change. */
   const commandRef = useRef<HTMLElement | null>(null);
 
@@ -479,6 +487,10 @@ function Battle({def, catalog, tier, day, unranked}:
       });
     }
     setShowLanding(false);
+    // Shown here rather than inside the landing screen, so the only route to it is pressing
+    // Begin. The battle state is already live behind it, which is what lets it double as a
+    // loading cover for the sheets and the backdrop.
+    setShowVersus(true);
     // The tap that starts the battle is a user gesture, which is exactly what autoplay
     // needs, so the theme can begin here rather than waiting for the first action.
     startAudio();
@@ -723,6 +735,17 @@ function Battle({def, catalog, tier, day, unranked}:
         bestiary={bestiary}
         met={metHeroes(rosterProgress, state.party)}
         progress={rosterProgress}
+      />
+    );
+  }
+
+  // After the landing screen and before the battle. Unskippable by design; see VersusScreen.
+  if (showVersus) {
+    return (
+      <VersusScreen
+        boss={{id: def.bossId, name: names[def.bossId] ?? def.bossId}}
+        party={state.party.map(id => ({id, name: names[id] ?? id}))}
+        onDone={() => setShowVersus(false)}
       />
     );
   }

@@ -669,3 +669,105 @@
 @media (min-width: 680px) {
   .dbb-landing-banner { width: 640px; }
 }
+
+/* ---------------------------------------------------------------- versus screen
+ * Boss and party zoom in from opposite sides, hold, then the battle starts. Unskippable by
+ * design -- see VersusScreen.tsx for why that is defensible rather than merely tolerated.
+ *
+ * The whole thing is transform and opacity, which the compositor handles without laying out
+ * or painting again. That matters here more than usual: the battle state is already live
+ * behind this screen and the sprite sheets are downloading, so the animation must not
+ * compete with them for the main thread. */
+.dbb-versus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  /* Hides the off-screen start positions rather than letting them widen the page: a
+   * translateX of -120% on a phone would otherwise be a horizontal scrollbar for 2 seconds. */
+  overflow: hidden;
+}
+
+.dbb-versus-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.dbb-versus-portrait {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+  border: 2px solid var(--dbb-border-outer, #8e9bb3);
+  box-shadow: inset 0 0 0 1px var(--dbb-border-inner, #4a5876), 3px 3px 0 rgba(0, 0, 0, 0.85);
+  background: #0b0d16;
+}
+/* The boss reads larger, because it is one figure against three. */
+.dbb-versus .is-boss .dbb-versus-portrait { width: 128px; height: 128px; }
+.dbb-versus-portrait.is-empty { opacity: 0.35; }
+
+.dbb-versus-hero { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+.dbb-versus-name {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--dbb-text-primary, #f4f2ea);
+}
+.dbb-versus .is-boss .dbb-versus-name { font-size: 15px; font-weight: bold; }
+
+.dbb-versus-vs {
+  margin: 0;
+  font-size: 34px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  color: var(--dbb-accent, #e8c886);
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+}
+
+/* Boss from the right, party from the left, VS last. Timings are deliberately inside the
+ * 2000ms the screen lasts, with room to spare: an animation still running when the battle
+ * replaces the screen reads as a cut rather than a transition. */
+@keyframes dbb-versus-in-right {
+  from { transform: translateX(60%) scale(1.6); opacity: 0; }
+  to   { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes dbb-versus-in-left {
+  from { transform: translateX(-60%) scale(1.6); opacity: 0; }
+  to   { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes dbb-versus-stamp {
+  from { transform: scale(2.4); opacity: 0; }
+  60%  { transform: scale(1); opacity: 1; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.dbb-versus .is-boss {
+  animation: dbb-versus-in-right 420ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.dbb-versus .is-party {
+  animation: dbb-versus-in-left 420ms cubic-bezier(0.2, 0.9, 0.3, 1) 120ms both;
+}
+.dbb-versus-vs {
+  animation: dbb-versus-stamp 320ms cubic-bezier(0.2, 1.2, 0.4, 1) 420ms both;
+}
+
+/* Wide viewports put them side by side, which is what the sides of a versus screen means
+ * once there is width to have sides. */
+@media (min-width: 760px) {
+  .dbb-versus { flex-direction: row; gap: 28px; }
+  .dbb-versus .is-party { flex-direction: column; }
+}
+
+/* The OS setting is honoured here as everywhere else: the screen still lasts its two
+ * seconds and still says the same thing, it simply arrives rather than flies. */
+@media (prefers-reduced-motion: reduce) {
+  .dbb-versus .is-boss,
+  .dbb-versus .is-party,
+  .dbb-versus-vs {
+    animation: none;
+  }
+}
