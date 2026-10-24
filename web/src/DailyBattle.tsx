@@ -35,6 +35,7 @@ import {BackgroundStudio} from './BackgroundStudio.js';
 import {Codex} from './Codex.js';
 import {BANNER_HEIGHT, BANNER_SHIPPED, BANNER_WIDTH, bannerUrl} from './title-banner.js';
 import {VersusScreen} from './VersusScreen.js';
+import {PauseMenu} from './PauseMenu.js';
 import {STATUS_DISPLAY, visibleStatuses} from '../../dist/src/status-display.js';
 import {logLines} from '../../dist/src/battle-log.js';
 import {focusFirstItemIfNavigating, handleMenuKey} from './menu-keys.js';
@@ -260,6 +261,15 @@ function Battle({def, catalog, tier, day, unranked}:
    * again, and neither must a reload of a day already in progress. Nobody wants the same
    * two seconds twice. */
   const [showVersus, setShowVersus] = useState(false);
+
+  /** The party menu, over a paused battle.
+   *
+   * "Paused" needs no clock surgery: the engine halts between turns and consults no wall
+   * clock, so nothing is advancing while this is open. The button is disabled *during*
+   * playback instead, because sound cues are scheduled ahead on the AudioContext and
+   * freezing the picture would not stop them -- see PauseMenu.tsx. */
+  const [showPause, setShowPause] = useState(false);
+  const closePause = useCallback(() => setShowPause(false), []);
   /** Stable, so the matchup screen's timer is not restarted by this component re-rendering
    * -- which it does twenty times a second while the idle clock runs. */
   const dismissVersus = useCallback(() => {
@@ -851,6 +861,18 @@ function Battle({def, catalog, tier, day, unranked}:
         <span className="dbb-brand">✦ DAILY BOSS BATTLE</span>
         <span className="dbb-header-right">
           <span className="dbb-day">{day} · {tier} · {MODE_BLURB[mode].title}</span>
+          {/* Disabled while a batch plays rather than pausing it: the cues for that batch
+            * are already scheduled on the AudioContext, so a frozen picture would still be
+            * accompanied by its hits. Between turns there is nothing to freeze. */}
+          <button
+            className="dbb-menu-button"
+            aria-label="Party menu"
+            disabled={phase.kind === 'playing'}
+            title={phase.kind === 'playing' ? 'Available between turns' : 'Party menu'}
+            onClick={() => setShowPause(true)}
+          >
+            ☰
+          </button>
           <button
             className="dbb-mute"
             aria-label={mutedState ? 'Unmute' : 'Mute'}
@@ -1097,6 +1119,18 @@ function Battle({def, catalog, tier, day, unranked}:
       <section className="dbb-log" aria-live="polite" aria-label="Battle log">
         {log.map((line, index) => <div key={index} className="dbb-log-line">{line}</div>)}
       </section>
+
+      {showPause && (
+        <PauseMenu
+          party={state.party}
+          actors={state.actors}
+          names={names}
+          maxHp={maxHp}
+          inventory={state.inventory}
+          disclosure={show}
+          onClose={closePause}
+        />
+      )}
     </main>
   );
 }

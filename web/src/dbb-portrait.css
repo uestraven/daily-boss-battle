@@ -774,3 +774,151 @@
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------- party menu
+ * A SNES-style party menu over a paused battle. The backdrop darkens the fight rather than
+ * hiding it: the stage stays visible behind, which is what makes it read as a menu over a
+ * battle instead of a separate screen. */
+.dbb-menu-button {
+  min-width: 32px;
+  min-height: 32px;
+  font-size: 15px;
+  line-height: 1;
+  background: var(--dbb-window-mid, #1d2b4a);
+  border: 2px solid var(--dbb-border-outer, #8e9bb3);
+  color: var(--dbb-text-primary, #f4f2ea);
+  cursor: pointer;
+}
+.dbb-menu-button:disabled { opacity: 0.4; cursor: default; }
+
+.dbb-pause-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 12, 0.78);
+  display: flex;
+  justify-content: center;
+  /* Scrolls as a whole on a phone, where three hero panels and the bag do not fit a
+   * viewport. `align-items: start` rather than centre, or a tall menu is cut off at the top
+   * with no way to reach it. */
+  align-items: flex-start;
+  overflow-y: auto;
+  padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+  z-index: 40;
+}
+
+.dbb-pause {
+  width: 100%;
+  max-width: 460px;
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbb-gap);
+  /* Focused on open so Escape reaches it; the ring would otherwise draw around the whole
+   * panel, which reads as an error rather than as focus. */
+  outline: none;
+}
+
+.dbb-pause-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dbb-pause-head h2 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dbb-pause-party { display: flex; flex-direction: column; gap: var(--dbb-gap); }
+.dbb-pause-hero { padding: 8px 10px; }
+.dbb-pause-hero.is-down { opacity: 0.55; }
+
+.dbb-pause-hero-head { display: flex; gap: 10px; align-items: flex-start; }
+.dbb-pause-portrait {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  border: 1px solid var(--dbb-border-inner, #4a5876);
+  background: #0b0d16;
+}
+.dbb-pause-vitals { flex: 1; min-width: 0; }
+.dbb-pause-vitals h3 { margin: 0 0 4px; font-size: 13px; }
+
+.dbb-pause-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+  font-size: 10px;
+}
+.dbb-pause-bar-label { flex: 0 0 18px; opacity: 0.65; }
+.dbb-pause-bar {
+  flex: 1;
+  height: 5px;
+  background: #2b364c;
+  border: 1px solid #44526e;
+  overflow: hidden;
+}
+.dbb-pause-bar-fill { display: block; height: 100%; }
+.dbb-pause-bar-fill.is-hp { background: #7dc29f; }
+.dbb-pause-bar-fill.is-mp { background: #83a9e4; }
+.dbb-pause-bar-row b { flex: 0 0 62px; text-align: right; font-size: 10px; }
+.dbb-pause-down { margin: 3px 0 0; font-size: 10px; color: #f2b2ac; }
+
+.dbb-pause-statuses { display: flex; flex-wrap: wrap; gap: 4px; margin: 7px 0 0; }
+.dbb-pause-status {
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 5px;
+  border: 1px solid #48627b;
+  background: #1a2a41;
+  color: #9cbfe0;
+  cursor: help;
+}
+
+.dbb-pause-stats {
+  margin: 8px 0 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+.dbb-pause-stat { text-align: center; }
+.dbb-pause-stat dt { font-size: 9px; letter-spacing: 0.06em; opacity: 0.6; }
+.dbb-pause-stat dd { margin: 1px 0 0; font-size: 12px; font-weight: bold; }
+
+.dbb-pause-moves { margin-top: 9px; }
+.dbb-pause-moves h4,
+.dbb-pause-items h3 {
+  margin: 0 0 5px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  font-weight: normal;
+}
+.dbb-pause-moves dl, .dbb-pause-items dl { margin: 0; display: grid; gap: 6px; }
+.dbb-pause-move dt, .dbb-pause-item dt { font-size: 11px; font-weight: bold; }
+.dbb-pause-move dd, .dbb-pause-item dd {
+  margin: 1px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+.dbb-pause-move dd span { display: block; }
+.dbb-pause-move-note { color: #9cbfe0; margin-top: 1px; }
+.dbb-pause-none { margin: 0; font-size: 10px; opacity: 0.7; }
+
+.dbb-pause-items { padding: 8px 10px; }
+.dbb-pause-item dt b { font-weight: normal; opacity: 0.7; }
+.dbb-pause-hint { margin: 7px 0 0; font-size: 9px; line-height: 1.5; opacity: 0.55; }
+
+/* Wider viewports put the three heroes side by side, which is where a party menu wants to
+ * be read across rather than scrolled down. */
+@media (min-width: 760px) {
+  .dbb-pause { max-width: 900px; }
+  .dbb-pause-party { flex-direction: row; align-items: stretch; }
+  .dbb-pause-hero { flex: 1 1 0; min-width: 0; }
+}
