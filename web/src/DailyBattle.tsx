@@ -845,7 +845,12 @@ function Battle({def, catalog, tier, day, unranked}:
   return (
     // Capture phase, so the theme starts on the first touch even if a child stops the
     // event. Firing repeatedly is harmless: startAudio is idempotent.
-    <main className="dbb-shell dbb-shell-battle" onPointerDownCapture={startAudio}>
+    //
+    // Wrapped rather than passed directly: `startAudio` now takes the opening track, and a
+    // React handler is called with its event, so passing it bare meant playing a track named
+    // after a PointerEvent. The battle screen opens on the battle theme -- the matchup sting
+    // belongs to `beginBattle`, which is the only path with a matchup screen to score.
+    <main className="dbb-shell dbb-shell-battle" onPointerDownCapture={() => startAudio()}>
       {unranked && (
         // Says so on screen, because an unverified pairing may well be unwinnable: the
         // pool covers 263 of the 1760 boss-and-party combinations, and the rest carry no
