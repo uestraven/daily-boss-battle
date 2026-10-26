@@ -370,7 +370,80 @@ discovered, alongside the rest of its entry.
 
 ---
 
-## 10. Waiting on a domain
+## 10. Dungeon mode
+
+**Raised 2026-10-26.** Navigate a SNES-style dungeon with the boss at the end. Assessed, not
+started. The three decisions below want settling before any code, because each one changes
+what gets built.
+
+### What already works in its favour
+
+**The engine does not care.** `createEncounter`, `advanceToDecision` and `applyPlayerAction`
+are per-encounter and hold no state between encounters, so running four in sequence needs no
+engine change at all.
+
+**Determinism is already solved.** `mixSeed(seed, key)` exists for exactly this: room layouts
+and trash encounters can be seeded from the day plus a room id and stay identical for
+everyone, which is the property the daily rests on.
+
+**Four art categories are complete** -- twenty portraits, eight arenas, twelve hero sheets,
+eight boss sheets, six effects -- and none of them is what a dungeon needs. See below.
+
+### Decision 1: what happens to the winnability proof
+
+`src/gates.ts` proves each encounter winnable **from a fresh start**, full HP and MP, G1
+through G7, with every solver line replayed through the authoritative engine. Arriving at the
+boss depleted means the proof covers a fight nobody plays.
+
+- **Verify whole runs.** The solver would search across encounters with carried resources.
+  Combinatorially brutal; the pool build is already substantial for 319 single encounters.
+- **No guarantee**, as decided for hard mode in item 2.
+- **Full restore before the boss door.** A save point, which is period-correct anyway. The
+  boss encounter is then byte-identical to the verified one, the pool stays valid untouched,
+  and the dungeon is a *prelude* rather than a change to the proven fight.
+
+The third is strongly preferred. It is the difference between adding a mode and rearchitecting
+the guarantee.
+
+### Decision 2: ranked or unranked
+
+`DailyRecord.inputs` is the authoritative record -- `normalizeLedger` replays every record
+through the engine, which is what makes a hand-edited one worthless. A dungeon adds movement
+and multiple encounters, so the log would need room transitions and per-encounter attribution,
+and the replay would have to reproduce movement faithfully.
+
+Unranked sidesteps all of it, and the unranked path already exists and is already used by
+replays. Same conclusion as hard mode, for the same reason.
+
+### Decision 3: is this the daily, or its own mode
+
+A dungeon turns a two-minute session into ten or fifteen. The landing card promises "One
+fight, the same for everyone, decided by choices rather than reflexes", and a fifteen-minute
+daily is a different product with a different retention curve rather than a larger version of
+this one.
+
+Recommended as **its own mode with its own entry point**, not a change to the daily. That also
+makes the unranked answer natural and means it cannot regress what already works.
+
+### The real cost is art, and it is a new category
+
+Every arena today is a single painted 320x180 image. A navigable dungeon needs a **tileset**
+-- floor, wall, door, stairs, with corner and edge variants -- plus a map format, collision,
+and a tile renderer. There is none of that: no tilemap, grid, collision or movement code
+exists anywhere in `src/` or `web/src/`.
+
+And the hero sheets are *battle* sheets. `walk` is row 7, a side-on battle approach; there is
+no 4-directional overworld walk cycle in the roster at all. A dungeon needs either a
+party-leader overworld sprite with four facings, or twelve of them.
+
+So: a tileset, a map format and an editor for it, a tile renderer with collision, and new
+4-direction character art. That is more than everything built between 2026-10-22 and
+2026-10-26 combined, and the gating item is commissioning rather than coding -- without
+tiles and facings there is nothing to navigate.
+
+---
+
+## 11. Waiting on a domain
 
 `Content-Security-Policy` headers and an absolute `og:image` URL. Neither can be finished
 until the production domain is settled.
