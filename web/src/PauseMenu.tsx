@@ -25,7 +25,7 @@
  * the visual clock would not stop them: hits would land audibly over a frozen picture. The
  * same reason you cannot open the party menu mid-attack in the games this imitates.
  */
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {describeAbility} from '../../dist/src/ability-reference.js';
 import {signatureAbilities} from '../../dist/src/draft.js';
 import {STATUS_DISPLAY, visibleStatuses} from '../../dist/src/status-display.js';
@@ -65,6 +65,13 @@ export type PauseMenuProps = {
   /** Which hero ids the player has fielded, for the roles the Codex also gates. */
   disclosure: Disclosure;
   onClose: () => void;
+  /** Leave the fight for the title screen. The day is not abandoned -- the ledger holds its
+   * action log, so Resume carries on where it left off. */
+  onQuit: () => void;
+  /** Whether the mode can still be changed, which is only true before the first action: the
+   * day is one recorded attempt, and re-choosing mid-fight would re-roll it. Passed in so
+   * the menu can say which of the two things quitting will offer. */
+  modeLocked: boolean;
 };
 
 function HeroPanel({id, actor, name, maxHpValue, disclosure}: {
@@ -154,8 +161,15 @@ function HeroPanel({id, actor, name, maxHpValue, disclosure}: {
   );
 }
 
-export function PauseMenu({party, actors, names, maxHp, inventory, disclosure, onClose}: PauseMenuProps) {
+export function PauseMenu({party, actors, names, maxHp, inventory, disclosure, onClose,
+  onQuit, modeLocked}: PauseMenuProps) {
   const rootRef = useRef<HTMLElement | null>(null);
+  /** Quitting asks first.
+   *
+   * It is one click from a battle to a different screen, and although nothing is lost --
+   * the day's log is in the ledger and Resume replays it -- a player cannot know that at the
+   * moment they press it. A confirm step is cheaper than the doubt. */
+  const [confirmQuit, setConfirmQuit] = useState(false);
 
   /** The latest `onClose`, so the key handler below never goes stale.
    *
@@ -205,6 +219,40 @@ export function PauseMenu({party, actors, names, maxHp, inventory, disclosure, o
             );
           })}
         </div>
+
+        <section className="dbb-pause-quit rpg-window">
+          {!confirmQuit ? (
+            <>
+              <button type="button" className="rpg-menu-item" data-menu-item=""
+                onClick={() => setConfirmQuit(true)}>
+                <span>Quit to title</span>
+              </button>
+              <p className="dbb-pause-hint">
+                {modeLocked
+                  ? 'Your progress is kept — resume from the title whenever you like. The '
+                    + 'mode is fixed once a battle has begun.'
+                  : 'Nothing has happened yet, so you can change the mode from the title.'}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="dbb-pause-confirm">Leave the battle?</p>
+              <p className="dbb-pause-hint">
+                {modeLocked
+                  ? 'Today\u2019s progress is saved and you can resume from the title. Your '
+                    + 'mode stays as it is.'
+                  : 'No turns have been taken, so nothing is lost and the mode is still '
+                    + 'yours to choose.'}
+              </p>
+              <div className="dbb-pause-confirm-row">
+                <button type="button" className="rpg-menu-item" data-menu-item=""
+                  onClick={onQuit}><span>Yes, quit</span></button>
+                <button type="button" className="rpg-menu-back" data-menu-item=""
+                  onClick={() => setConfirmQuit(false)}>Stay</button>
+              </div>
+            </>
+          )}
+        </section>
 
         <section className="dbb-pause-items rpg-window">
           <h3>Items</h3>

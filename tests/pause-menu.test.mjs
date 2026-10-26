@@ -78,3 +78,59 @@ test('ability text comes from the shared reference, not written again', () => {
   assert.ok(/describeAbility/.test(code(menu)),
     'the menu describes abilities without using src/ability-reference.ts');
 });
+
+// --- quitting to the title -------------------------------------------------------------
+
+test('the mode is locked once the day has been acted on', () => {
+  // The day is one recorded attempt at a fight everyone gets the same. Quitting a losing
+  // battle, switching to Easy and starting again would re-roll it -- and `DailyRecord.mode`
+  // is carried rather than verified, so nothing downstream could tell. This is the same rule
+  // `showLanding`'s initial condition already states from the other side.
+  const body = code(screen);
+  const lock = body.match(/const modeLocked = ([^;]+);/)?.[1] ?? '';
+  assert.ok(lock, 'modeLocked is gone; the mode choice may have been reopened mid-battle');
+  assert.ok(/inputs\.length/.test(lock),
+    `modeLocked is computed from "${lock}", which does not consult the day's action log`);
+  // An unranked attempt has no record to protect, so it stays open.
+  assert.ok(/unranked/.test(lock), 'modeLocked ignores unranked attempts, which have no '
+    + 'record to protect and should stay free to switch');
+});
+
+test('the mode fieldset is actually disabled, not merely styled', () => {
+  const body = code(screen);
+  assert.ok(/<fieldset className="dbb-modes" disabled=\{modeLocked\}/.test(body),
+    'the mode radios are not disabled when the mode is locked, so the lock is cosmetic');
+});
+
+test('quitting keeps the day rather than discarding it', () => {
+  // Nothing is lost: the ledger holds the action log and Resume replays it. The quit path
+  // must not clear the ledger or the step, or "quit to title" becomes "forfeit".
+  const body = code(screen);
+  const quit = body.slice(body.indexOf('const quitToTitle'), body.indexOf('const quitToTitle') + 500);
+  assert.ok(/setShowLanding\(true\)/.test(quit), 'quitting does not return to the title');
+  for (const destructive of ['clearLedger', 'setLedger', 'setStep', 'saveLedger']) {
+    assert.ok(!new RegExp(destructive).test(quit),
+      `quitToTitle calls ${destructive}; quitting must not touch the recorded day`);
+  }
+});
+
+test('the matchup screen does not replay on a resume', () => {
+  // An introduction, and 2.6 unskippable seconds that were a pleasure once are an obstacle
+  // the third time.
+  const body = code(screen);
+  assert.ok(/const resuming = \(ledger\.records\[day\]\?\.inputs\.length \?\? 0\) > 0;/.test(body),
+    'beginBattle does not work out whether it is resuming');
+  assert.ok(/setShowVersus\(!resuming\)/.test(body),
+    'the matchup screen plays again when resuming a fight already in progress');
+  assert.ok(/startAudio\(resuming \? 'battle_main' : 'versus'\)/.test(body),
+    'a resume would play the matchup sting with no matchup screen to go with it');
+});
+
+test('quitting asks first', () => {
+  // One click from a battle to another screen. Nothing is lost, but a player cannot know
+  // that at the moment they press it, and a confirm step is cheaper than the doubt.
+  const body = code(menu);
+  assert.ok(/confirmQuit/.test(body), 'quitting is not confirmed');
+  // And the confirm must gate the call, not just render a warning beside it.
+  assert.ok(/!confirmQuit \?/.test(body), 'the confirmation does not gate the quit action');
+});

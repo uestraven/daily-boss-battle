@@ -270,6 +270,18 @@ function Battle({def, catalog, tier, day, unranked}:
    * freezing the picture would not stop them -- see PauseMenu.tsx. */
   const [showPause, setShowPause] = useState(false);
   const closePause = useCallback(() => setShowPause(false), []);
+
+  /** Quit to the title screen.
+   *
+   * Loses nothing: the ledger holds the day's action log, so pressing Begin again replays it
+   * and resumes exactly where it was left. What it does *not* do is re-roll the day -- see
+   * `modeLocked` for why the mode choice is not simply reopened with it. */
+  const quitToTitle = useCallback(() => {
+    setShowPause(false);
+    setSelected(null);
+    setOpenGroup(null);
+    setShowLanding(true);
+  }, []);
   /** Stable, so the matchup screen's timer is not restarted by this component re-rendering
    * -- which it does twenty times a second while the idle clock runs. */
   const dismissVersus = useCallback(() => {
@@ -513,12 +525,17 @@ function Battle({def, catalog, tier, day, unranked}:
     // Shown here rather than inside the landing screen, so the only route to it is pressing
     // Begin. The battle state is already live behind it, which is what lets it double as a
     // loading cover for the sheets and the backdrop.
-    setShowVersus(true);
+    // Only on a fresh start. The matchup screen is an introduction, so resuming a fight
+    // after quitting to the title should not sit through it again -- and 2.6 seconds that
+    // were a pleasure once are an obstacle the third time.
+    const resuming = (ledger.records[day]?.inputs.length ?? 0) > 0;
+    setShowVersus(!resuming);
     // The tap that starts the battle is a user gesture, which is exactly what autoplay
-    // needs, so the music can begin here rather than waiting for the first action. It opens
-    // on the matchup sting; the battle theme follows when that screen gives way.
-    startAudio('versus');
-  }, [day, startAudio, unranked]);
+    // needs, so the music can begin here rather than waiting for the first action. A fresh
+    // start opens on the matchup sting and the theme follows when that screen gives way; a
+    // resume has no matchup screen to score, so it opens on the theme.
+    startAudio(resuming ? 'battle_main' : 'versus');
+  }, [day, ledger, startAudio, unranked]);
 
   /** Status badges for one actor, resolved against playback rather than the state the
    * batch ended in -- the same rule as the health bars, so a buff cannot appear before the
@@ -710,6 +727,19 @@ function Battle({def, catalog, tier, day, unranked}:
 
   const stars = starsForResult(state);
   const record = ledger.records[day];
+
+  /** Whether the mode is still open to change.
+   *
+   * Only before the first action. The day is one recorded attempt at a fight everyone gets
+   * the same, so quitting a losing battle, switching to Easy and starting again would
+   * re-roll it -- and `DailyRecord.mode` is carried rather than verified, so nothing
+   * downstream could tell. This is not a new rule: `showLanding`'s own initial condition
+   * already says the landing screen is only offered while `inputs.length === 0`, which is
+   * the same statement from the other side. Quitting to the title is always allowed; the
+   * mode simply stops being a choice once the fight has begun.
+   *
+   * An unranked attempt has no record to protect, so it stays open. */
+  const modeLocked = !unranked && (record?.inputs.length ?? 0) > 0;
   const stats = useMemo(() => dailyStatistics(ledger, day), [ledger, day]);
   /** Show the result panel once the active battle has finished playing out. */
   const showResult = Boolean(active.terminal) && phase.kind !== 'playing';
@@ -800,8 +830,12 @@ function Battle({def, catalog, tier, day, unranked}:
             {' '}Difficulty: <strong>{tier}</strong>.
           </p>
 
-          <fieldset className="dbb-modes">
-            <legend>Choose how much the interface tells you</legend>
+          <fieldset className="dbb-modes" disabled={modeLocked}>
+            <legend>
+              {modeLocked
+                ? `Playing on ${MODE_BLURB[mode].title}`
+                : 'Choose how much the interface tells you'}
+            </legend>
             {(['easy', 'normal'] as const).map(option => (
               <label key={option} className={`dbb-mode${mode === option ? ' is-chosen' : ''}`}>
                 <input
@@ -816,12 +850,16 @@ function Battle({def, catalog, tier, day, unranked}:
           </fieldset>
 
           <p className="dbb-landing-note">
-            Both modes fight the same boss with the same party. Easy only shows you more;
-            it does not weaken the fight. Your result records which one you chose.
+            {modeLocked
+              ? 'This battle is already under way, so the mode is fixed for today. Your '
+                + 'progress is saved — begin again to carry on where you left off.'
+              : 'Both modes fight the same boss with the same party. Easy only shows you '
+                + 'more; it does not weaken the fight. Your result records which one you '
+                + 'chose.'}
           </p>
 
           <button className="dbb-begin" onClick={() => beginBattle(mode)}>
-            Begin battle
+            {modeLocked ? 'Resume battle' : 'Begin battle'}
           </button>
 
           {/* Held as state rather than a URL parameter on purpose: `battle-params.ts` makes
@@ -1134,6 +1172,8 @@ function Battle({def, catalog, tier, day, unranked}:
           inventory={state.inventory}
           disclosure={show}
           onClose={closePause}
+          onQuit={quitToTitle}
+          modeLocked={modeLocked}
         />
       )}
     </main>

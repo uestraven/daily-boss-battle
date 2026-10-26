@@ -922,3 +922,22 @@
   .dbb-pause-party { flex-direction: row; align-items: stretch; }
   .dbb-pause-hero { flex: 1 1 0; min-width: 0; }
 }
+
+/* Quit to title, at the foot of the party menu. Visually quieter than the party panels: it
+ * is the one destructive-looking action here, and it should not be the first thing the eye
+ * lands on when the menu opens. */
+.dbb-pause-quit { padding: 8px 10px; }
+.dbb-pause-quit .rpg-menu-item { width: 100%; }
+.dbb-pause-confirm {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--dbb-accent, #e8c886);
+}
+.dbb-pause-confirm-row { display: flex; gap: 6px; margin-top: 7px; }
+.dbb-pause-confirm-row .rpg-menu-item { flex: 1; }
+
+/* A locked mode reads as a statement of fact, not as something broken. The browser's own
+ * disabled styling on a fieldset is nearly invisible, so it is spelled out. */
+.dbb-modes:disabled { opacity: 0.75; }
+.dbb-modes:disabled .dbb-mode { cursor: default; }

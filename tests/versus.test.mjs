@@ -43,14 +43,19 @@ test('nothing on it is exclusive to it', () => {
 test('it is reachable only by pressing Begin', () => {
   // A replay must not play it again, and neither must reloading a day in progress: nobody
   // wants the same two seconds twice.
+  // Two call sites and no more: the one that opens it, and the one that dismisses it.
+  // Asserted by count rather than by their exact text, because the opening call now decides
+  // whether this is a fresh start or a resume and will keep changing shape.
   const setters = code(screen).match(/setShowVersus\([^)]*\)/g) ?? [];
-  assert.deepEqual([...new Set(setters)].sort(),
-    ['setShowVersus(false)', 'setShowVersus(true)'],
-    'showVersus is set from more places than Begin and its own dismissal');
+  assert.equal(setters.length, 2,
+    `showVersus is set from ${setters.length} places: ${setters.join(', ')}. It should be `
+    + 'turned on by Begin and off by its own dismissal, and nothing else.');
+  assert.ok(setters.some(c => /false/.test(c)), 'nothing turns the matchup screen off');
   // And the one that turns it on sits in beginBattle rather than in a render path.
   const begin = code(screen).slice(code(screen).indexOf('const beginBattle'));
-  assert.ok(begin.slice(0, 1200).includes('setShowVersus(true)'),
-    'the matchup screen is not started by beginBattle');
+  assert.ok(/setShowVersus\((?:true|!resuming)\)/.test(begin.slice(0, 1600)),
+    'the matchup screen is not started by beginBattle, so it is reachable from somewhere '
+    + 'that is not the player pressing Begin');
 });
 
 test('the animation finishes before the screen does', () => {
@@ -147,8 +152,8 @@ test('the matchup screen is scored by the sting, and the theme follows it', () =
   // gives way. Tying that to the audio's own length would drift out of step with the
   // screen, which is what the player actually sees -- so it hangs off the dismissal.
   const body = code(screen);
-  assert.ok(/startAudio\('versus'\)/.test(body),
-    'beginBattle does not open on the matchup sting');
+  assert.ok(/startAudio\((?:'versus'|resuming \? '[a-z_]+' : 'versus')\)/.test(body),
+    'beginBattle does not open on the matchup sting for a fresh battle');
   const dismiss = body.slice(body.indexOf('const dismissVersus'));
   assert.ok(/playMusic\('battle_main'\)/.test(dismiss.slice(0, 600)),
     'nothing starts the battle theme when the matchup screen ends, so a non-looping sting '
