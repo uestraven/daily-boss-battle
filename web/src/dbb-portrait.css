@@ -941,3 +941,7 @@
  * disabled styling on a fieldset is nearly invisible, so it is spelled out. */
 .dbb-modes:disabled { opacity: 0.75; }
 .dbb-modes:disabled .dbb-mode { cursor: default; }
+
+/* "Show me more" sits above Quit and reads as help rather than as a setting. */
+.dbb-pause-reveal { padding: 8px 10px; }
+.dbb-pause-reveal .rpg-menu-item { width: 100%; }

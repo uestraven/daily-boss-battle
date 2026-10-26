@@ -276,6 +276,34 @@ function Battle({def, catalog, tier, day, unranked}:
    * Loses nothing: the ledger holds the day's action log, so pressing Begin again replays it
    * and resumes exactly where it was left. What it does *not* do is re-roll the day -- see
    * `modeLocked` for why the mode choice is not simply reopened with it. */
+  /** Reveal the interface mid-fight, permanently for today.
+   *
+   * One-way on purpose. Easy adds *information* and never changes a number -- `disclosure.ts`
+   * is explicit that neither mode alters the fight, which is what keeps one winnability proof
+   * valid for both -- so a player who is lost in Normal can be rescued without the day
+   * becoming easier. What must not be possible is flipping to Easy to read the telegraph and
+   * back to Normal to keep the harder badge, and a ratchet closes exactly that.
+   *
+   * The day's record is rewritten to `easy` as it happens, so the result says what the
+   * player actually used. `setDayMode` refuses once the day is complete, which is the same
+   * rule from the other end: a finished result cannot be relabelled.
+   *
+   * Deliberately does not touch `MODE_KEY`. That is the remembered preference for tomorrow,
+   * a different question from what today turned out to need.
+   *
+   * Safe mid-battle because mode never reaches the engine: the action log is
+   * mode-independent, so a replay of this day cannot diverge from having switched. */
+  const revealMode = useCallback(() => {
+    setShowPause(false);
+    setMode('easy');
+    if (unranked) return;
+    setLedger(previous => {
+      const next = setDayMode(previous, day, 'easy');
+      saveLedger(next);
+      return next;
+    });
+  }, [day, unranked]);
+
   const quitToTitle = useCallback(() => {
     setShowPause(false);
     setSelected(null);
@@ -1174,6 +1202,8 @@ function Battle({def, catalog, tier, day, unranked}:
           onClose={closePause}
           onQuit={quitToTitle}
           modeLocked={modeLocked}
+          mode={mode}
+          onReveal={revealMode}
         />
       )}
     </main>

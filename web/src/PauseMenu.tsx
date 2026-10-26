@@ -33,6 +33,7 @@ import {hasPortrait, portraitUrl, PORTRAIT_SIZE} from './portrait-catalog.js';
 import {handleMenuKey} from './menu-keys.js';
 import type {ActorState, ItemId, StatusId} from '../../src/types.js';
 import type {Disclosure} from '../../src/disclosure.js';
+import type {BattleMode} from '../../src/types.js';
 
 /** Items in the bag, in a fixed order so the panel does not reshuffle as they are spent. */
 const ITEM_ORDER: ItemId[] = ['potion', 'mana_vial', 'revive_tonic'];
@@ -68,10 +69,14 @@ export type PauseMenuProps = {
   /** Leave the fight for the title screen. The day is not abandoned -- the ledger holds its
    * action log, so Resume carries on where it left off. */
   onQuit: () => void;
-  /** Whether the mode can still be changed, which is only true before the first action: the
-   * day is one recorded attempt, and re-choosing mid-fight would re-roll it. Passed in so
-   * the menu can say which of the two things quitting will offer. */
+  /** Whether the mode can still be changed from the title, which is only true before the
+   * first action: the day is one recorded attempt, and re-choosing mid-fight would re-roll
+   * it. Passed in so the menu can say which of the two things quitting will offer. */
   modeLocked: boolean;
+  /** The mode in force. Only Normal is offered a way out, and only inwards. */
+  mode: BattleMode;
+  /** Switch to Easy for the rest of today, permanently. */
+  onReveal: () => void;
 };
 
 function HeroPanel({id, actor, name, maxHpValue, disclosure}: {
@@ -162,7 +167,7 @@ function HeroPanel({id, actor, name, maxHpValue, disclosure}: {
 }
 
 export function PauseMenu({party, actors, names, maxHp, inventory, disclosure, onClose,
-  onQuit, modeLocked}: PauseMenuProps) {
+  onQuit, modeLocked, mode, onReveal}: PauseMenuProps) {
   const rootRef = useRef<HTMLElement | null>(null);
   /** Quitting asks first.
    *
@@ -170,6 +175,8 @@ export function PauseMenu({party, actors, names, maxHp, inventory, disclosure, o
    * the day's log is in the ledger and Resume replays it -- a player cannot know that at the
    * moment they press it. A confirm step is cheaper than the doubt. */
   const [confirmQuit, setConfirmQuit] = useState(false);
+  /** Revealing asks too, because it cannot be undone for the day. */
+  const [confirmReveal, setConfirmReveal] = useState(false);
 
   /** The latest `onClose`, so the key handler below never goes stale.
    *
@@ -219,6 +226,43 @@ export function PauseMenu({party, actors, names, maxHp, inventory, disclosure, o
             );
           })}
         </div>
+
+        {/* One way only. Easy adds information and never changes a number, so a player lost
+          * in Normal can be rescued without the fight becoming easier -- but flipping to
+          * Easy to read the telegraph and back to Normal to keep the harder badge must not
+          * be possible, and a ratchet is what closes it. Easy is offered nothing here,
+          * because there is nothing to offer it. */}
+        {mode === 'normal' && (
+          <section className="dbb-pause-reveal rpg-window">
+            {!confirmReveal ? (
+              <>
+                <button type="button" className="rpg-menu-item" data-menu-item=""
+                  onClick={() => setConfirmReveal(true)}>
+                  <span>Show me more</span>
+                </button>
+                <p className="dbb-pause-hint">
+                  Switches to Easy for the rest of today: status effects, the
+                  boss&rsquo;s weaknesses, its next attack, and what each action will do.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="dbb-pause-confirm">Switch to Easy?</p>
+                <p className="dbb-pause-hint">
+                  The fight does not change — the same boss, the same party, the same
+                  numbers. You simply see more of it. This cannot be undone today, and
+                  your result will say Easy.
+                </p>
+                <div className="dbb-pause-confirm-row">
+                  <button type="button" className="rpg-menu-item" data-menu-item=""
+                    onClick={onReveal}><span>Yes, switch</span></button>
+                  <button type="button" className="rpg-menu-back" data-menu-item=""
+                    onClick={() => setConfirmReveal(false)}>Keep Normal</button>
+                </div>
+              </>
+            )}
+          </section>
+        )}
 
         <section className="dbb-pause-quit rpg-window">
           {!confirmQuit ? (

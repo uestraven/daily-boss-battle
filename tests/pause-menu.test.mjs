@@ -134,3 +134,48 @@ test('quitting asks first', () => {
   // And the confirm must gate the call, not just render a warning beside it.
   assert.ok(/!confirmQuit \?/.test(body), 'the confirmation does not gate the quit action');
 });
+
+// --- the one-way switch to Easy --------------------------------------------------------
+
+test('Easy can be switched to mid-fight, and Normal cannot be switched back to', () => {
+  // A ratchet. Easy adds information and never changes a number -- disclosure.ts is explicit
+  // that neither mode alters the fight, which is what keeps one winnability proof valid for
+  // both -- so rescuing a player lost in Normal costs the day nothing. What must not be
+  // possible is flipping to Easy to read the telegraph and back to Normal to keep the harder
+  // badge, and only one direction being offered is what closes it.
+  const body = code(menu);
+  assert.ok(/mode === 'normal' &&/.test(body),
+    'the reveal option is not gated on being in Normal, so Easy would be offered a way out');
+  assert.ok(!/'normal'\)/.test(code(screen).slice(code(screen).indexOf('const revealMode'),
+    code(screen).indexOf('const revealMode') + 900)),
+    'revealMode can set the mode back to normal; the switch must be one-way');
+});
+
+test('switching rewrites the day record, so the result says what was used', () => {
+  // Otherwise a Normal badge would be earned with Easy information, which is the only way
+  // this could be an exploit rather than a kindness.
+  const body = code(screen);
+  const reveal = body.slice(body.indexOf('const revealMode'), body.indexOf('const revealMode') + 900);
+  assert.ok(/setDayMode\(previous, day, 'easy'\)/.test(reveal),
+    'revealMode does not record the switch against the day');
+  assert.ok(/saveLedger/.test(reveal), 'the rewritten mode is never persisted');
+  // And an unranked attempt has no record to rewrite.
+  assert.ok(/if \(unranked\) return;/.test(reveal),
+    'revealMode writes a ledger record for an unranked attempt');
+});
+
+test('switching does not change the remembered preference for tomorrow', () => {
+  // What today turned out to need is a different question from what the player wants by
+  // default. Writing MODE_KEY here would quietly make Easy their new normal.
+  const body = code(screen);
+  const reveal = body.slice(body.indexOf('const revealMode'), body.indexOf('const revealMode') + 900);
+  assert.ok(!/MODE_KEY/.test(reveal),
+    'revealMode writes the remembered mode preference, so one rescued battle would change '
+    + 'every future day');
+});
+
+test('revealing asks first, because it cannot be undone today', () => {
+  const body = code(menu);
+  assert.ok(/confirmReveal/.test(body), 'the switch to Easy is not confirmed');
+  assert.ok(/!confirmReveal \?/.test(body), 'the confirmation does not gate the switch');
+});
