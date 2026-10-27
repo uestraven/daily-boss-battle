@@ -23,7 +23,17 @@
 import {useEffect, useRef} from 'react';
 import {hasPortrait, portraitUrl, PORTRAIT_SIZE} from './portrait-catalog.js';
 
-export const VERSUS_MS = 2600;
+/** How long the matchup screen holds.
+ *
+ * 3000ms, matched to the sting rather than chosen. `versus.wav` is 3.304s long but goes
+ * inaudible at 2.92s -- 2.88s of bars at 180.30 BPM plus a decay tail -- so 3000 lets it
+ * finish and decay with 80ms of quiet before the battle theme takes over. 3400 would add
+ * 400ms of silence to every launch; 2600 cut the last note.
+ *
+ * Measured from the file rather than taken from the table that generated it: the musical
+ * length and the file length differ by the tail, and it is the audible end that the screen
+ * has to cover. */
+export const VERSUS_MS = 3000;
 
 export type VersusCombatant = {id: string; name: string};
 
