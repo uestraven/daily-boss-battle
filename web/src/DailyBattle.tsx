@@ -36,6 +36,7 @@ import {Codex} from './Codex.js';
 import {BANNER_HEIGHT, BANNER_SHIPPED, BANNER_WIDTH, bannerUrl} from './title-banner.js';
 import {VersusScreen} from './VersusScreen.js';
 import {PauseMenu} from './PauseMenu.js';
+import {DungeonMode} from './DungeonMode.js';
 import {STATUS_DISPLAY, visibleStatuses} from '../../dist/src/status-display.js';
 import {logLines} from '../../dist/src/battle-log.js';
 import {focusFirstItemIfNavigating, handleMenuKey} from './menu-keys.js';
@@ -112,6 +113,20 @@ const DEV = PARAMS.has('dev');
  * producing art, not part of the game, and its only previous entry point was the deleted
  * App.tsx harness, which left it unreachable. */
 const STUDIO = PARAMS.has('studio');
+/** Dungeon mode, behind its own parameter.
+ *
+ * Its own entry rather than a change to the daily, which is decision 3 of backlog item 10:
+ * a dungeon turns a two-minute session into something much longer, and the landing card
+ * promises the short one.
+ *
+ * The *walk* writes nothing to the ledger, but the fight behind the door is the ordinary
+ * ranked daily -- and legitimately so, because walking spends no resources, so the encounter
+ * reached is byte-identical to the one the landing screen would have given. The dungeon is
+ * flavour in front of the same fight rather than a different one, which is also what keeps
+ * `gates.ts` proving what it proves. `?dungeon` is an unrecognised parameter to
+ * `parseBattleParams`, which ignores unknowns by design, so it does not mark the attempt
+ * unranked and does not need to. */
+const DUNGEON = PARAMS.has('dungeon');
 /** `?speed=` scales playback: 1 is normal, 0.5 half speed, 2 double. For dialling in the
  * animation pace against real art without a rebuild. */
 const SPEED = (() => {
@@ -261,6 +276,10 @@ function Battle({def, catalog, tier, day, unranked}:
    * again, and neither must a reload of a day already in progress. Nobody wants the same
    * two seconds twice. */
   const [showVersus, setShowVersus] = useState(false);
+  /** Whether the dungeon is still being walked. Starts true under `?dungeon`, and reaching
+   * the boss door or leaving turns it off for good: nobody wants to re-walk a room to get
+   * back to a fight they were already in. */
+  const [showDungeon, setShowDungeon] = useState(DUNGEON);
 
   /** The party menu, over a paused battle.
    *
@@ -807,6 +826,21 @@ function Battle({def, catalog, tier, day, unranked}:
           onChange={() => { /* imports live in IndexedDB; the stage reads bundled art */ }}
         />
       </main>
+    );
+  }
+
+  /** The dungeon, ahead of the landing screen: `?dungeon` means the player asked for it.
+   *
+   * Walking spends nothing, so the fight behind the door is the same verified encounter the
+   * daily would have given -- which is what keeps `gates.ts` proving what it proves and
+   * makes this a prelude rather than a change to the proven fight. */
+  if (DUNGEON && showDungeon) {
+    return (
+      <DungeonMode
+        bossName={names[def.bossId] ?? 'the boss'}
+        onEnterBoss={() => { setShowDungeon(false); startAudio('versus'); setShowVersus(true); }}
+        onQuit={() => { setShowDungeon(false); }}
+      />
     );
   }
 

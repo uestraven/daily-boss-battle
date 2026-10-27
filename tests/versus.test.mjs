@@ -43,14 +43,17 @@ test('nothing on it is exclusive to it', () => {
 test('it is reachable only by pressing Begin', () => {
   // A replay must not play it again, and neither must reloading a day in progress: nobody
   // wants the same two seconds twice.
-  // Two call sites and no more: the one that opens it, and the one that dismisses it.
-  // Asserted by count rather than by their exact text, because the opening call now decides
-  // whether this is a fresh start or a resume and will keep changing shape.
+  // Three call sites and no more, each a deliberate way into or out of a battle: pressing
+  // Begin, reaching the dungeon's boss door, and the screen's own dismissal. Counted and
+  // named rather than matched exactly, because the opening call decides between a fresh
+  // start and a resume and will keep changing shape -- but a fourth means the screen has
+  // become reachable from somewhere nobody chose, which is what this guards.
   const setters = code(screen).match(/setShowVersus\([^)]*\)/g) ?? [];
-  assert.equal(setters.length, 2,
-    `showVersus is set from ${setters.length} places: ${setters.join(', ')}. It should be `
-    + 'turned on by Begin and off by its own dismissal, and nothing else.');
+  assert.ok(setters.length <= 3,
+    `showVersus is set from ${setters.length} places: ${setters.join(', ')}. Every one should `
+    + 'be a deliberate entry to or exit from a battle; a new one needs a reason here.');
   assert.ok(setters.some(c => /false/.test(c)), 'nothing turns the matchup screen off');
+  assert.ok(setters.some(c => /true|!resuming/.test(c)), 'nothing turns it on');
   // And the one that turns it on sits in beginBattle rather than in a render path.
   const begin = code(screen).slice(code(screen).indexOf('const beginBattle'));
   assert.ok(/setShowVersus\((?:true|!resuming)\)/.test(begin.slice(0, 1600)),
