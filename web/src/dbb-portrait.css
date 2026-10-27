@@ -949,6 +949,9 @@
 /* ---------------------------------------------------------------- dungeon
  * Same whole-number scaling as the battle stage, so switching between the two does not
  * resize the game. */
+/* The dungeon takes the wide shell, not the 640px one. At scale 2 a 320px canvas was
+ * 640x352 on a desktop monitor, which is a postage stamp; the wide shell allows scale 3. */
+.dbb-shell-dungeon { max-width: 1100px; }
 .dungeon-wrap { display: flex; justify-content: center; background: #05060b; }
 .dungeon-canvas { display: block; image-rendering: pixelated; }
 

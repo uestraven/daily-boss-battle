@@ -20,8 +20,9 @@
  * minute session the landing card promises.
  */
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {FIRST_ROOM, atDoor, step} from '../../dist/src/dungeon.js';
-import type {Direction, Point} from '../../src/dungeon.js';
+import {initialState, roomById, tryStep} from '../../dist/src/dungeon.js';
+import {FIRST_DUNGEON} from '../../dist/src/dungeon-content.js';
+import type {Direction, DungeonState, StepOutcome} from '../../src/dungeon.js';
 import {DungeonStage, prefetchTiles} from './DungeonStage.js';
 
 const KEYS: Record<string, Direction> = {
@@ -35,17 +36,16 @@ export function DungeonMode({onEnterBoss, onQuit, bossName}: {
   onQuit: () => void;
   bossName: string;
 }) {
-  const map = FIRST_ROOM;
-  const [at, setAt] = useState<Point>(map.start);
-  const [facing, setFacing] = useState<Direction>('right');
-  const [steps, setSteps] = useState(0);
-  const [bumped, setBumped] = useState(false);
+  const dungeon = FIRST_DUNGEON;
+  const [state, setState] = useState<DungeonState>(() => initialState(dungeon));
+  const [effect, setEffect] = useState<StepOutcome['effect']>('moved');
+  const room = roomById(dungeon, state.room);
 
   /** The latest callbacks, so the key handler never closes over a dead render.
    *
    * The lesson from the matchup screen, which locked the game by capturing a callback that
    * went stale. Here a stale `onEnterBoss` would mean reaching the door did nothing, which
-   * in a room with no other exit is the same soft lock wearing a different hat. */
+   * in a dungeon with no other way out is the same soft lock wearing a different hat. */
   const enter = useRef(onEnterBoss);
   enter.current = onEnterBoss;
   const quit = useRef(onQuit);
@@ -56,24 +56,28 @@ export function DungeonMode({onEnterBoss, onQuit, bossName}: {
   useEffect(() => { prefetchTiles(); }, []);
 
   const move = useCallback((direction: Direction) => {
-    setAt(current => {
-      const result = step(map, current, direction);
-      setFacing(result.facing);
-      setBumped(result.blocked);
-      if (!result.blocked) setSteps(n => n + 1);
-      // Reaching the door ends the dungeon. Checked here rather than in an effect so it
-      // cannot fire twice for one step, which would start two battles.
-      if (!result.blocked && atDoor(map, result.position)) {
-        window.setTimeout(() => enter.current?.(), 220);
-      }
-      return result.position;
+    setState(current => {
+      const out = tryStep(dungeon, current, direction);
+      setEffect(out.effect);
+      // Checked here rather than in an effect so it cannot fire twice for one step, which
+      // would start two battles.
+      if (out.effect === 'boss_door') window.setTimeout(() => enter.current?.(), 260);
+      return out.state;
     });
-  }, [map]);
+  }, [dungeon]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.key === 'Escape') { quit.current?.(); return; }
+      if (event.key === 'r' || event.key === 'R') {
+        // A reset, because a pushed block can make a room unsolvable and a player who has
+        // done that needs a way out that is not quitting the dungeon. Cheap precisely
+        // because state is rebuilt rather than undone.
+        setState(initialState(dungeon));
+        setEffect('moved');
+        return;
+      }
       const direction = KEYS[event.key];
       if (!direction) return;
       // Arrow keys scroll a page by default, which on a one-screen room is the difference
@@ -83,28 +87,37 @@ export function DungeonMode({onEnterBoss, onQuit, bossName}: {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [move]);
+  }, [move, dungeon]);
+
+  const message = effect === 'boss_door' ? `The way is open. ${bossName} waits beyond.`
+    : effect === 'locked' ? 'Locked. Something opens this.'
+    : effect === 'unlocked' ? 'The lock gives way.'
+    : effect === 'took_key' ? 'Took a key.'
+    : effect === 'lever' ? 'The mechanism shifts.'
+    : effect === 'pushed' ? 'The stone grinds forward.'
+    : effect === 'blocked' ? 'Solid stone.'
+    : effect === 'changed_room' ? room.name
+    : `Find the way down. ${bossName} is somewhere past it.`;
 
   return (
-    <main className="dbb-shell dbb-shell-dungeon">
+    <main className="dbb-shell dbb-shell-wide dbb-shell-dungeon">
       <header className="dbb-header">
-        <span className="dbb-brand">✦ {map.name}</span>
+        <span className="dbb-brand">✦ {dungeon.name}</span>
         <span className="dbb-header-right">
-          <span className="dbb-day">{steps} steps · unranked</span>
+          <span className="dbb-day">
+            {room.name} · {state.steps} steps{state.keys > 0 ? ` · ${state.keys} key` : ''}
+          </span>
+          <button className="dbb-menu-button" aria-label="Reset this room"
+            title="Reset this room (R)"
+            onClick={() => { setState(initialState(dungeon)); setEffect('moved'); }}>⟲</button>
           <button className="dbb-menu-button" aria-label="Leave the dungeon"
             onClick={() => quit.current?.()}>✕</button>
         </span>
       </header>
 
-      <DungeonStage map={map} at={at} facing={facing} />
+      <DungeonStage room={room} state={state} />
 
-      <p className="dungeon-hint" aria-live="polite">
-        {atDoor(map, at)
-          ? `The way is open. ${bossName} waits beyond.`
-          : bumped
-            ? 'Solid stone.'
-            : `Find the door. ${bossName} is somewhere past it.`}
-      </p>
+      <p className="dungeon-hint" aria-live="polite">{message}</p>
 
       {/* Touch controls, because a phone has no arrow keys and this is the first screen in
         * the game that needs directional input at all. Laid out as a d-pad rather than a row

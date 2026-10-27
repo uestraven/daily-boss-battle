@@ -21,8 +21,8 @@
  * the same arrangement that let the Codex ship before any portrait existed.
  */
 import {useEffect, useLayoutEffect, useRef, useState} from 'react';
-import {atDoor, tileAt} from '../../dist/src/dungeon.js';
-import type {Direction, DungeonMap, Point} from '../../src/dungeon.js';
+import {TERRAIN_CHARS, entityAt, isGateOpen, isPressed, terrainAt} from '../../dist/src/dungeon.js';
+import type {Direction, DungeonRoom, DungeonState} from '../../src/dungeon.js';
 import {mediaUrl} from './media-url.js';
 
 export const TILE = 16;
@@ -63,11 +63,30 @@ export function prefetchTiles(): void {
   for (const file of Object.values(TILE_FILES)) tileImage(file);
 }
 
-export function DungeonStage({map, at, facing}: {
-  map: DungeonMap;
-  at: Point;
-  facing: Direction;
+/** Placeholder colours for the puzzle pieces.
+ *
+ * Drawn rather than blitted, because there is no art for them yet and a shape that reads
+ * correctly beats a tile that does not exist. The same arrangement that let the Codex ship
+ * before any portrait: the mechanism is what wants testing, and art upgrades it later. Each
+ * piece is a distinct shape as well as a distinct colour, so the screen does not rely on
+ * colour alone to say what something is. */
+const PIECE = {
+  block: '#8a6a44',
+  plate: '#4a5876',
+  platePressed: '#a6e7bb',
+  gate: '#8e9bb3',
+  lever: '#e8c886',
+  leverOff: '#6b7488',
+  key: '#f0d6a5',
+  lock: '#b08a5a',
+} as const;
+
+export function DungeonStage({room, state}: {
+  room: DungeonRoom;
+  state: DungeonState;
 }) {
+  const at = state.at;
+  const facing: Direction = state.facing;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
@@ -102,24 +121,75 @@ export function DungeonStage({map, at, facing}: {
     context.fillStyle = '#05060b';
     context.fillRect(0, 0, DUNGEON_STAGE.width, DUNGEON_STAGE.height);
 
-    for (let y = 0; y < map.height; y++) {
-      for (let x = 0; x < map.width; x++) {
-        const kind = tileAt(map, x, y);
-        if (!kind) continue;
-        let file: string | null = null;
-        if (kind === 'floor' || kind === 'start') file = TILE_FILES.floor;
-        else if (kind === 'door') file = TILE_FILES.door;
-        else if (kind === 'wall') {
+    // Terrain first, then the pieces on top of it: a plate is a thing lying on a floor,
+    // not a kind of floor.
+    for (let y = 0; y < room.height; y++) {
+      for (let x = 0; x < room.width; x++) {
+        const char = terrainAt(room, x, y);
+        if (char === null || char === TERRAIN_CHARS.VOID) continue;
+        let file: string;
+        if (char === TERRAIN_CHARS.BOSS) file = TILE_FILES.door;
+        else if (char === TERRAIN_CHARS.WALL) {
           // The rule that gives a flat grid height: a wall with floor below it is seen from
           // the side, and one with wall below it is seen from above.
-          const below = tileAt(map, x, y + 1);
-          const facingCamera = below !== 'wall' && below !== null;
-          file = facingCamera ? TILE_FILES.wall_face : TILE_FILES.wall_top;
-        }
-        if (!file) continue;
+          const below = terrainAt(room, x, y + 1);
+          const exposed = below !== null && below !== TERRAIN_CHARS.WALL
+            && below !== TERRAIN_CHARS.VOID;
+          file = exposed ? TILE_FILES.wall_face : TILE_FILES.wall_top;
+        } else file = TILE_FILES.floor;
         const image = tileImage(file);
-        if (!image) continue;
-        context.drawImage(image, 0, 0, TILE, TILE, x * TILE, y * TILE, TILE, TILE);
+        if (image) context.drawImage(image, 0, 0, TILE, TILE, x * TILE, y * TILE, TILE, TILE);
+      }
+    }
+
+    for (let y = 0; y < room.height; y++) {
+      for (let x = 0; x < room.width; x++) {
+        const entity = entityAt(room, state, x, y);
+        if (!entity) continue;
+        const px = x * TILE, py = y * TILE;
+        if (entity.kind === 'block') {
+          context.fillStyle = '#2a1f14';
+          context.fillRect(px + 1, py + 1, TILE - 2, TILE - 2);
+          context.fillStyle = PIECE.block;
+          context.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+        } else if (entity.kind === 'plate') {
+          // A pressed plate sits lower and turns green, so its state is readable from the
+          // shape as well as the colour.
+          const pressed = isPressed(room, state, entity.letter);
+          context.fillStyle = pressed ? PIECE.platePressed : PIECE.plate;
+          const inset = pressed ? 5 : 3;
+          context.fillRect(px + inset, py + inset, TILE - inset * 2, TILE - inset * 2);
+        } else if (entity.kind === 'gate') {
+          // An open gate leaves its posts, so the player can see where it was.
+          const open = isGateOpen(room, state, entity.letter);
+          context.fillStyle = PIECE.gate;
+          if (open) {
+            context.fillRect(px, py, 2, TILE);
+            context.fillRect(px + TILE - 2, py, 2, TILE);
+          } else {
+            context.fillRect(px, py, TILE, TILE);
+            context.fillStyle = '#4a5876';
+            for (let i = 2; i < TILE; i += 4) context.fillRect(px + i, py, 1, TILE);
+          }
+        } else if (entity.kind === 'lever') {
+          const on = state.levers[entity.letter] === true;
+          context.fillStyle = '#2a2f3d';
+          context.fillRect(px + 4, py + 10, TILE - 8, 3);
+          context.fillStyle = on ? PIECE.lever : PIECE.leverOff;
+          // The handle leans to show which way it is thrown.
+          context.fillRect(on ? px + 9 : px + 4, py + 3, 3, 8);
+        } else if (entity.kind === 'key') {
+          context.fillStyle = PIECE.key;
+          context.fillRect(px + 5, py + 4, 3, 8);
+          context.fillRect(px + 8, py + 4, 3, 3);
+        } else if (entity.kind === 'lock') {
+          context.fillStyle = '#2a1f14';
+          context.fillRect(px, py, TILE, TILE);
+          context.fillStyle = PIECE.lock;
+          context.fillRect(px + 3, py + 5, TILE - 6, TILE - 8);
+          context.fillStyle = '#2a1f14';
+          context.fillRect(px + 7, py + 8, 2, 3);
+        }
       }
     }
 
@@ -128,7 +198,7 @@ export function DungeonStage({map, at, facing}: {
     const px = at.x * TILE, py = at.y * TILE;
     context.fillStyle = '#0b0d16';
     context.fillRect(px + 3, py + 3, TILE - 6, TILE - 6);
-    context.fillStyle = atDoor(map, at) ? '#a6e7bb' : '#e8c886';
+    context.fillStyle = '#e8c886';
     context.fillRect(px + 4, py + 4, TILE - 8, TILE - 8);
     // Facing, as a notch on the leading edge: without it a marker cannot show which way the
     // last input went, and a blocked step then looks like a dropped input.
@@ -138,7 +208,7 @@ export function DungeonStage({map, at, facing}: {
     if (facing === 'down') context.fillRect(px + mid, py + TILE - 4, 2, 2);
     if (facing === 'left') context.fillRect(px + 2, py + mid, 2, 2);
     if (facing === 'right') context.fillRect(px + TILE - 4, py + mid, 2, 2);
-  }, [map, at, facing, scale, loadTick]);
+  }, [room, state, at, facing, scale, loadTick]);
 
   return (
     <div className="dungeon-wrap" ref={wrapRef}>
@@ -152,7 +222,7 @@ export function DungeonStage({map, at, facing}: {
           height: DUNGEON_STAGE.height * scale,
         }}
         role="img"
-        aria-label={`${map.name}, at ${at.x},${at.y} facing ${facing}`}
+        aria-label={`${room.name}, at ${at.x},${at.y} facing ${facing}`}
       />
     </div>
   );
